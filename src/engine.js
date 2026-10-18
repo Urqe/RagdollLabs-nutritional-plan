@@ -2,12 +2,14 @@
 // Deterministic: the same date always gets the same meals (before swaps).
 var Engine = (function () {
   var D = (typeof module !== "undefined") ? require("./data.js") : null;
-  var CATX = D ? D.CAT : CAT, RX = D ? D.RECIPES : RECIPES, SX = D ? D.SNACKS : SNACKS,
+  var CATX = D ? D.CAT : CAT, RX = D ? D.RECIPES : RECIPES, S1 = D ? D.SNACKS1 : SNACKS1, S2 = D ? D.SNACKS2 : SNACKS2, JX = D ? D.JUICES : JUICES,
       PX = D ? D.PEOPLE : PEOPLE, SHARE = D ? D.DEFAULT_SHARE : DEFAULT_SHARE;
 
   var EPOCH = Date.UTC(2025, 0, 6); // a Monday
   var DAY = 86400000;
+  // Protein the three meals should give two people together: both targets minus snack 1 each.
   var RULES = { breakfast: 5, lunch: 9, dinner: 12, cheat: 3 }; // min days between repeats
+  var MEAL_GOAL = PX.p1.protein + PX.p2.protein - 2 * 23;
   var byId = {}; RX.forEach(function (r) { byId[r.id] = r; });
 
   function grams(it) {
@@ -28,6 +30,7 @@ var Engine = (function () {
     return { p: p, k: k };
   }
   RX.forEach(function (r) { var n = nutrOf(r.ing); r.P = n.p; r.K = n.k; r.share = r.split ? r.split.share : SHARE; });
+  S1.concat(S2, JX).forEach(function (s) { var n = nutrOf(s.ing); s.p = Math.round(n.p); s.k = Math.round(n.k); });
 
   function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
@@ -42,13 +45,14 @@ var Engine = (function () {
 
   var plan = [], last = {}, rand = rng(20261018);
 
-  function pick(pool, idx, gap, avoidMain) {
+  function pick(pool, idx, gap, avoidMain, extra) {
     var best = null, bestScore = -Infinity;
     pool.forEach(function (r) {
       var since = last[r.id] == null ? 999 : idx - last[r.id];
       var score = Math.min(since, 60) + rand() * 6;
       if (since < gap) score -= 1000;
-      if (avoidMain && avoidMain.indexOf(r.main) >= 0) score -= 25;
+      if (avoidMain && avoidMain.indexOf(r.main) >= 0) score -= 8;
+      if (extra) score += extra(r);
       if (score > bestScore) { bestScore = score; best = r; }
     });
     last[best.id] = idx;
@@ -63,7 +67,8 @@ var Engine = (function () {
       var b = weekend ? pick(pools.wkndBreakfast, i, 6) : pick(pools.wkBreakfast, i, RULES.breakfast);
       var l = pick(pools.lunch, i, RULES.lunch, prev ? [prev.d.main] : null);
       var d = dow === 6 ? pick(pools.cheat, i, RULES.cheat)
-                        : pick(pools.dinner, i, RULES.dinner, [l.main].concat(prev ? [prev.d.main] : []));
+                        : pick(pools.dinner, i, RULES.dinner, [l.main].concat(prev ? [prev.d.main] : []),
+                               function (r) { return -Math.abs(b.P + l.P + r.P - MEAL_GOAL) * 0.4; });
       plan.push({ b: b, l: l, d: d });
     }
   }
@@ -71,8 +76,10 @@ var Engine = (function () {
   function idxOf(y, m, dd) { return Math.round((Date.UTC(y, m, dd) - EPOCH) / DAY); }
   function key(y, m, dd) { return y + "-" + String(m + 1).padStart(2, "0") + "-" + String(dd).padStart(2, "0"); }
 
-  // Two optional snacks a day, the same for both people. Daily totals count snack 1.
-  function snacksFor(i) { return [SX[i % SX.length], SX[(i + 2) % SX.length]]; }
+  // Two optional snacks a day, the same for both people: snack 1 from the protein
+  // pool (counted in daily totals), snack 2 from the fruit pool. Plus a morning juice.
+  function snacksFor(i) { return [S1[i % S1.length], S2[(i * 5 + 3) % S2.length]]; }
+  function juiceFor(i) { return JX[(i * 5) % JX.length]; }
 
   // overrides: { "2026-10-18|b": "b03", ... }
   function day(y, m, dd, overrides) {
@@ -86,7 +93,7 @@ var Engine = (function () {
       d: byId[ov[k + "|d"]] || base.d
     };
     var sn = snacksFor(i);
-    var res = { key: k, meals: meals, base: base, snacks: sn, people: {} };
+    var res = { key: k, meals: meals, base: base, snacks: sn, juice: juiceFor(i), people: {} };
     ["p1", "p2"].forEach(function (p) {
       var mp = 0, mk = 0;
       ["b", "l", "d"].forEach(function (s) {

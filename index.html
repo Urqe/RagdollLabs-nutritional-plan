@@ -257,6 +257,38 @@ var CAT = {
   banana:   { n: "Bananas", fi: "banaani", p: 1.1, k: 90, w: 120, s: "Vegetables & fruit" },
   garlic:   { n: "Garlic", fi: "valkosipuli", s: "Vegetables & fruit" },
 
+  tortM:    { n: "Mini tortillas (15 cm)", fi: "minitortilla", p: 8, k: 300, w: 25, s: "Bread & grains" },
+  bread:    { n: "Wholegrain or sourdough bread slices", fi: "täysjyvä- tai hapanjuurileipä", p: 9, k: 240, w: 35, s: "Bread & grains" },
+  ricecake: { n: "Rice cakes", fi: "riisikakku", p: 8, k: 390, w: 8, s: "Bread & grains" },
+  popcorn:  { n: "Popcorn kernels", fi: "popcornmaissi", p: 11, k: 380, s: "Bread & grains" },
+  halloumi: { n: "Light halloumi (stands in for panela)", fi: "kevyt grillijuusto", p: 24, k: 250, s: "Dairy & eggs" },
+  chickpea: { n: "Chickpeas, canned (drained)", fi: "kikherne", p: 7, k: 120, s: "Tins & jars" },
+  mushroom: { n: "Mushrooms", fi: "herkkusieni", p: 3, k: 22, s: "Vegetables & fruit" },
+  cauli:    { n: "Cauliflower", fi: "kukkakaali", p: 1.9, k: 25, s: "Vegetables & fruit" },
+  celery:   { n: "Celery", fi: "varsiselleri", p: 0.7, k: 16, s: "Vegetables & fruit" },
+  kohlrabi: { n: "Kohlrabi (stands in for jícama)", fi: "kyssäkaali", p: 1.7, k: 27, s: "Vegetables & fruit" },
+  beetroot: { n: "Cooked beetroot", fi: "keitetty punajuuri", p: 1.7, k: 44, s: "Vegetables & fruit" },
+  springon: { n: "Spring onions", fi: "kevätsipuli", p: 1.8, k: 32, w: 15, s: "Vegetables & fruit" },
+  strawb:   { n: "Strawberries, fresh or frozen", fi: "mansikka", p: 0.7, k: 32, s: "Vegetables & fruit" },
+  pear:     { n: "Pears", fi: "päärynä", p: 0.4, k: 57, w: 180, s: "Vegetables & fruit" },
+  orange:   { n: "Oranges", fi: "appelsiini", p: 0.9, k: 47, w: 150, s: "Vegetables & fruit" },
+  apple:    { n: "Green apples", fi: "vihreä omena", p: 0.3, k: 52, w: 150, s: "Vegetables & fruit" },
+  grapes:   { n: "Red grapes", fi: "punaiset viinirypäleet", p: 0.7, k: 70, s: "Vegetables & fruit" },
+  lingon:   { n: "Lingonberries, frozen (for cranberries)", fi: "puolukka", p: 0.7, k: 45, s: "Frozen" },
+  mint:     { n: "Fresh mint", fi: "minttu", s: "Vegetables & fruit" },
+  basil:    { n: "Fresh basil", fi: "basilika", s: "Vegetables & fruit" },
+  chives:   { n: "Chives", fi: "ruohosipuli", s: "Vegetables & fruit" },
+  almonds:  { n: "Almonds", fi: "mantelit", p: 21, k: 600, s: "Other" },
+  walnut:   { n: "Walnuts", fi: "saksanpähkinä", p: 15, k: 680, s: "Other" },
+  peanut:   { n: "Unsalted peanuts", fi: "maapähkinä", p: 26, k: 590, s: "Other" },
+  darkchoc: { n: "Dark chocolate 70 %", fi: "tumma suklaa", p: 8, k: 570, s: "Other" },
+  coffee:   { n: "Instant coffee", fi: "pikakahvi", s: "Pantry", pantry: true },
+  vanilla:  { n: "Vanilla sugar or extract", fi: "vaniljasokeri", s: "Pantry", pantry: true },
+  hotsauce: { n: "Buffalo-style hot sauce", fi: "chilikastike", s: "Pantry", pantry: true },
+  chiliflk: { n: "Chilli flakes", fi: "chilihiutale", s: "Pantry", pantry: true },
+  chilisalt:{ n: "Chilli-lime salt (Tajín, or chilli powder + lime zest + salt)", fi: "chili-limesuola", s: "Pantry", pantry: true },
+  chilicrisp:{ n: "Chilli crisp (for salsa macha)", fi: "chili crisp", s: "Pantry", pantry: true },
+
   oil:      { n: "Rapeseed oil", fi: "rypsiöljy", p: 0, k: 900, t: 10, s: "Pantry", pantry: true },
   cocoa:    { n: "Cocoa powder", fi: "kaakaojauhe", p: 20, k: 350, s: "Pantry", pantry: true },
   pb:       { n: "Peanut butter", fi: "maapähkinävoi", p: 25, k: 600, t: 16, s: "Pantry", pantry: true },
@@ -283,355 +315,349 @@ var CAT = {
 // heat 1-3. side: salsa or heat served on the side. weekend: breakfast only on Sat/Sun.
 var RECIPES = [
 // BREAKFAST ----------------------------------------------------------------
-{ id: "b01", meal: "breakfast", name: "Chorizo and egg breakfast burritos", time: 15, heat: 2, main: "egg",
-  split: { p2: "3 burritos", p1: "2 burritos", share: 0.6 },
-  ing: [["egg",4,"pc"],["chorizo",40,"g","diced"],["tortS",5,"pc"],["cheese",30,"g"],["pepper",1,"pc","diced"],["onion",0.5,"pc","diced"],["salsaverde",60,"g"],["oil",1,"tsp"]],
-  steps: ["Fry the chorizo in a dry pan over medium heat for 2 minutes until it releases its fat.",
-    "Add the pepper and onion and cook for 3 minutes.",
-    "Beat the eggs, pour into the pan and stir gently until just set.",
-    "Warm the tortillas, fill with egg, cheese and a spoon of salsa verde, then roll tightly.",
-    "Toast seam-side down in the dry pan for 1 minute per side."] },
+{ id: "b01", meal: "breakfast", name: "Protein oats with banana, strawberries and peanut butter", time: 10, heat: 1, main: "dairy",
+  ing: [["oats",90,"g"],["milk",400,"ml"],["whey",20,"g"],["banana",1,"pc","sliced"],["strawb",150,"g"],["pb",1,"tbsp"],["cinnamon",1,"tsp"]],
+  steps: ["Cook the oats in the milk over medium heat for 4 minutes, stirring.",
+    "Take off the heat and stir in the protein powder with a splash of milk.",
+    "Divide by the split and top with banana, strawberries, a drizzle of peanut butter and cinnamon."] },
 
-{ id: "b02", meal: "breakfast", name: "Huevos rancheros with black beans", time: 15, heat: 2, main: "egg",
-  split: { p2: "3 eggs, 2 tortillas, bigger scoop of beans", p1: "2 eggs, 2 tortillas", share: 0.58 },
-  ing: [["egg",5,"pc"],["blackbean",150,"g"],["tortC",4,"pc"],["crushed",300,"g"],["onion",0.5,"pc"],["jalap",1,"pc"],["garlic",1,"clove"],["cumin",0.5,"tsp"],["leipa",40,"g","crumbled"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
-  steps: ["Fry the onion, garlic and jalapeño in half the oil for 2 minutes. Add crushed tomatoes and cumin and simmer 5 minutes into a ranchero sauce.",
-    "Warm the black beans in a small pan and lightly mash with a fork.",
-    "Fry the eggs in the remaining oil.",
-    "Toast the tortillas in a dry pan, top with beans, eggs and sauce.",
-    "Finish with crumbled leipäjuusto and coriander."] },
+{ id: "b02", meal: "breakfast", name: "Huevos rancheros", time: 15, heat: 2, main: "egg", side: true,
+  split: { p2: "3 eggs, 3 tortillas", p1: "2 eggs, 3 tortillas", share: 0.58 },
+  ing: [["tortM",6,"pc"],["egg",5,"pc"],["refried",150,"g"],["tomato",2,"pc"],["onion",0.25,"pc"],["jalap",1,"pc"],["garlic",1,"clove"],["leipa",40,"g","crumbled"],["avocado",0.5,"pc","sliced"],["oil",1,"tsp"]],
+  steps: ["Blend tomatoes, onion, garlic and jalapeño with a pinch of salt, then simmer 5 minutes for a quick ranchera salsa.",
+    "Warm the tortillas in the oiled pan, crack the eggs on top, cover and cook until the whites set.",
+    "Spoon over the salsa, add crumbled leipäjuusto and avocado.",
+    "Serve with warm refried beans on the side."] },
 
-{ id: "b03", meal: "breakfast", name: "Champurrado overnight oats", time: 5, heat: 1, main: "dairy",
-  ing: [["oats",100,"g"],["quark",300,"g"],["milk",250,"ml"],["cocoa",15,"g"],["banana",1,"pc","sliced"],["cinnamon",1,"tsp"],["cayenne",1,"pinch"],["honey",1,"tbsp"]],
-  steps: ["Mix oats, quark, milk, cocoa, cinnamon, cayenne and honey in a bowl.",
-    "Divide into two jars by the split and refrigerate overnight.",
-    "Top with sliced banana in the morning."] },
+{ id: "b03", meal: "breakfast", name: "Cottage cheese toasts two ways", time: 10, heat: 1, main: "dairy",
+  split: { p2: "3 toasts", p1: "2 toasts", share: 0.6 },
+  ing: [["bread",5,"pc"],["cottage",250,"g"],["avocado",0.5,"pc"],["berries",150,"g"],["cinnamon",0.5,"tsp"],["chiliflk",1,"pinch"]],
+  steps: ["Simmer the berries with 2 tbsp water for 5 minutes until jammy.",
+    "Toast the bread and spread each slice with cottage cheese.",
+    "Top half the toasts with mashed avocado, salt, pepper and chilli flakes, the other half with the berry compote and cinnamon."] },
 
-{ id: "b04", meal: "breakfast", name: "Turkey and egg breakfast quesadillas", time: 12, heat: 1, main: "egg", side: true,
-  split: { p2: "7 wedges", p1: "5 wedges", share: 0.58 },
-  ing: [["tortL",3,"pc"],["egg",3,"pc"],["turkeyham",80,"g"],["cheese",40,"g"],["pickjal",20,"g"],["salsa",60,"g","for dipping"]],
-  steps: ["Scramble the eggs softly and set aside.",
-    "Lay out the tortillas, cover half of each with egg, turkey, cheese and jalapeños, then fold.",
-    "Toast in a dry pan for 2 minutes per side until the cheese melts.",
-    "Cut each into 4 wedges and serve with salsa on the side."] },
+{ id: "b04", meal: "breakfast", name: "Mushroom and spinach scramble with beans", time: 12, heat: 1, main: "egg", side: true,
+  split: { p2: "3 eggs, 2 slices of rye", p1: "2 eggs, 1 slice", share: 0.6 },
+  ing: [["egg",5,"pc"],["mushroom",200,"g","sliced"],["tomato",1,"pc"],["spinach",60,"g"],["blackbean",150,"g"],["rye",3,"pc"],["salsa",60,"g"],["oil",1,"tsp"]],
+  steps: ["Fry the mushrooms in the oil until golden, then add the tomato and spinach for 1 minute.",
+    "Pour in the beaten eggs, season and stir until just set.",
+    "Warm the beans with a pinch of salt.",
+    "Serve with rye bread and salsa on the side."] },
 
-{ id: "b05", meal: "breakfast", name: "Machaca-style beef scramble on rye", time: 15, heat: 2, main: "beef",
-  split: { p2: "3 slices of rye, larger half of the scramble", p1: "2 slices", share: 0.6 },
-  ing: [["beef5",120,"g"],["egg",3,"pc"],["tomato",1,"pc","diced"],["onion",0.5,"pc"],["jalap",1,"pc"],["rye",5,"pc"],["cumin",0.5,"tsp"],["oil",1,"tsp"]],
-  steps: ["Brown the beef mince hard in a hot pan with the oil until crisp at the edges.",
-    "Add onion, jalapeño, tomato and cumin and cook for 3 minutes.",
-    "Pour in the beaten eggs and stir until just set.",
-    "Serve on toasted rye bread."] },
+{ id: "b05", meal: "breakfast", name: "Skyr with banana, mango and granola", time: 5, heat: 1, main: "dairy",
+  ing: [["skyr",350,"g"],["whey",15,"g"],["banana",0.5,"pc"],["mango",150,"g","thawed"],["granola",40,"g"],["cinnamon",0.5,"tsp"]],
+  steps: ["Stir the protein powder into the skyr until smooth.",
+    "Divide by the split and top with banana, mango, granola and cinnamon."] },
 
-{ id: "b06", meal: "breakfast", name: "Bacon, egg and bean breakfast tacos", time: 20, heat: 2, main: "egg", weekend: true, side: true,
-  split: { p2: "4 tacos", p1: "3 tacos", share: 0.57 },
-  ing: [["tortS",7,"pc"],["egg",4,"pc"],["bacon",60,"g"],["refried",150,"g"],["cheese",30,"g"],["salsa",80,"g"],["cilantro",0.25,"bunch"]],
-  steps: ["Fry the bacon until crisp, then chop.",
-    "Scramble the eggs in the bacon pan.",
-    "Warm the refried beans and the tortillas.",
-    "Spread beans on each tortilla, add egg, bacon, cheese and coriander.",
-    "Serve with salsa on the side."] },
+{ id: "b06", meal: "breakfast", name: "Turkey sincronizadas with avocado", time: 12, heat: 1, main: "turkey", side: true,
+  split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
+  ing: [["tortL",4,"pc"],["turkeyham",100,"g"],["mozz",60,"g"],["spinach",40,"g"],["avocado",1,"pc"],["tomato",1,"pc"],["salsa",60,"g"]],
+  steps: ["Lay turkey and mozzarella on two tortillas and cover with the other two.",
+    "Toast in a dry pan 2 minutes per side until the cheese melts.",
+    "Cut each into quarters and serve with spinach, sliced avocado, tomato and salsa on the side."] },
 
-{ id: "b07", meal: "breakfast", name: "Mexican chocolate protein pancakes", time: 25, heat: 1, main: "dairy", weekend: true,
-  split: { p2: "6 pancakes", p1: "4 pancakes", share: 0.6 },
-  ing: [["oats",100,"g"],["egg",3,"pc"],["cottage",200,"g"],["banana",1,"pc"],["cocoa",10,"g"],["cinnamon",1,"tsp"],["chilipw",1,"pinch"],["bpowder",1,"tsp"],["greek",150,"g","to serve"],["berries",150,"g","to serve"],["oil",1,"tsp"]],
-  steps: ["Blend oats, eggs, cottage cheese, banana, cocoa, cinnamon, chilli and baking powder until smooth. Rest 5 minutes.",
-    "Cook 10 small pancakes in a lightly oiled pan over medium heat, about 2 minutes per side.",
-    "Warm the berries in a small pan until saucy.",
-    "Serve with Greek yoghurt and the berries."] },
+{ id: "b07", meal: "breakfast", name: "Arroz con leche-style protein oats", time: 10, heat: 1, main: "dairy",
+  ing: [["oats",90,"g"],["milk",400,"ml"],["whey",20,"g"],["cinnamon",1,"tsp"],["vanilla",1,"tsp"],["walnut",20,"g","chopped"],["banana",0.5,"pc"]],
+  steps: ["Cook the oats with the milk, half the cinnamon and the vanilla until thick and creamy.",
+    "Off the heat, stir in the protein powder.",
+    "Serve dusted with the rest of the cinnamon, with walnuts and sliced banana."] },
 
-{ id: "b08", meal: "breakfast", name: "Chilli-lime mango skyr bowl", time: 5, heat: 1, main: "dairy",
-  ing: [["skyr",500,"g"],["mango",200,"g","thawed"],["granola",50,"g"],["lime",1,"pc"],["chilipw",0.5,"tsp"]],
-  steps: ["Toss the mango with lime juice, a pinch of salt and the chilli powder.",
-    "Divide the skyr by the split, top with mango and granola."] },
+{ id: "b08", meal: "breakfast", name: "Egg, bean and spinach breakfast burritos", time: 15, heat: 2, main: "egg", side: true,
+  split: { p2: "2 burritos with 3 eggs", p1: "2 burritos with 2 eggs", share: 0.6 },
+  ing: [["egg",5,"pc"],["tortS",4,"pc"],["blackbean",150,"g"],["spinach",40,"g"],["tomato",1,"pc"],["avocado",0.5,"pc"],["salsa",60,"g"],["oil",1,"tsp"]],
+  steps: ["Scramble the eggs in the oil with salt and pepper.",
+    "Warm the tortillas and the beans.",
+    "Fill with beans, egg, tomato, spinach and avocado, fold in the ends and roll.",
+    "Salsa on the side."] },
 
-{ id: "b09", meal: "breakfast", name: "Chilaquiles verdes with fried eggs", time: 25, heat: 3, main: "egg", weekend: true,
-  split: { p2: "3 eggs, larger half of the chilaquiles", p1: "2 eggs", share: 0.6 },
-  ing: [["tortC",6,"pc","cut in wedges"],["salsaverde",300,"g"],["egg",5,"pc"],["leipa",50,"g"],["greek",80,"g"],["redonion",0.5,"pc"],["jalap",1,"pc"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
-  steps: ["Heat oven to 220 °C. Toss tortilla wedges with half the oil and bake 8–10 minutes until crisp.",
-    "Simmer the salsa verde with the chopped jalapeño for 3 minutes.",
-    "Fold the baked chips through the salsa, just long enough to coat.",
-    "Fry the eggs in the remaining oil.",
-    "Plate chips, top with eggs, crumbled leipäjuusto, yoghurt, red onion and coriander."] },
+{ id: "b09", meal: "breakfast", name: "Chilaquiles rojos with shredded beef", time: 30, heat: 3, main: "beef", weekend: true,
+  split: { p2: "larger half of the chilaquiles and beef", p1: "smaller half", share: 0.6 },
+  ing: [["tortC",6,"pc","cut in wedges"],["strips",150,"g"],["chipotle",1,"tbsp"],["tomato",3,"pc"],["onion",0.5,"pc"],["garlic",1,"clove"],["greek",80,"g"],["leipa",40,"g"],["refried",120,"g"],["redonion",0.5,"pc"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
+  steps: ["Heat oven to 220 °C. Toss tortilla wedges in half the oil and bake 8–10 minutes until crisp.",
+    "Boil tomatoes, onion and garlic for 5 minutes, blend with a little of the water, chilli and salt, then simmer 5 minutes.",
+    "Sear the beef strips with the chipotle in the rest of the oil, then chop.",
+    "Fold the chips through the salsa just to coat.",
+    "Top with beef, yoghurt, leipäjuusto, red onion and coriander. Refried beans on the side."] },
 
-{ id: "b10", meal: "breakfast", name: "Rye toast with avocado, raejuusto and jalapeño", time: 8, heat: 2, main: "dairy",
-  split: { p2: "3 slices", p1: "2 slices", share: 0.6 },
-  ing: [["rye",5,"pc"],["cottage",350,"g"],["avocado",1,"pc"],["tomato",1,"pc"],["pickjal",30,"g"],["lime",0.5,"pc"],["chilipw",1,"pinch"]],
-  steps: ["Toast the rye bread.",
-    "Mash the avocado with lime juice and a pinch of salt.",
-    "Spread avocado on the toast and top with raejuusto, sliced tomato, jalapeños and a pinch of chilli."] },
+{ id: "b10", meal: "breakfast", name: "French toast waffles with berries and chilli eggs", time: 20, heat: 1, main: "egg", weekend: true,
+  split: { p2: "3 waffles, 2 scrambled eggs", p1: "2 waffles, 1 egg", share: 0.6 },
+  ing: [["bread",5,"pc"],["egg",5,"pc","2 for the batter, 3 scrambled"],["milk",100,"ml"],["cinnamon",1,"tsp"],["berries",200,"g"],["honey",1,"tbsp"],["chiliflk",1,"pinch"]],
+  steps: ["Whisk 2 eggs with the milk and cinnamon. Soak the bread slices briefly.",
+    "Cook in a waffle iron until golden (or in a non-stick pan).",
+    "Scramble the remaining eggs with chilli flakes.",
+    "Serve waffles with berries and a little honey, eggs on the side."] },
 
-{ id: "b11", meal: "breakfast", name: "Cinnamon banana protein licuado", time: 5, heat: 1, main: "dairy",
-  ing: [["milk",500,"ml"],["whey",40,"g"],["banana",2,"pc"],["oats",40,"g"],["cinnamon",1,"tsp"],["rye",2,"pc","toasted, optional"]],
-  steps: ["Blend milk, protein powder, bananas, oats and cinnamon with a few ice cubes.",
-    "Pour by the split. Person 2 takes the toast."] },
+{ id: "b11", meal: "breakfast", name: "Carrot cake waffles with yoghurt and walnuts", time: 20, heat: 1, main: "dairy", weekend: true,
+  split: { p2: "3 waffles", p1: "2 waffles", share: 0.6 },
+  ing: [["oats",100,"g"],["egg",2,"pc"],["whey",20,"g"],["carrot",100,"g","grated"],["milk",100,"ml"],["cinnamon",1,"tsp"],["bpowder",1,"tsp"],["greek",100,"g"],["walnut",20,"g"]],
+  steps: ["Blend oats, eggs, protein powder, carrot, cinnamon, baking powder and milk into a thick batter.",
+    "Cook 5 waffles in a waffle iron until golden.",
+    "Serve with Greek yoghurt, chopped walnuts and a dusting of cinnamon."] },
 
-{ id: "b12", meal: "breakfast", name: "Chorizo potato hash with eggs", time: 30, heat: 2, main: "egg", weekend: true,
-  split: { p2: "3 eggs, larger half of the hash", p1: "2 eggs", share: 0.6 },
-  ing: [["potato",500,"g","diced"],["chorizo",60,"g"],["egg",5,"pc"],["pepper",1,"pc"],["onion",1,"pc"],["cheese",30,"g"],["greek",60,"g"],["paprika",1,"tsp"],["oil",1,"tbsp"]],
-  steps: ["Microwave the diced potatoes covered for 5 minutes to par-cook.",
-    "Fry potatoes in the oil until golden, about 10 minutes. Add chorizo, onion, pepper and paprika for 4 more minutes.",
-    "Make 5 wells, crack in the eggs, cover and cook until the whites set.",
-    "Scatter cheese, serve with a spoon of yoghurt."] },
+{ id: "b12", meal: "breakfast", name: "Baked cinnamon roll oats", time: 35, heat: 1, main: "dairy", weekend: true,
+  split: { p2: "the larger dish", p1: "the smaller dish", share: 0.6 },
+  ing: [["oats",100,"g"],["egg",2,"pc"],["greek",150,"g","half for the glaze"],["banana",1,"pc"],["milk",150,"ml"],["whey",20,"g"],["cinnamon",1,"tsp"],["bpowder",1,"tsp"],["vanilla",1,"tsp"],["creamch",30,"g"]],
+  steps: ["Heat oven to 180 °C. Blend oats, eggs, half the yoghurt, banana, milk, protein powder, cinnamon, baking powder and vanilla.",
+    "Divide 60/40 between two greased ovenproof dishes and bake 25–30 minutes until set.",
+    "Mix the rest of the yoghurt with cream cheese and a little vanilla for the glaze.",
+    "Let cool a few minutes, then spread with the glaze."] },
 
 // LUNCH --------------------------------------------------------------------
-{ id: "l01", meal: "lunch", name: "Chicken tinga rice bowls", time: 30, heat: 3, main: "chicken", prep: true,
-  ing: [["chk",160,"g"],["rice",120,"g"],["blackbean",100,"g"],["crushed",300,"g"],["onion",1,"pc"],["chipotle",2,"tbsp"],["garlic",2,"clove"],["oregano",1,"tsp"],["greek",60,"g"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
-  steps: ["Simmer the chicken in salted water for 15 minutes, then shred with two forks.",
-    "Cook the rice meanwhile.",
-    "Fry sliced onion and garlic in the oil for 4 minutes. Add tomatoes, chipotle and oregano and simmer 5 minutes.",
-    "Stir the shredded chicken into the sauce.",
-    "Build bowls with rice, beans, tinga, yoghurt and coriander."] },
+{ id: "l01", meal: "lunch", name: "Mexican beef bowl with rice, beans and pico de gallo", time: 25, heat: 2, main: "beef", prep: true,
+  ing: [["beef5",210,"g"],["rice",100,"g"],["blackbean",200,"g"],["avocado",0.5,"pc"],["tomato",2,"pc"],["onion",0.5,"pc"],["jalap",1,"pc"],["cilantro",0.25,"bunch"],["lime",1,"pc"],["lettuce",100,"g"],["paprika",1,"tsp"],["garlic",1,"clove"],["oil",1,"tsp"]],
+  steps: ["Cook the rice.",
+    "Brown the beef in the oil with garlic, paprika, salt and pepper.",
+    "Chop tomato, onion, jalapeño and coriander with lime and salt for pico de gallo.",
+    "Build bowls with rice, beans, beef, lettuce, pico and avocado."] },
 
-{ id: "l02", meal: "lunch", name: "Chili con carne", time: 40, heat: 3, main: "beef", prep: true,
-  ing: [["beef5",180,"g"],["kidney",200,"g"],["crushed",400,"g"],["onion",1,"pc"],["pepper",1,"pc"],["garlic",2,"clove"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["cocoa",5,"g"],["rice",100,"g"],["oil",1,"tsp"]],
-  steps: ["Brown the beef with onion and pepper in the oil.",
-    "Add garlic, cumin, chilli powder and cocoa for 1 minute.",
-    "Add tomatoes, chipotle and beans and simmer 25 minutes.",
-    "Serve over rice. It keeps 3 days in the fridge."] },
+{ id: "l02", meal: "lunch", name: "Creamy green pasta salad with chicken", time: 25, heat: 1, main: "chicken", prep: true,
+  ing: [["chk",200,"g"],["pasta",100,"g"],["cottage",120,"g"],["avocado",0.5,"pc"],["spinach",80,"g"],["basil",0.25,"bunch"],["chives",0.25,"bunch"],["lime",1,"pc"],["garlic",1,"clove"],["cucumber",150,"g"],["redonion",0.5,"pc"],["tomato",2,"pc"],["almonds",15,"g","chopped"],["oil",1,"tsp"]],
+  steps: ["Cook the pasta and cool under running water.",
+    "Blend cottage cheese, avocado, half the spinach, basil, chives, lime juice, garlic, salt and a splash of water until creamy.",
+    "Season the chicken and fry in the oil 5–6 minutes per side, then slice.",
+    "Toss pasta with the rest of the spinach, cucumber, red onion and tomato. Add chicken, dressing and almonds."] },
 
-{ id: "l03", meal: "lunch", name: "Chicken fajita wraps", time: 20, heat: 2, main: "chicken",
-  split: { p2: "2½ wraps", p1: "1½ wraps", share: 0.6 },
-  ing: [["chk",160,"g","sliced"],["tortL",4,"pc"],["pepper",2,"pc"],["onion",1,"pc"],["greek",100,"g"],["lime",1,"pc"],["paprika",1,"tsp"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["oil",1,"tbsp"]],
-  steps: ["Toss chicken with paprika, cumin, chilli and half the oil.",
-    "Sear chicken in a hot pan 5 minutes, then remove. Fry sliced peppers and onion in the rest of the oil for 4 minutes.",
-    "Mix yoghurt with lime juice and salt for a crema.",
-    "Fill tortillas with chicken, vegetables and crema and roll. Cut one wrap in half to split."] },
+{ id: "l03", meal: "lunch", name: "Chicken en papillote with vegetables and lime", time: 30, heat: 2, main: "chicken",
+  ing: [["chk",240,"g"],["carrot",150,"g","in strips"],["pepper",1,"pc","in strips"],["redonion",0.5,"pc"],["jalap",1,"pc","sliced, optional"],["lime",2,"pc"],["paprika",1,"tsp"],["garlic",1,"clove"],["rice",100,"g"],["oil",1,"tsp"]],
+  steps: ["Heat oven to 200 °C. Cook the rice.",
+    "Lay each chicken breast on foil, season with salt, pepper, paprika, garlic and lime juice.",
+    "Pile the vegetables and jalapeño on top, drizzle with oil and seal the parcels.",
+    "Bake 20–25 minutes until the chicken is cooked through.",
+    "Serve with rice and lime wedges."] },
 
-{ id: "l04", meal: "lunch", name: "Turkey taco salad", time: 20, heat: 2, main: "turkey",
-  ing: [["turkeymince",180,"g"],["lettuce",200,"g"],["tomato",1,"pc"],["corn",100,"g"],["blackbean",100,"g"],["leipa",40,"g"],["chips",30,"g","crushed"],["greek",80,"g"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["lime",1,"pc"],["oil",1,"tsp"]],
-  steps: ["Brown the turkey mince with cumin and chilli powder.",
-    "Whisk yoghurt, chipotle and lime juice into a dressing.",
-    "Toss lettuce, tomato, corn and beans.",
-    "Top with turkey, crumbled leipäjuusto and crushed chips. Dress just before eating."] },
+{ id: "l04", meal: "lunch", name: "Chicken tacos with avocado crema", time: 20, heat: 2, main: "chicken",
+  split: { p2: "5 tacos", p1: "3 tacos", share: 0.62 },
+  ing: [["thigh",230,"g","sliced"],["tortC",8,"pc"],["avocado",0.5,"pc"],["greek",100,"g"],["cilantro",0.5,"bunch"],["jalap",1,"pc"],["lime",2,"pc"],["garlic",1,"clove"],["paprika",1,"tsp"],["lettuce",80,"g"],["redonion",0.5,"pc"],["oil",1,"tsp"]],
+  steps: ["Season the chicken with paprika, garlic, salt and lime and fry in the oil until browned.",
+    "Blend avocado, yoghurt, half the coriander, half the jalapeño, lime juice and salt with a splash of water for the crema.",
+    "Warm the tortillas.",
+    "Fill with chicken, crema, shredded lettuce, red onion and coriander."] },
 
-{ id: "l05", meal: "lunch", name: "Citrus chicken thighs with sweet potato", time: 35, heat: 2, main: "chicken", prep: true, side: true,
-  ing: [["thigh",250,"g"],["sweetpot",500,"g","cubed"],["lime",1,"pc"],["garlic",2,"clove"],["oregano",1,"tsp"],["chilipw",1,"tsp"],["salsaverde",100,"g"],["greek",80,"g"],["oil",1,"tbsp"]],
-  steps: ["Heat oven to 220 °C. Marinate the thighs in lime juice, garlic, oregano and chilli.",
-    "Toss sweet potato in oil and roast 10 minutes.",
-    "Add the thighs to the tray and roast 20 minutes more.",
-    "Slice and serve with salsa verde on the side and yoghurt."] },
+{ id: "l05", meal: "lunch", name: "Carne asada with charro beans and charred spring onions", time: 30, heat: 2, main: "beef", side: true,
+  ing: [["sirloin",210,"g"],["blackbean",230,"g"],["bacon",30,"g"],["springon",6,"pc"],["avocado",0.5,"pc"],["tomato",2,"pc"],["onion",0.5,"pc"],["jalap",1,"pc"],["cilantro",0.25,"bunch"],["lime",2,"pc"],["garlic",1,"clove"],["tortC",4,"pc"]],
+  steps: ["Season the steak with salt, pepper, garlic and lime juice.",
+    "For the beans: fry the diced bacon, add half the onion and the beans with 150 ml water and simmer 10 minutes.",
+    "Sear steak in a very hot pan 3 minutes per side. Char the spring onions in the same pan. Rest the steak and slice.",
+    "Chop tomato, the rest of the onion, jalapeño and coriander with lime for pico de gallo.",
+    "Plate steak, beans, spring onions, avocado and pico. Tortillas and salsa on the side."] },
 
-{ id: "l06", meal: "lunch", name: "Chipotle beef burrito bowls", time: 25, heat: 3, main: "beef",
-  ing: [["strips",180,"g"],["rice",120,"g"],["corn",100,"g"],["tomato",2,"pc"],["redonion",0.5,"pc"],["jalap",1,"pc"],["chipotle",1,"tbsp"],["cheese",30,"g"],["lime",1,"pc"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
-  steps: ["Cook the rice with a squeeze of lime.",
-    "Dice tomato, red onion and jalapeño with coriander and lime for a pico de gallo.",
-    "Toss beef strips with chipotle and salt. Sear in a very hot pan 3 minutes.",
-    "Build bowls with rice, beef, corn, pico and cheese."] },
+{ id: "l06", meal: "lunch", name: "Pastel azteca with chicken and roasted peppers", time: 45, heat: 2, main: "chicken", prep: true,
+  split: { p2: "3 of 5 pieces", p1: "2 of 5 pieces", share: 0.6 },
+  ing: [["chk",150,"g"],["tortM",8,"pc"],["cottage",150,"g"],["pepper",3,"pc","green"],["jalap",1,"pc"],["onion",1,"pc"],["garlic",1,"clove"],["corn",100,"g"],["mozz",40,"g"],["oil",1,"tsp"]],
+  steps: ["Simmer the chicken 15 minutes in salted water, then shred.",
+    "Char the peppers and jalapeño under the grill, peel one pepper and blend it with the cottage cheese, a quarter of the onion, garlic and salt into a sauce.",
+    "Slice the other peppers into strips (rajas) and fry with the rest of the onion and the corn until golden. Stir in the chicken and half the sauce.",
+    "Heat oven to 200 °C. Layer tortillas, filling and sauce in a small dish, finish with mozzarella.",
+    "Bake 15 minutes and cut into 5 pieces."] },
 
-{ id: "l07", meal: "lunch", name: "Chicken and leipäjuusto quesadillas", time: 20, heat: 2, main: "chicken", side: true,
-  split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
-  ing: [["chk",130,"g"],["tortL",4,"pc"],["cheese",40,"g"],["leipa",40,"g","grated"],["pepper",1,"pc"],["pickjal",20,"g"],["cumin",1,"tsp"],["salsa",80,"g"],["oil",1,"tsp"]],
-  steps: ["Slice the chicken thin, season with cumin and salt, and fry until cooked.",
-    "Fry diced pepper briefly in the same pan.",
-    "Fill half of each tortilla with chicken, pepper, both cheeses and jalapeño, then fold.",
-    "Toast 2 minutes per side, cut each in half and serve with salsa."] },
+{ id: "l07", meal: "lunch", name: "Crispy chicken tacos dorados", time: 30, heat: 2, main: "chicken", side: true,
+  split: { p2: "6 tacos", p1: "4 tacos", share: 0.6 },
+  ing: [["chk",170,"g"],["tortM",10,"pc"],["greek",80,"g"],["salsaverde",100,"g"],["leipa",30,"g"],["lettuce",100,"g"],["avocado",0.5,"pc"],["refried",120,"g"],["oil",1,"tbsp"]],
+  steps: ["Simmer the chicken 15 minutes in salted water, then shred.",
+    "Warm the tortillas so they don't crack, fill with chicken and roll tightly.",
+    "Brush with oil and bake at 200 °C (or air fry at 180 °C) for 8–10 minutes, turning halfway.",
+    "Serve on lettuce with yoghurt, crumbled leipäjuusto, avocado, refried beans and salsa verde on the side."] },
 
-{ id: "l08", meal: "lunch", name: "Sopa de lima (chicken lime soup)", time: 30, heat: 2, main: "chicken",
-  ing: [["chk",220,"g"],["stock",1,"pc"],["onion",1,"pc"],["tomato",2,"pc"],["jalap",1,"pc"],["garlic",2,"clove"],["lime",2,"pc"],["oregano",1,"tsp"],["tortC",3,"pc","cut in strips"],["avocado",0.5,"pc"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
-  steps: ["Fry onion, garlic and jalapeño in half the oil. Add tomatoes, oregano, 1.2 l water and the stock cube.",
-    "Add whole chicken breasts and simmer 15 minutes. Remove, shred and return.",
-    "Bake tortilla strips with the rest of the oil at 220 °C for 8 minutes.",
-    "Season the soup with lime juice and serve with tortilla strips, avocado and coriander."] },
+{ id: "l08", meal: "lunch", name: "Chicken tinga tostadas", time: 30, heat: 3, main: "chicken", prep: true,
+  split: { p2: "5 tostadas", p1: "3 tostadas", share: 0.62 },
+  ing: [["chk",200,"g"],["tomato",3,"pc"],["onion",1,"pc"],["garlic",1,"clove"],["chipotle",1,"tbsp"],["tortC",8,"pc"],["lettuce",100,"g"],["leipa",40,"g"],["redonion",0.5,"pc"],["oil",1,"tsp"]],
+  steps: ["Simmer the chicken 15 minutes in salted water, then shred.",
+    "Blend tomatoes, a quarter of the onion, garlic, chipotle and salt. Fry the rest of the onion in the oil, add the sauce and cook 5 minutes.",
+    "Stir in the chicken until it soaks up the sauce.",
+    "Bake the tortillas at 220 °C for 6–8 minutes until crisp.",
+    "Top tostadas with tinga, lettuce, leipäjuusto and red onion."] },
 
-{ id: "l09", meal: "lunch", name: "Beef picadillo with potatoes", time: 30, heat: 2, main: "beef", prep: true,
-  ing: [["beef10",220,"g"],["potato",400,"g","small dice"],["carrot",150,"g","small dice"],["peas",80,"g"],["crushed",200,"g"],["onion",1,"pc"],["garlic",2,"clove"],["jalap",1,"pc"],["cumin",1,"tsp"],["oil",1,"tsp"]],
-  steps: ["Brown the beef with onion, garlic and jalapeño.",
-    "Add potatoes, carrots, cumin, tomatoes and 200 ml water. Cover and simmer 15 minutes.",
-    "Add peas for the last 3 minutes. Season well.",
-    "Eat as is or in tortillas. Keeps 3 days."] },
+{ id: "l09", meal: "lunch", name: "Salpicón de res on tostadas", time: 100, heat: 2, main: "beef", prep: true,
+  split: { p2: "5 tostadas", p1: "3 tostadas", share: 0.62 },
+  ing: [["chuck",240,"g"],["onion",1,"pc"],["garlic",2,"clove"],["lettuce",150,"g"],["tomato",2,"pc"],["redonion",0.5,"pc"],["cilantro",0.5,"bunch"],["lime",2,"pc"],["avocado",0.5,"pc"],["tortC",8,"pc"],["jalap",1,"pc"]],
+  steps: ["Simmer the beef with half the onion, garlic and salt in water for about 90 minutes, until it shreds easily. Cool and shred.",
+    "Bake the tortillas at 220 °C for 6–8 minutes until crisp.",
+    "Toss the beef with chopped lettuce, tomato, red onion, jalapeño, coriander, lime juice, salt and pepper.",
+    "Serve on the tostadas with avocado. Keeps 3 days in the fridge."] },
 
-{ id: "l10", meal: "lunch", name: "Black bean and chorizo soup", time: 30, heat: 2, main: "pork", prep: true,
-  ing: [["chorizo",80,"g"],["blackbean",460,"g"],["lentil",60,"g"],["crushed",400,"g"],["onion",1,"pc"],["garlic",2,"clove"],["stock",1,"pc"],["cumin",1,"tsp"],["chipotle",1,"tbsp"],["greek",100,"g"],["lime",1,"pc"]],
-  steps: ["Fry the diced chorizo until crisp. Remove a spoonful for topping.",
-    "Fry onion and garlic in the chorizo fat. Add cumin, beans, lentils, tomatoes, chipotle, stock cube and 600 ml water.",
-    "Simmer 20 minutes, then blend half the soup for body.",
-    "Serve with yoghurt, lime and the crisp chorizo."] },
+{ id: "l10", meal: "lunch", name: "Spinach and cheese stuffed chicken with pasta", time: 35, heat: 1, main: "chicken", side: true,
+  split: { p2: "the larger breast, more pasta", p1: "the smaller breast", share: 0.58 },
+  ing: [["chk",220,"g","2 breasts"],["spinach",80,"g"],["mozz",40,"g"],["paprika",1,"tsp"],["garlic",1,"clove"],["pasta",100,"g"],["lettuce",80,"g"],["cucumber",100,"g"],["salsa",80,"g"],["oil",1,"tsp"]],
+  steps: ["Cut each chicken breast open like a book. Fill with spinach and mozzarella and close with a toothpick.",
+    "Season with salt, pepper, paprika and garlic. Fry in the oil 6–7 minutes per side, covered, until cooked through.",
+    "Cook the pasta.",
+    "Serve with pasta, a cucumber salad and salsa on the side."] },
 
-{ id: "l11", meal: "lunch", name: "Esquites chicken salad", time: 20, heat: 2, main: "chicken",
-  ing: [["chk",180,"g"],["corn",250,"g"],["feta",50,"g"],["greek",80,"g"],["lime",1,"pc"],["redonion",0.5,"pc"],["jalap",1,"pc"],["lettuce",150,"g"],["chilipw",1,"tsp"],["cilantro",0.25,"bunch"],["oil",1,"tsp"]],
-  steps: ["Season chicken with chilli and salt and pan-fry 5–6 minutes per side. Rest and slice.",
-    "Char the drained corn in a dry, very hot pan for 5 minutes.",
-    "Mix corn with yoghurt, lime, red onion, jalapeño and crumbled feta.",
-    "Serve over lettuce with the chicken on top."] },
-
-{ id: "l12", meal: "lunch", name: "Turkey and black bean enchilada bake", time: 40, heat: 2, main: "turkey", prep: true,
+{ id: "l11", meal: "lunch", name: "Chicken enchiladas rojas", time: 45, heat: 2, main: "chicken",
   split: { p2: "3½ enchiladas", p1: "2½ enchiladas", share: 0.58 },
-  ing: [["turkeymince",160,"g"],["blackbean",150,"g"],["tortS",6,"pc"],["crushed",400,"g"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["onion",1,"pc"],["cheese",40,"g"],["oil",1,"tsp"]],
-  steps: ["Heat oven to 200 °C. Blend tomatoes with chipotle, cumin and salt for the sauce.",
-    "Brown turkey and onion, then stir in the beans and a third of the sauce.",
-    "Roll the filling in tortillas, lay in a dish and cover with remaining sauce and cheese.",
-    "Bake 20 minutes."] },
+  ing: [["chk",200,"g"],["tortS",6,"pc"],["ancho",2,"pc"],["tomato",2,"pc"],["onion",1,"pc"],["garlic",1,"clove"],["leipa",40,"g"],["lettuce",80,"g"],["redonion",0.5,"pc"],["cilantro",0.25,"bunch"],["oil",1,"tsp"]],
+  steps: ["Soak the anchos in hot water 10 minutes. Blend with tomatoes, a quarter of the onion, garlic, 100 ml water and salt. Strain and simmer in the oil 5 minutes.",
+    "Simmer the chicken 15 minutes and shred.",
+    "Dip each tortilla in the sauce, warm in the pan, fill with chicken and leipäjuusto and roll.",
+    "Pour over the remaining sauce. Top with lettuce, red onion and coriander."] },
 
-{ id: "l13", meal: "lunch", name: "Carne asada tortas", time: 20, heat: 2, main: "beef", side: true,
-  split: { p2: "2 tortas", p1: "1 torta with a cucumber-chilli salad", share: 0.63 },
-  ing: [["sirloin",180,"g"],["roll",3,"pc"],["refried",120,"g"],["avocado",1,"pc"],["pickjal",30,"g"],["greek",50,"g"],["chipotle",1,"tsp"],["lettuce",60,"g"],["cucumber",150,"g"],["lime",1,"pc"],["oil",1,"tsp"]],
-  steps: ["Season the sirloin with salt, lime and oil. Sear 3 minutes per side, rest 5 minutes, slice thin.",
-    "Mix yoghurt and chipotle.",
-    "Toast the rolls, spread with refried beans and chipotle yoghurt.",
-    "Fill with steak, avocado, lettuce and jalapeños.",
-    "Toss cucumber with lime and chilli for Person 1's side."] },
+{ id: "l12", meal: "lunch", name: "Chicken salad with lingonberries and walnuts", time: 20, heat: 1, main: "chicken",
+  ing: [["chk",210,"g"],["lettuce",200,"g"],["lingon",80,"g"],["walnut",20,"g"],["cucumber",150,"g"],["tomato",2,"pc"],["leipa",40,"g"],["greek",60,"g"],["lime",1,"pc"],["chilipw",0.5,"tsp"],["rye",3,"pc"],["oil",1,"tsp"]],
+  steps: ["Season the chicken and fry in the oil 5–6 minutes per side. Rest and slice.",
+    "Whisk the yoghurt with lime juice, chilli and salt for a dressing.",
+    "Toss lettuce, cucumber and tomato. Add chicken, lingonberries, walnuts and crumbled leipäjuusto.",
+    "Dress and serve with rye bread."] },
 
-{ id: "l14", meal: "lunch", name: "Caldo de res (beef and vegetable soup)", time: 90, heat: 1, main: "beef", prep: true, side: true,
-  ing: [["chuck",250,"g","cubed"],["potato",300,"g"],["carrot",200,"g"],["cabbage",200,"g"],["corncob",1,"pc","cut in 4"],["onion",1,"pc"],["garlic",3,"clove"],["bay",2,"pc"],["stock",1,"pc"],["lime",1,"pc"],["habanero",1,"pc","for a side salsa"],["redonion",0.5,"pc"]],
-  steps: ["Cover beef with 1.5 l water, add onion, garlic, bay and stock cube. Simmer 60 minutes, skimming.",
-    "Add potatoes, carrots and corn and simmer 15 minutes. Add cabbage for the last 5 minutes.",
-    "Chop habanero and red onion with lime and salt for a sharp table salsa.",
-    "Serve in deep bowls with salsa on the side. Freezes well."] },
+{ id: "l13", meal: "lunch", name: "Chilli-lime grilled chicken with rice and salad", time: 25, heat: 2, main: "chicken", side: true,
+  ing: [["chk",240,"g"],["lime",2,"pc"],["paprika",1,"tsp"],["chilipw",1,"tsp"],["garlic",1,"clove"],["rice",120,"g"],["lettuce",120,"g"],["cucumber",150,"g"],["tomato",2,"pc"],["redonion",0.5,"pc"],["salsaverde",100,"g"],["oil",1,"tsp"]],
+  steps: ["Marinate the chicken in lime juice, paprika, chilli, garlic and salt for 10 minutes.",
+    "Cook the rice.",
+    "Grill or pan-fry the chicken in the oil 5–6 minutes per side.",
+    "Serve with rice, the salad dressed with lime, and salsa verde on the side."] },
 
-{ id: "l15", meal: "lunch", name: "Taco pasta", time: 20, heat: 2, main: "beef", prep: true,
-  ing: [["beef5",180,"g"],["pasta",160,"g"],["salsa",200,"g"],["onion",1,"pc"],["pepper",1,"pc"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["cheese",30,"g"],["pickjal",30,"g"]],
-  steps: ["Cook the pasta.",
-    "Brown beef with onion, pepper, cumin and chilli.",
-    "Stir in salsa and a splash of pasta water.",
-    "Toss with the pasta, top with cheese and jalapeños."] },
+{ id: "l14", meal: "lunch", name: "Chicken, sweet potato and chickpea bowl", time: 35, heat: 2, main: "chicken", prep: true,
+  ing: [["thigh",240,"g"],["sweetpot",400,"g","cubed"],["chickpea",200,"g"],["avocado",0.5,"pc"],["paprika",1,"tsp"],["cumin",1,"tsp"],["garlic",1,"clove"],["cilantro",0.25,"bunch"],["lime",2,"pc"],["oil",1,"tbsp"]],
+  steps: ["Heat oven to 200 °C (or air fryer to 180 °C). Toss sweet potato and chickpeas in half the oil, salt and paprika and roast 20 minutes, stirring halfway.",
+    "Season the chicken with cumin, garlic and salt and fry in the rest of the oil until cooked.",
+    "Build bowls with sweet potato, chickpeas, chicken, avocado, coriander and lime."] },
 
-{ id: "l16", meal: "lunch", name: "Chicken burritos with rice and beans", time: 30, heat: 2, main: "chicken", prep: true, side: true,
-  split: { p2: "2½ burritos", p1: "1½ burritos", share: 0.6 },
-  ing: [["thigh",140,"g"],["rice",80,"g"],["blackbean",120,"g"],["tortL",4,"pc"],["cheese",30,"g"],["greek",60,"g"],["salsa",100,"g"],["cumin",1,"tsp"],["paprika",1,"tsp"],["lime",1,"pc"],["oil",1,"tsp"]],
-  steps: ["Cook rice with lime zest.",
-    "Season chicken with cumin, paprika and salt, fry 10 minutes and chop.",
-    "Fill tortillas with rice, beans, chicken, cheese and yoghurt, fold in the sides and roll.",
-    "Toast seam-side down. Salsa on the side. Wrap in foil for a packed lunch."] },
+{ id: "l15", meal: "lunch", name: "Chicken salad tostadas with yoghurt and lime", time: 20, heat: 2, main: "chicken",
+  split: { p2: "4 tostadas", p1: "2 tostadas with extra salad", share: 0.6 },
+  ing: [["chk",200,"g"],["greek",100,"g"],["cucumber",150,"g"],["redonion",0.5,"pc"],["cilantro",0.25,"bunch"],["lime",2,"pc"],["jalap",1,"pc"],["tortC",6,"pc"],["avocado",0.5,"pc"],["lettuce",80,"g"]],
+  steps: ["Simmer the chicken 15 minutes in salted water, cool and chop finely.",
+    "Mix with yoghurt, diced cucumber, red onion, jalapeño, coriander, lime, salt and pepper.",
+    "Bake the tortillas at 220 °C for 6–8 minutes until crisp.",
+    "Pile the chicken salad on the tostadas with lettuce and avocado."] },
 
-{ id: "l17", meal: "lunch", name: "Molletes with chorizo and pico", time: 15, heat: 2, main: "pork",
-  split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
-  ing: [["roll",4,"pc","halved"],["refried",250,"g"],["chorizo",50,"g"],["cheese",70,"g"],["tomato",2,"pc"],["redonion",0.5,"pc"],["jalap",1,"pc"],["cilantro",0.25,"bunch"],["lime",1,"pc"]],
-  steps: ["Heat oven grill to 225 °C. Fry the diced chorizo until crisp.",
-    "Spread refried beans on the roll halves, top with chorizo and cheese.",
-    "Grill 5 minutes until bubbling.",
-    "Top with a pico of tomato, red onion, jalapeño, coriander and lime."] },
+{ id: "l16", meal: "lunch", name: "Chicken burritos with avocado and salad", time: 20, heat: 2, main: "chicken", side: true,
+  split: { p2: "2 burritos", p1: "1 burrito, bigger salad", share: 0.63 },
+  ing: [["chk",220,"g"],["tortL",3,"pc"],["avocado",1,"pc"],["lettuce",120,"g"],["cucumber",150,"g"],["tomato",2,"pc"],["paprika",1,"tsp"],["garlic",1,"clove"],["salsa",100,"g"],["oil",1,"tsp"]],
+  steps: ["Season the chicken with paprika, garlic, salt and pepper, fry in the oil and slice.",
+    "Fill the tortillas with chicken, avocado and lettuce and roll.",
+    "Serve with a cucumber and tomato salad and salsa on the side."] },
 
-{ id: "l18", meal: "lunch", name: "Spicy beef tostadas", time: 20, heat: 3, main: "beef",
-  split: { p2: "4 tostadas", p1: "2 tostadas with extra lettuce", share: 0.6 },
-  ing: [["beef5",160,"g"],["refried",150,"g"],["tortC",6,"pc"],["lettuce",100,"g"],["tomato",1,"pc"],["leipa",40,"g"],["greek",60,"g"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["oil",1,"tsp"]],
-  steps: ["Brush tortillas lightly with oil and bake at 220 °C for 6–8 minutes until crisp.",
-    "Brown beef with cumin and chipotle.",
-    "Spread each tostada with refried beans, add beef, lettuce, tomato, leipäjuusto and yoghurt."] },
+{ id: "l17", meal: "lunch", name: "Chicken al pastor tacos", time: 40, heat: 3, main: "chicken", side: true,
+  split: { p2: "6 tacos", p1: "4 tacos", share: 0.6 },
+  ing: [["chk",250,"g","cubed"],["ancho",2,"pc"],["guajillo",2,"pc"],["onion",1,"pc"],["garlic",1,"clove"],["orange",1,"pc","juiced"],["vinegar",2,"tbsp"],["chipotle",1,"tbsp"],["oregano",1,"tsp"],["cumin",0.5,"tsp"],["pineapple",150,"g"],["tortC",10,"pc"],["cilantro",0.5,"bunch"],["lime",1,"pc"],["salsa",100,"g"],["oil",1,"tsp"]],
+  steps: ["Toast the dried chillies, a quarter of the onion and the garlic in a dry pan. Soak the chillies 10 minutes.",
+    "Blend with orange juice, vinegar, chipotle, oregano, cumin and salt, then strain.",
+    "Marinate the chicken at least 20 minutes, then fry in the oil over high heat.",
+    "Sear the pineapple in the same pan.",
+    "Serve in warm tortillas with pineapple, chopped onion, coriander and lime. Salsa on the side."] },
+
+{ id: "l18", meal: "lunch", name: "Turkey enchiladas verdes", time: 40, heat: 2, main: "turkey", prep: true,
+  split: { p2: "3½ enchiladas", p1: "2½ enchiladas", share: 0.58 },
+  ing: [["turkeymince",220,"g"],["tortS",6,"pc"],["salsaverde",300,"g"],["onion",1,"pc"],["cumin",1,"tsp"],["greek",80,"g"],["mozz",40,"g"],["cilantro",0.25,"bunch"],["oil",1,"tsp"]],
+  steps: ["Heat oven to 200 °C. Brown the turkey with the onion, cumin and salt.",
+    "Stir a third of the salsa verde into the turkey.",
+    "Roll the filling in the tortillas and lay in a dish. Cover with the rest of the salsa and the mozzarella.",
+    "Bake 20 minutes. Top with yoghurt and coriander."] },
 
 // DINNER -------------------------------------------------------------------
-{ id: "d01", meal: "dinner", name: "Yoghurt-dough pizza with chipotle chicken", time: 40, heat: 2, main: "chicken",
-  split: { p2: "5 slices", p1: "3 slices", share: 0.62 },
-  ing: [["flour",200,"g"],["greek",200,"g"],["bpowder",2,"tsp"],["passata",150,"g"],["chipotle",1,"tbsp"],["chk",130,"g"],["mozz",80,"g"],["redonion",0.5,"pc"],["pickjal",30,"g"],["oregano",1,"tsp"],["oil",1,"tsp"]],
-  steps: ["Heat oven to 250 °C. Knead flour, yoghurt, baking powder and a pinch of salt into a dough. Roll thin on baking paper.",
-    "Slice chicken thin, toss with half the chipotle and fry 4 minutes.",
-    "Mix passata with remaining chipotle and oregano. Spread on the dough.",
-    "Top with chicken, mozzarella, red onion and jalapeños.",
-    "Bake 10–12 minutes on the lowest rack. Cut into 8 slices."] },
+{ id: "d01", meal: "dinner", name: "Grilled halloumi tacos with peppers", time: 15, heat: 2, main: "dairy", side: true,
+  split: { p2: "5 tacos", p1: "3 tacos", share: 0.62 },
+  ing: [["halloumi",220,"g","in sticks"],["pepper",2,"pc","in strips"],["tortM",8,"pc"],["avocado",0.5,"pc"],["salsa",80,"g"],["lime",1,"pc"],["oil",1,"tsp"]],
+  steps: ["Fry the halloumi in a dry pan until golden on all sides.",
+    "Fry the peppers in the same pan with the oil, salt and pepper.",
+    "Fill warm tortillas with halloumi, peppers and avocado. Lime and salsa on the side."] },
 
-{ id: "d02", meal: "dinner", name: "Chipotle burgers with yoghurt sauce and wedges", time: 40, heat: 2, main: "beef", side: true,
-  split: { p2: "2 burgers, more wedges", p1: "1 burger, side salad", share: 0.62 },
-  ing: [["beef10",360,"g"],["bun",3,"pc"],["cheese",45,"g"],["greek",100,"g"],["chipotle",1,"tbsp"],["potato",500,"g"],["lettuce",80,"g"],["tomato",1,"pc"],["redonion",0.5,"pc"],["paprika",1,"tsp"],["oil",1,"tbsp"]],
-  steps: ["Heat oven to 225 °C. Cut potatoes into wedges, toss with oil, paprika and salt, roast 30 minutes.",
-    "Shape 3 patties of 120 g, season well.",
-    "Mix yoghurt with chipotle and salt. This replaces mayo.",
-    "Fry patties 3–4 minutes per side, top with cheese for the last minute.",
-    "Build burgers with lettuce, tomato, red onion and the chipotle yoghurt."] },
+{ id: "d02", meal: "dinner", name: "Protein French toast with yoghurt and berry compote", time: 15, heat: 1, main: "dairy",
+  split: { p2: "3 slices", p1: "2 slices", share: 0.6 },
+  ing: [["bread",5,"pc"],["egg",3,"pc"],["whey",20,"g"],["milk",60,"ml"],["cinnamon",1,"tsp"],["skyr",200,"g"],["berries",200,"g"]],
+  steps: ["Simmer the berries with 2 tbsp water for 5 minutes until jammy.",
+    "Whisk eggs, protein powder, milk and cinnamon. Soak the bread briefly.",
+    "Cook in a non-stick pan until golden on both sides.",
+    "Serve with skyr and the compote."] },
 
-{ id: "d03", meal: "dinner", name: "Carne asada tacos with charro beans", time: 35, heat: 3, main: "beef", side: true,
-  split: { p2: "6 tacos", p1: "4 tacos", share: 0.6 },
-  ing: [["sirloin",220,"g"],["tortC",10,"pc"],["blackbean",230,"g"],["bacon",40,"g"],["tomato",1,"pc"],["onion",1,"pc"],["jalap",1,"pc"],["garlic",2,"clove"],["lime",2,"pc"],["cumin",1,"tsp"],["cilantro",0.5,"bunch"],["salsa",100,"g"],["oil",1,"tsp"]],
-  steps: ["Marinate steak in lime juice, garlic, cumin, salt and oil for at least 15 minutes.",
-    "For the beans: fry the diced bacon, add half the onion, the jalapeño and tomato, then the beans and 150 ml water. Simmer 10 minutes.",
-    "Sear steak in a very hot pan 3 minutes per side. Rest and chop small.",
-    "Warm tortillas. Fill with steak, the rest of the onion finely chopped and coriander.",
-    "Serve with beans and salsa on the side."] },
+{ id: "d03", meal: "dinner", name: "Wholewheat pasta salad with chicken, avocado and leipäjuusto", time: 20, heat: 1, main: "chicken",
+  ing: [["pasta",120,"g"],["chk",180,"g"],["avocado",0.5,"pc"],["cucumber",200,"g"],["leipa",50,"g"],["lime",1,"pc"],["chiliflk",1,"pinch"],["oil",1,"tbsp"]],
+  steps: ["Cook the pasta and cool.",
+    "Season and fry the chicken in a little of the oil, then dice.",
+    "Toss pasta with chicken, diced avocado, cucumber and crumbled leipäjuusto.",
+    "Dress with the rest of the oil, lime juice, salt, pepper and chilli flakes."] },
 
-{ id: "d04", meal: "dinner", name: "Chicken al pastor tacos", time: 35, heat: 3, main: "chicken", side: true,
-  split: { p2: "6 tacos", p1: "4 tacos", share: 0.6 },
-  ing: [["thigh",290,"g"],["pineapple",200,"g"],["tortC",10,"pc"],["chipotle",1,"tbsp"],["ancho",1,"pc"],["vinegar",1,"tbsp"],["garlic",2,"clove"],["oregano",1,"tsp"],["onion",1,"pc"],["cilantro",0.5,"bunch"],["lime",1,"pc"],["salsa",100,"g"],["oil",1,"tbsp"]],
-  steps: ["Soak the ancho in hot water 10 minutes, then blend with chipotle, vinegar, garlic, oregano, half the pineapple and salt.",
-    "Marinate the thighs in the paste for at least 20 minutes.",
-    "Grill or pan-fry thighs over high heat 5 minutes per side. Rest and slice thin.",
-    "Sear the remaining pineapple in the same pan.",
-    "Serve in warm tortillas with pineapple, onion, coriander and lime. Salsa on the side."] },
+{ id: "d04", meal: "dinner", name: "Pizza toasts with turkey and jalapeño", time: 15, heat: 2, main: "turkey",
+  split: { p2: "3 toasts", p1: "2 toasts", share: 0.6 },
+  ing: [["bread",5,"pc"],["passata",100,"g"],["turkeyham",100,"g"],["mozz",90,"g"],["spinach",40,"g"],["tomato",1,"pc"],["pickjal",30,"g"],["oregano",1,"tsp"]],
+  steps: ["Toast the bread lightly.",
+    "Spread with passata mixed with oregano and salt.",
+    "Top with turkey, spinach, sliced tomato, jalapeños and mozzarella.",
+    "Bake at 220 °C (or air fry at 180 °C) for 5 minutes until the cheese melts."] },
 
-{ id: "d05", meal: "dinner", name: "Chicken enchiladas rojas", time: 45, heat: 2, main: "chicken",
-  split: { p2: "3½ enchiladas", p1: "2½ enchiladas", share: 0.58 },
-  ing: [["chk",200,"g"],["tortS",6,"pc"],["crushed",400,"g"],["ancho",2,"pc"],["onion",1,"pc"],["garlic",2,"clove"],["cumin",1,"tsp"],["cheese",40,"g"],["greek",80,"g"],["cilantro",0.25,"bunch"],["oil",1,"tsp"]],
-  steps: ["Soak anchos in hot water 10 minutes. Blend with tomatoes, half the onion, garlic, cumin and salt.",
-    "Simmer chicken in salted water 15 minutes and shred. Mix with a third of the sauce.",
-    "Heat oven to 200 °C. Roll chicken in tortillas, lay seam-down in a dish.",
-    "Cover with the rest of the sauce and cheese. Bake 20 minutes.",
-    "Top with yoghurt, sliced onion and coriander."] },
+{ id: "d05", meal: "dinner", name: "Bean, cheese and chicken tostadas", time: 25, heat: 2, main: "chicken", side: true,
+  split: { p2: "5 tostadas", p1: "3 tostadas", share: 0.62 },
+  ing: [["refried",200,"g"],["tortC",8,"pc"],["chk",160,"g"],["leipa",50,"g"],["lettuce",100,"g"],["tomato",1,"pc"],["avocado",0.5,"pc"],["redonion",0.5,"pc"],["salsa",100,"g"],["lime",1,"pc"]],
+  steps: ["Simmer the chicken 15 minutes in salted water and shred.",
+    "Bake the tortillas at 220 °C for 6–8 minutes until crisp.",
+    "Spread each with warm refried beans, add chicken and crumbled leipäjuusto.",
+    "Finish with lettuce, tomato, avocado and red onion. Salsa and lime on the side."] },
 
-{ id: "d06", meal: "dinner", name: "Chilli-rubbed steak, sweet potato and salsa verde", time: 40, heat: 2, main: "beef", side: true,
-  ing: [["sirloin",250,"g"],["sweetpot",600,"g"],["salsaverde",150,"g"],["greek",80,"g"],["lettuce",100,"g"],["chilipw",1,"tsp"],["cumin",1,"tsp"],["paprika",1,"tsp"],["lime",1,"pc"],["oil",1,"tbsp"]],
-  steps: ["Heat oven to 220 °C. Roast sweet potato wedges in half the oil for 30 minutes.",
-    "Rub steak with chilli, cumin, paprika and salt.",
-    "Sear 3–4 minutes per side, rest 5 minutes, slice.",
-    "Serve with sweet potato, salad dressed with lime, yoghurt, and salsa verde on the side."] },
+{ id: "d06", meal: "dinner", name: "Buffalo cauliflower and chicken bites with yoghurt ranch", time: 30, heat: 3, main: "chicken",
+  ing: [["cauli",500,"g","in florets"],["chk",210,"g","cubed"],["greek",200,"g","60 g for coating, the rest for the ranch"],["oats",40,"g","blended to flour"],["paprika",1,"tsp"],["garlic",1,"clove"],["hotsauce",3,"tbsp"],["lime",1,"pc"],["chives",0.25,"bunch"],["celery",150,"g","in sticks"]],
+  steps: ["Heat oven to 220 °C (or air fryer to 180 °C).",
+    "Toss cauliflower and chicken with 60 g yoghurt, oat flour, paprika, garlic powder, salt and pepper.",
+    "Bake 15–18 minutes, turning halfway, until golden and the chicken is cooked.",
+    "Toss with the hot sauce.",
+    "Mix the rest of the yoghurt with lime, chives, garlic, salt and pepper for the ranch. Serve with celery sticks."] },
 
-{ id: "d07", meal: "dinner", name: "Quick mole chicken with rice", time: 40, heat: 2, main: "chicken",
-  ing: [["thigh",320,"g"],["pb",30,"g"],["cocoa",10,"g"],["ancho",2,"pc"],["chipotle",1,"tbsp"],["crushed",400,"g"],["onion",1,"pc"],["garlic",2,"clove"],["cinnamon",0.5,"tsp"],["cumin",1,"tsp"],["rice",120,"g"],["stock",1,"pc"],["oil",1,"tbsp"]],
-  steps: ["Soak anchos in hot water 10 minutes.",
-    "Fry onion and garlic in oil. Blend with anchos, chipotle, tomatoes, peanut butter, cocoa, cinnamon, cumin and stock cube with 200 ml water.",
-    "Brown the thighs, pour over the mole and simmer covered 20 minutes.",
-    "Cook rice meanwhile. Serve chicken and sauce over rice."] },
+{ id: "d07", meal: "dinner", name: "Avocado toast with turkey and cottage cheese", time: 10, heat: 1, main: "turkey",
+  split: { p2: "3 toasts", p1: "2 toasts", share: 0.6 },
+  ing: [["bread",5,"pc"],["avocado",1,"pc"],["turkeyham",120,"g"],["cottage",200,"g"],["lime",1,"pc"],["chiliflk",1,"pinch"],["tomato",1,"pc"]],
+  steps: ["Toast the bread.",
+    "Mash the avocado with lime and salt and spread on the toast.",
+    "Top with cottage cheese, turkey, tomato, pepper and chilli flakes."] },
 
-{ id: "d08", meal: "dinner", name: "Turkey albóndigas in chipotle sauce", time: 40, heat: 3, main: "turkey",
-  split: { p2: "12 meatballs", p1: "8 meatballs", share: 0.6 },
-  ing: [["turkeymince",290,"g"],["oats",30,"g"],["egg",1,"pc"],["garlic",3,"clove"],["cumin",1,"tsp"],["crushed",400,"g"],["chipotle",2,"tbsp"],["onion",1,"pc"],["rice",120,"g"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
-  steps: ["Mix turkey, oats, egg, half the garlic, cumin and salt. Roll 20 meatballs.",
-    "Brown the meatballs in the oil, then remove.",
-    "Fry onion and the rest of the garlic. Add tomatoes and chipotle, simmer 5 minutes.",
-    "Return meatballs, cover and simmer 15 minutes.",
-    "Serve over rice with coriander."] },
+{ id: "d08", meal: "dinner", name: "Spinach and chicken quesadillas", time: 20, heat: 1, main: "chicken", side: true,
+  split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
+  ing: [["tortL",4,"pc"],["spinach",100,"g"],["mozz",80,"g"],["chk",130,"g"],["avocado",0.5,"pc"],["salsa",80,"g"],["oil",1,"tsp"]],
+  steps: ["Slice the chicken thin, season and fry in the oil. Wilt the spinach in the same pan.",
+    "Fill half of each tortilla with chicken, spinach and mozzarella and fold.",
+    "Toast 2 minutes per side until the cheese melts.",
+    "Cut in half and serve with avocado and salsa on the side."] },
 
 { id: "d09", meal: "dinner", name: "Sheet-pan chicken fajitas", time: 30, heat: 2, main: "chicken", side: true,
   split: { p2: "3½ fajitas", p1: "2½ fajitas", share: 0.58 },
-  ing: [["chk",250,"g"],["pepper",3,"pc"],["redonion",1,"pc"],["tortS",6,"pc"],["greek",100,"g"],["lime",1,"pc"],["paprika",2,"tsp"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["salsa",100,"g"],["oil",1,"tbsp"]],
+  ing: [["chk",210,"g"],["pepper",3,"pc"],["redonion",1,"pc"],["tortS",6,"pc"],["greek",100,"g"],["lime",1,"pc"],["paprika",2,"tsp"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["salsa",100,"g"],["oil",1,"tbsp"]],
   steps: ["Heat oven to 230 °C.",
-    "Slice chicken, peppers and onion into strips. Toss with oil, spices and salt on a tray.",
-    "Roast 18–20 minutes, then squeeze over lime.",
+    "Slice chicken, peppers and onion into strips and toss with the oil, spices and salt on a tray.",
+    "Roast 18–20 minutes, then squeeze over the lime.",
     "Serve in warm tortillas with yoghurt and salsa on the side."] },
 
-{ id: "d10", meal: "dinner", name: "Beef and rice stuffed peppers", time: 50, heat: 2, main: "beef",
-  split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
-  ing: [["beef5",250,"g"],["rice",80,"g"],["blackbean",120,"g"],["pepper",4,"pc"],["crushed",200,"g"],["onion",1,"pc"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["cheese",50,"g"],["greek",60,"g"],["oil",1,"tsp"]],
-  steps: ["Heat oven to 200 °C. Cook the rice.",
-    "Brown beef with onion and cumin, add tomatoes, chipotle and beans, and simmer 5 minutes. Stir in the rice.",
-    "Halve the peppers lengthways and remove seeds. Fill with the beef mixture.",
-    "Cover with foil and bake 25 minutes. Uncover, add cheese and bake 10 more.",
-    "Serve with a spoon of yoghurt."] },
+{ id: "d10", meal: "dinner", name: "Mexican egg bowl with beans and coriander yoghurt", time: 15, heat: 2, main: "egg",
+  split: { p2: "4 eggs", p1: "3 eggs", share: 0.57 },
+  ing: [["egg",7,"pc"],["blackbean",230,"g"],["avocado",0.5,"pc"],["tomato",2,"pc"],["onion",0.5,"pc"],["jalap",1,"pc"],["cilantro",0.5,"bunch"],["lime",1,"pc"],["greek",80,"g"],["oil",1,"tsp"]],
+  steps: ["Warm the beans with salt and a splash of water.",
+    "Chop tomato, onion, jalapeño and half the coriander with lime for pico de gallo.",
+    "Mix the yoghurt with the rest of the coriander, lime and salt.",
+    "Scramble the eggs in the oil.",
+    "Build bowls with beans, eggs, pico, avocado and the coriander yoghurt."] },
 
-{ id: "d11", meal: "dinner", name: "Pollo en salsa verde with rice and beans", time: 35, heat: 3, main: "chicken",
-  ing: [["thigh",290,"g"],["salsaverde",300,"g"],["jalap",2,"pc"],["onion",1,"pc"],["garlic",2,"clove"],["cilantro",0.5,"bunch"],["rice",120,"g"],["blackbean",150,"g"],["greek",60,"g"],["oil",1,"tbsp"]],
-  steps: ["Brown the thighs in the oil and set aside.",
-    "Fry onion, garlic and jalapeños. Blend with salsa verde, half the coriander and 100 ml water.",
-    "Return chicken to the pan with the sauce and simmer covered 20 minutes.",
-    "Cook rice and warm the beans with a pinch of cumin and salt.",
-    "Serve with yoghurt and the remaining coriander."] },
+{ id: "d11", meal: "dinner", name: "Lime-yoghurt chicken rice bowl", time: 25, heat: 1, main: "chicken",
+  ing: [["chk",210,"g"],["greek",100,"g"],["lime",2,"pc"],["rice",100,"g"],["cucumber",150,"g"],["tomato",2,"pc"],["avocado",0.5,"pc"],["chilicrisp",1,"tbsp"],["oil",1,"tsp"]],
+  steps: ["Cook the rice.",
+    "Season and fry the chicken in the oil, then chop.",
+    "Mix the chicken with yoghurt, lime juice, salt and pepper.",
+    "Build bowls with rice, chicken, cucumber, tomato and avocado. Finish with a little chilli crisp."] },
 
-{ id: "d12", meal: "dinner", name: "Bistec a la mexicana", time: 25, heat: 3, main: "beef",
-  ing: [["strips",290,"g"],["tomato",3,"pc"],["onion",1,"pc"],["jalap",2,"pc"],["garlic",2,"clove"],["rice",120,"g"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
-  steps: ["Cook rice.",
-    "Sear beef strips in batches in a very hot pan with oil, 2 minutes each. Set aside.",
-    "Fry onion, garlic and sliced jalapeños 3 minutes. Add chopped tomatoes and cook 5 minutes until saucy.",
-    "Return the beef, season well and serve over rice with coriander."] },
+{ id: "d12", meal: "dinner", name: "Churro protein mug cakes with skyr", time: 10, heat: 1, main: "dairy",
+  split: { p2: "the larger mug, more skyr", p1: "the smaller mug", share: 0.6 },
+  ing: [["oats",70,"g","blended to flour"],["whey",30,"g"],["banana",0.5,"pc"],["milk",100,"ml"],["egg",2,"pc"],["cinnamon",2,"tsp"],["vanilla",1,"tsp"],["bpowder",1,"tsp"],["walnut",20,"g"],["skyr",200,"g"]],
+  steps: ["Mash the banana and mix with oat flour, protein powder, milk, eggs, half the cinnamon, vanilla and baking powder.",
+    "Divide 60/40 between two large mugs and microwave each 1½–2 minutes.",
+    "Let cool slightly, dust with the rest of the cinnamon and top with walnuts. Skyr on the side."] },
 
-{ id: "d13", meal: "dinner", name: "Chipotle chicken pasta", time: 25, heat: 2, main: "chicken",
-  ing: [["chk",220,"g"],["pasta",180,"g"],["creamch",75,"g"],["greek",100,"g"],["chipotle",2,"tbsp"],["garlic",2,"clove"],["spinach",80,"g"],["pepper",1,"pc"],["oil",1,"tsp"]],
-  steps: ["Cook the pasta. Keep a cup of pasta water.",
-    "Fry sliced chicken and pepper in oil 6 minutes. Add garlic for 1 minute.",
-    "Off the heat, stir in cream cheese, yoghurt, chipotle and a splash of pasta water. Off the heat stops the yoghurt splitting.",
-    "Toss with pasta and spinach until it wilts."] },
+{ id: "d13", meal: "dinner", name: "Apple-walnut protein licuado with turkey rye toast", time: 10, heat: 1, main: "dairy",
+  ing: [["apple",1,"pc"],["greek",150,"g"],["whey",25,"g"],["milk",400,"ml"],["walnut",15,"g"],["cinnamon",1,"tsp"],["rye",3,"pc"],["turkeyham",80,"g"],["tomato",1,"pc"]],
+  steps: ["Blend apple, yoghurt, protein powder, milk and cinnamon until creamy.",
+    "Pour by the split and top with chopped walnuts and a pinch of cinnamon.",
+    "Toast the rye bread and top with turkey and tomato."] },
 
-{ id: "d14", meal: "dinner", name: "Beef barbacoa rice bowls", time: 150, heat: 3, main: "beef", side: true,
-  ing: [["chuck",320,"g"],["chipotle",2,"tbsp"],["ancho",1,"pc"],["garlic",3,"clove"],["cumin",1,"tsp"],["oregano",1,"tsp"],["bay",2,"pc"],["vinegar",1,"tbsp"],["lime",1,"pc"],["rice",120,"g"],["redonion",1,"pc","pickled"],["salsa",100,"g"],["cilantro",0.25,"bunch"]],
-  steps: ["Blend chipotle, soaked ancho, garlic, cumin, oregano, vinegar, lime juice and 200 ml water.",
-    "Put beef in a pot with the sauce and bay leaves. Cover and cook at 160 °C in the oven for 2 hours, until it falls apart.",
-    "Slice red onion thin and cover with vinegar, a pinch of sugar and salt.",
-    "Shred beef in its juices. Serve over rice with pickled onion and coriander. Salsa on the side."] },
+{ id: "d14", meal: "dinner", name: "Chicken tacos de rajas with corn", time: 25, heat: 2, main: "chicken",
+  split: { p2: "5 tacos", p1: "3 tacos", share: 0.62 },
+  ing: [["chk",190,"g"],["pepper",3,"pc","green"],["jalap",1,"pc"],["onion",1,"pc"],["corn",100,"g"],["cottage",120,"g"],["garlic",1,"clove"],["tortM",8,"pc"],["oil",1,"tsp"]],
+  steps: ["Char the peppers and jalapeño under the grill, then slice into strips.",
+    "Blend the cottage cheese with a quarter of the onion, garlic, salt and a splash of water.",
+    "Fry sliced chicken with the rest of the onion and the corn in the oil. Add the peppers and the cottage sauce and heat through.",
+    "Serve in warm tortillas."] },
 
-{ id: "d15", meal: "dinner", name: "Baked chicken taquitos", time: 35, heat: 2, main: "chicken", side: true,
+{ id: "d15", meal: "dinner", name: "Baked chicken taquitos with guacamole", time: 30, heat: 2, main: "chicken", side: true,
   split: { p2: "6 taquitos", p1: "4 taquitos", share: 0.6 },
-  ing: [["chk",220,"g"],["tortC",10,"pc"],["cheese",50,"g"],["refried",100,"g"],["salsa",100,"g"],["cumin",1,"tsp"],["greek",100,"g"],["lime",1,"pc"],["lettuce",150,"g"],["tomato",1,"pc"],["oil",1,"tbsp"]],
-  steps: ["Simmer chicken 15 minutes and shred. Mix with refried beans, cheese, cumin and a few spoons of salsa.",
-    "Heat oven to 220 °C. Warm tortillas so they roll without cracking.",
-    "Roll the filling tightly in tortillas, place seam-down on a tray and brush with oil.",
-    "Bake 15 minutes until crisp.",
-    "Serve with lime yoghurt, a simple salad and salsa on the side."] },
+  ing: [["chk",190,"g"],["tortM",10,"pc"],["avocado",1,"pc"],["tomato",1,"pc"],["onion",0.5,"pc"],["cilantro",0.25,"bunch"],["lime",1,"pc"],["paprika",1,"tsp"],["salsa",80,"g"],["oil",1,"tbsp"]],
+  steps: ["Season the chicken with paprika, salt and pepper, fry in half the oil and chop finely.",
+    "Heat oven to 220 °C. Roll the chicken tightly in warm tortillas, place seam-down on a tray and brush with the rest of the oil.",
+    "Bake 12–15 minutes until crisp.",
+    "Mash the avocado with lime, chopped tomato, onion, coriander and salt.",
+    "Serve with guacamole and salsa on the side."] },
 
 // CHEAT DINNERS ------------------------------------------------------------
 { id: "c01", meal: "dinner", cheat: true, name: "Birria-style beef tacos with consomé", time: 180, heat: 3, main: "beef", side: true,
@@ -679,16 +705,37 @@ var RECIPES = [
     "Drizzle with honey and, if you dare, thin slices of habanero. Cut each into 8."] }
 ];
 
-// ---- Optional snacks ----------------------------------------------------
-// Picked per person to close the gap to the daily protein target.
-var SNACKS = [
-  { id: "s1", name: "Protein shake", desc: "30 g whey in water", p: 24, k: 115, ing: [["whey",30,"g"]] },
-  { id: "s2", name: "Maitorahka with berries", desc: "200 g quark, 100 g frozen berries", p: 25, k: 177, ing: [["quark",200,"g"],["berries",100,"g"]] },
-  { id: "s3", name: "Raejuusto with chilli-lime cucumber", desc: "200 g cottage cheese, cucumber, Tajín-style chilli-lime salt", p: 24, k: 200, ing: [["cottage",200,"g"],["cucumber",100,"g"]] },
-  { id: "s4", name: "Skyr with honey", desc: "200 g skyr, 1 tsp honey", p: 22, k: 140, ing: [["skyr",200,"g"]] }
+// ---- Optional snacks and morning juice -----------------------------------
+// Per person. Snack 1 is protein-focused and counts toward the daily totals.
+// Snack 2 is a light fruit or vegetable snack. The juice is not counted.
+var SNACKS1 = [
+  { id: "s1", name: "Protein shake", desc: "30 g whey in water", ing: [["whey",30,"g"]] },
+  { id: "s2", name: "Maitorahka with berries", desc: "200 g quark, 100 g berries", ing: [["quark",200,"g"],["berries",100,"g"]] },
+  { id: "s3", name: "Raejuusto with chilli-lime cucumber", desc: "200 g cottage cheese, cucumber, chilli-lime salt", ing: [["cottage",200,"g"],["cucumber",100,"g"],["chilisalt",1,"pinch"]] },
+  { id: "s4", name: "Tiramisu rice cakes", desc: "Skyr whipped with protein, instant coffee and cinnamon on 2 rice cakes, dusted with cocoa", ing: [["skyr",150,"g"],["whey",10,"g"],["ricecake",2,"pc"],["coffee",1,"tsp"],["cocoa",2,"g"]] },
+  { id: "s5", name: "Frozen yoghurt bark", desc: "Make a tray ahead: Greek yoghurt with protein, berries, mango, granola and dark chocolate", ing: [["greek",150,"g"],["whey",10,"g"],["berries",30,"g"],["mango",20,"g"],["granola",10,"g"],["darkchoc",5,"g"]] },
+  { id: "s6", name: "Skyr with honey and cinnamon", desc: "200 g skyr, 1 tsp honey", ing: [["skyr",200,"g"],["honey",0.33,"tbsp"],["cinnamon",1,"pinch"]] }
+];
+var SNACKS2 = [
+  { id: "f1", name: "Mango with lime and chilli-lime salt", desc: "150 g mango", ing: [["mango",150,"g"],["lime",0.25,"pc"],["chilisalt",1,"pinch"]] },
+  { id: "f2", name: "Pear with peanut butter and cinnamon", desc: "½ pear, ½ tbsp peanut butter", ing: [["pear",0.5,"pc"],["pb",0.5,"tbsp"],["cinnamon",1,"pinch"]] },
+  { id: "f3", name: "Strawberry frappé", desc: "Frozen strawberries blended with water and ice", ing: [["strawb",100,"g"]] },
+  { id: "f4", name: "Popcorn with fruit", desc: "Air-popped popcorn from 25 g kernels, ½ apple", ing: [["popcorn",25,"g"],["apple",0.5,"pc"]] },
+  { id: "f5", name: "Orange wedges with chilli", desc: "1 orange, chilli-lime salt", ing: [["orange",1,"pc"],["chilisalt",1,"pinch"]] },
+  { id: "f6", name: "Kohlrabi and cucumber sticks with lime", desc: "Kohlrabi stands in for jícama", ing: [["kohlrabi",100,"g"],["cucumber",100,"g"],["lime",0.25,"pc"],["chilisalt",1,"pinch"]] },
+  { id: "f7", name: "Green apple with chilli-lime and peanuts", desc: "½ apple, 15 g peanuts", ing: [["apple",0.5,"pc"],["peanut",15,"g"],["chilisalt",1,"pinch"]] },
+  { id: "f8", name: "Light esquites", desc: "Charred corn with yoghurt, leipäjuusto, lime and chilli", ing: [["corn",120,"g"],["greek",40,"g"],["leipa",15,"g"],["lime",0.25,"pc"],["chilipw",1,"pinch"]] }
+];
+var JUICES = [
+  { id: "j1", name: "Pear, celery and mint", ing: [["pear",0.25,"pc"],["cucumber",100,"g"],["celery",40,"g"],["mint",0.1,"bunch"]] },
+  { id: "j2", name: "Citrus, carrot and kohlrabi", ing: [["orange",1,"pc"],["carrot",50,"g"],["kohlrabi",50,"g"]] },
+  { id: "j3", name: "Strawberry and beetroot", ing: [["strawb",60,"g"],["beetroot",40,"g"],["apple",0.25,"pc"]] },
+  { id: "j4", name: "Green apple and celery", ing: [["apple",0.25,"pc"],["celery",80,"g"],["cucumber",100,"g"],["lime",0.5,"pc"]] },
+  { id: "j5", name: "Pineapple and cucumber", ing: [["pineapple",80,"g"],["cucumber",100,"g"],["kohlrabi",50,"g"],["mint",0.1,"bunch"]] },
+  { id: "j6", name: "Grape and kohlrabi", ing: [["grapes",80,"g"],["kohlrabi",50,"g"],["lime",0.5,"pc"]] }
 ];
 
-if (typeof module !== "undefined") module.exports = { PEOPLE, DEFAULT_SHARE, CAT, RECIPES, SNACKS };
+if (typeof module !== "undefined") module.exports = { PEOPLE, DEFAULT_SHARE, CAT, RECIPES, SNACKS1, SNACKS2, JUICES };
 
 </script>
 <script>
@@ -696,12 +743,14 @@ if (typeof module !== "undefined") module.exports = { PEOPLE, DEFAULT_SHARE, CAT
 // Deterministic: the same date always gets the same meals (before swaps).
 var Engine = (function () {
   var D = (typeof module !== "undefined") ? require("./data.js") : null;
-  var CATX = D ? D.CAT : CAT, RX = D ? D.RECIPES : RECIPES, SX = D ? D.SNACKS : SNACKS,
+  var CATX = D ? D.CAT : CAT, RX = D ? D.RECIPES : RECIPES, S1 = D ? D.SNACKS1 : SNACKS1, S2 = D ? D.SNACKS2 : SNACKS2, JX = D ? D.JUICES : JUICES,
       PX = D ? D.PEOPLE : PEOPLE, SHARE = D ? D.DEFAULT_SHARE : DEFAULT_SHARE;
 
   var EPOCH = Date.UTC(2025, 0, 6); // a Monday
   var DAY = 86400000;
+  // Protein the three meals should give two people together: both targets minus snack 1 each.
   var RULES = { breakfast: 5, lunch: 9, dinner: 12, cheat: 3 }; // min days between repeats
+  var MEAL_GOAL = PX.p1.protein + PX.p2.protein - 2 * 23;
   var byId = {}; RX.forEach(function (r) { byId[r.id] = r; });
 
   function grams(it) {
@@ -722,6 +771,7 @@ var Engine = (function () {
     return { p: p, k: k };
   }
   RX.forEach(function (r) { var n = nutrOf(r.ing); r.P = n.p; r.K = n.k; r.share = r.split ? r.split.share : SHARE; });
+  S1.concat(S2, JX).forEach(function (s) { var n = nutrOf(s.ing); s.p = Math.round(n.p); s.k = Math.round(n.k); });
 
   function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
@@ -736,13 +786,14 @@ var Engine = (function () {
 
   var plan = [], last = {}, rand = rng(20261018);
 
-  function pick(pool, idx, gap, avoidMain) {
+  function pick(pool, idx, gap, avoidMain, extra) {
     var best = null, bestScore = -Infinity;
     pool.forEach(function (r) {
       var since = last[r.id] == null ? 999 : idx - last[r.id];
       var score = Math.min(since, 60) + rand() * 6;
       if (since < gap) score -= 1000;
-      if (avoidMain && avoidMain.indexOf(r.main) >= 0) score -= 25;
+      if (avoidMain && avoidMain.indexOf(r.main) >= 0) score -= 8;
+      if (extra) score += extra(r);
       if (score > bestScore) { bestScore = score; best = r; }
     });
     last[best.id] = idx;
@@ -757,7 +808,8 @@ var Engine = (function () {
       var b = weekend ? pick(pools.wkndBreakfast, i, 6) : pick(pools.wkBreakfast, i, RULES.breakfast);
       var l = pick(pools.lunch, i, RULES.lunch, prev ? [prev.d.main] : null);
       var d = dow === 6 ? pick(pools.cheat, i, RULES.cheat)
-                        : pick(pools.dinner, i, RULES.dinner, [l.main].concat(prev ? [prev.d.main] : []));
+                        : pick(pools.dinner, i, RULES.dinner, [l.main].concat(prev ? [prev.d.main] : []),
+                               function (r) { return -Math.abs(b.P + l.P + r.P - MEAL_GOAL) * 0.4; });
       plan.push({ b: b, l: l, d: d });
     }
   }
@@ -765,8 +817,10 @@ var Engine = (function () {
   function idxOf(y, m, dd) { return Math.round((Date.UTC(y, m, dd) - EPOCH) / DAY); }
   function key(y, m, dd) { return y + "-" + String(m + 1).padStart(2, "0") + "-" + String(dd).padStart(2, "0"); }
 
-  // Two optional snacks a day, the same for both people. Daily totals count snack 1.
-  function snacksFor(i) { return [SX[i % SX.length], SX[(i + 2) % SX.length]]; }
+  // Two optional snacks a day, the same for both people: snack 1 from the protein
+  // pool (counted in daily totals), snack 2 from the fruit pool. Plus a morning juice.
+  function snacksFor(i) { return [S1[i % S1.length], S2[(i * 5 + 3) % S2.length]]; }
+  function juiceFor(i) { return JX[(i * 5) % JX.length]; }
 
   // overrides: { "2026-10-18|b": "b03", ... }
   function day(y, m, dd, overrides) {
@@ -780,7 +834,7 @@ var Engine = (function () {
       d: byId[ov[k + "|d"]] || base.d
     };
     var sn = snacksFor(i);
-    var res = { key: k, meals: meals, base: base, snacks: sn, people: {} };
+    var res = { key: k, meals: meals, base: base, snacks: sn, juice: juiceFor(i), people: {} };
     ["p1", "p2"].forEach(function (p) {
       var mp = 0, mk = 0;
       ["b", "l", "d"].forEach(function (s) {
@@ -897,9 +951,11 @@ if (typeof module !== "undefined") module.exports = Engine;
         '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P2 " + r0(r.P * r.share) + " g · P1 " + r0(r.P * (1 - r.share)) + " g</span></button>";
     });
     h += "</div>";
-    h += '<div class="snacks"><h3>Optional snacks</h3><ul>' + plan.snacks.map(function (s, i) {
-      return "<li><b>Optional snack " + (i + 1) + "</b> · " + esc(s.name) + ' <span class="kcal">' + esc(s.desc) + " · " + s.p + " g protein each</span></li>";
-    }).join("") + '</ul><p class="kcal">Daily totals above include optional snack 1.</p></div>';
+    h += '<div class="snacks"><h3>Optional extras</h3><ul>' +
+      "<li><b>Morning juice</b> · " + esc(plan.juice.name) + ' <span class="kcal">Blend with ½ cup water and ice</span></li>' +
+      plan.snacks.map(function (s, i) {
+        return "<li><b>Optional snack " + (i + 1) + "</b> · " + esc(s.name) + ' <span class="kcal">' + esc(s.desc) + " · " + s.p + " g protein each</span></li>";
+      }).join("") + '</ul><p class="kcal">Daily totals above include optional snack 1.</p></div>';
     h += '<button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " summary and shopping list</button>";
     return h + "</div>";
   }
@@ -961,6 +1017,7 @@ if (typeof module !== "undefined") module.exports = Engine;
     plans.forEach(function (pl) {
       ["b", "l", "d"].forEach(function (s) { pl.meals[s].ing.forEach(function (it) { add(it, 1); }); });
       pl.snacks.forEach(function (sn) { sn.ing.forEach(function (it) { add(it, 2); }); }); // both snacks, for two
+      pl.juice.ing.forEach(function (it) { add(it, 2); });
     });
     var bySec = {}, text = [];
     Object.keys(agg).forEach(function (k) { var x = agg[k]; (bySec[x.c.s] = bySec[x.c.s] || []).push(x); });
@@ -981,7 +1038,7 @@ if (typeof module !== "undefined") module.exports = Engine;
       h += "</ul>";
     });
     var pk = Object.keys(pantry).sort();
-    h += '<p class="kcal">Includes both optional snacks for two people each day.</p><h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
+    h += '<p class="kcal">Includes the morning juice and both optional snacks for two people each day.</p><h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
     text.push("PANTRY: " + pk.join(", "));
     state.shopText = "Week " + isoWeek(mon.y, mon.m, mon.d) + "\n" + text.join("\n");
     return h + "</div>";

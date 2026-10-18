@@ -19,3 +19,7 @@ console.log('repeat violations',repeats);
 const use={}; for(let i=0;i<365;i++){const dt=new Date(Date.UTC(2026,0,1)+i*864e5); const d=E.day(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate()); for(const sl of ['b','l','d']) use[d.meals[sl].id]=(use[d.meals[sl].id]||0)+1;}
 console.log(Object.entries(use).sort().map(([k,v])=>k+':'+v).join(' '));
 const wk=[]; for(let i=0;i<14;i++){const dt=new Date(Date.UTC(2026,9,12)+i*864e5); const d=E.day(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate()); wk.push(d.key+' '+['Su','Mo','Tu','We','Th','Fr','Sa'][dt.getUTCDay()]+' '+d.meals.b.id+' '+d.meals.l.id+' '+d.meals.d.id+' p1 '+d.people.p1.p.toFixed(0)+' snack1 '+d.snacks[0].id+' p2 '+d.people.p2.p.toFixed(0));} console.log(wk.join('\n'));
+// weekly averages (Mon-Sun) for 2026
+{ const W={p1:[],p2:[]}; let start=Date.UTC(2025,11,29);
+  for(let w=0;w<52;w++){ const acc={p1:0,p2:0}; for(let k=0;k<7;k++){ const dt=new Date(start+(w*7+k)*864e5); const d=E.day(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate()); acc.p1+=d.people.p1.p; acc.p2+=d.people.p2.p; } W.p1.push(acc.p1/7); W.p2.push(acc.p2/7); }
+  for(const p of ['p1','p2']) console.log('weekly avg',p,'min',Math.min(...W[p]).toFixed(0),'max',Math.max(...W[p]).toFixed(0)); }

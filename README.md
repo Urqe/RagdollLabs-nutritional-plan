@@ -1,6 +1,6 @@
 # RagdollLabs-nutritional-plan
 
-A year-view meal calendar for two people doing strength training while losing fat. Mexican-style food, spicy, with ingredients available in Finland.
+A year-view meal calendar for two people doing strength training while losing fat. The recipes adapt the style of Healthy Ivonne's "Come Conmigo" plans: Mexican home cooking, spicy, with every ingredient available in Finnish supermarkets.
 
 Open `index.html` in a browser. It is a single self-contained page with no server and no install.
 
@@ -14,7 +14,7 @@ Open `index.html` in a browser. It is a single self-contained page with no serve
 
 ## Portions
 
-Each meal is planned for two and split between Person 1 and Person 2. Where possible the split is by count (for example 6 vs 4 tacos), otherwise about 57 / 43. Each person has a daily protein target. Every day also lists two optional snacks you can both have. Daily totals include optional snack 1.
+Each meal is planned for two and split between Person 1 and Person 2. Where possible the split is by count (for example 6 vs 4 tacos), otherwise about 57 / 43. Each person has a daily protein target. Every day also lists a morning juice and two optional snacks you can both have: snack 1 is protein-focused and counted in the daily totals, snack 2 is a light fruit or vegetable snack.
 
 ## Food rules
 
@@ -22,6 +22,7 @@ Each meal is planned for two and split between Person 1 and Person 2. Where poss
 - No pork mince or thick pork cuts. Bacon and chorizo are allowed.
 - Mince is always 100 % beef or turkey. Refried beans must be lard-free.
 - Greek yoghurt replaces mayonnaise and sour cream on regular days. Saturday dinner is a cheat night.
+- Ingredients that are hard to find in Finland are swapped: kohlrabi for jícama, leipäjuusto or light halloumi for panela, mozzarella for Oaxaca cheese, lingonberries for cranberries, chilli-lime salt for Tajín and chamoy.
 
 ## Rotation
 
@@ -33,7 +34,7 @@ Each meal is planned for two and split between Person 1 and Person 2. Where poss
 | Lunch | 9 |
 | Dinner | 12 |
 
-Dinners also avoid repeating the main protein of the previous dinner or the same day's lunch where possible.
+Dinners also avoid repeating the main protein of the previous dinner or the same day's lunch where possible, and lean toward the dinner that brings the day's protein closest to target.
 
 ## Project layout
 
@@ -51,5 +52,9 @@ tools/check-year.js   runs a year of the plan and reports protein, snacks and re
 1. Edit files in `src/`. To add a recipe, add an entry to `RECIPES` in `src/data.js` using ingredient ids from `CAT`. Protein and calories are calculated from the ingredient weights.
 2. Run `node tools/check-year.js` to confirm targets are still met and no repeat rules are broken.
 3. Run `python3 build.py` to rebuild `index.html`.
+
+## Planned
+
+- Estimated prices per recipe and per weekly shopping list, based on K-Ruoka prices.
 
 Nutrition values are per 100 g estimates for typical Finnish supermarket products. Check labels if exact numbers matter.
