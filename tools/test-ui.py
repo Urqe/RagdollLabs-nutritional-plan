@@ -175,6 +175,21 @@ async def desktop_suite(browser):
     await page.wait_for_timeout(300)
     check("desktop: chosen theme is remembered", await page.evaluate("document.documentElement.getAttribute('data-theme')") == "light")
     await page.click("#theme"); await page.click("#theme")  # back to automatic for later tests
+    # Week shopping list: three trips whose totals add up to the checkout total.
+    await page.evaluate("location.hash = '#year'")
+    await page.wait_for_timeout(300)
+    await page.click("#months [data-wk]")
+    await page.wait_for_timeout(300)
+    shop = await page.evaluate("""() => {
+      const num = s => parseFloat(s.replace(/[^0-9,.]/g, '').replace(',', '.'));
+      const trips = [...document.querySelectorAll('#panel details.trip')];
+      const sums = trips.map(d => num(d.querySelector('.t-sum').textContent.split('≈')[1]));
+      const total = num(document.querySelector('#panel .shop .costline b').textContent);
+      return { n: trips.length, open: trips.filter(d => d.open).length, sums, total,
+               copies: document.querySelectorAll('#panel [data-copy]').length };
+    }""")
+    check("desktop: week shopping list has three trips, one open", shop["n"] == 3 and shop["open"] == 1 and shop["copies"] == 3, str(shop))
+    check("desktop: trip totals add up to the checkout total", abs(sum(shop["sums"]) - shop["total"]) <= 0.05, str(shop))
     check("desktop: no script errors", not errors, "; ".join(errors[:2]))
     await page.close()
 
