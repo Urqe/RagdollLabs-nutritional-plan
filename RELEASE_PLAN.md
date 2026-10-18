@@ -171,6 +171,35 @@ Notes
 
 ---
 
+## v0.5: iPhone-smooth zoom and fast start (shipped)
+
+Goal: pinch, zoom and swipe feel like a native iPhone app, and the app opens instantly.
+
+Scope
+- [x] GitHub Pages build is a full HTML document (doctype, viewport, charset). Without it iPhone Safari renders the page in quirks mode at desktop width, which breaks pinch handling and touch response. The Claude page keeps its own fragment build.
+- [x] Plan generated at build time and embedded in the page, so opening the app does no rotation work.
+- [x] Day plans cached between renders.
+- [x] Pinch follows the fingers 1:1 (scale and position), with resistance only past 2×.
+- [x] Level change is one continuous zoom: the pinched month or day grows into the new level, and zooming out shrinks it back into its place. Uses only transform and opacity, with an iOS-style easing.
+- [x] Velocity-aware: a quick pinch commits even if short; a slow, small one settles back.
+- [x] Swipe is a page turn: the neighbouring month or day is rendered beside the current one and both follow the finger 1:1, then finish with the flick's speed or snap back. Rubber-band at the ends of the plan range.
+- [x] Tap feedback on iPhone: no grey tap flash, a pressed state instead, no double-tap zoom delay.
+- [x] Off-screen months skip layout work (`content-visibility`).
+
+Checks
+- [x] `tools/test-ui.py` passes on both builds, and checks that the Pages build has a doctype and viewport.
+- [x] Frame timing during pinch, zoom, swipe and zoom out: worst frame 17 ms at normal CPU speed (no frame over 20 ms), 33 ms at 2× slowdown (no frame over 50 ms). Changed from the planned 4× check: at 4× (closer to a low-end Android than any iPhone) commit frames still reach about 100 ms in headless Chrome, which also draws without the graphics chip.
+- [x] App start-up script: 31 ms (was about 700 ms).
+
+Shipped notes
+- The main cause of the jank on iPhone: the Pages build had no doctype or viewport, so Safari ran it in quirks mode at 980 px desktop width. `build.py` now writes a full document for Pages (`index.html`) and a fragment for the Claude page (`artifact.html`).
+- The meal plan to the end of 2032 is computed at build time (70 KB) and checked to match the live rotation for every day.
+- Views are layers: neighbouring pages and likely zoom targets are built in idle time; a finished swipe or zoom promotes the prepared layer instead of rebuilding. The side panel renders after the motion (desktop) or when the sheet opens (phone).
+- Fonts load without blocking the first render.
+- Real-device check on iPhone Safari still to do.
+
+---
+
 ## Later
 
 ### Check prices in the store (was v0.2.1)
@@ -235,3 +264,4 @@ Checks
 | v0.3 | 2026-10-18 | Year, month and day zoom with pinch, trackpad, keyboard and buttons; swipe between months and days; phone agenda at month level. |
 | v0.4 | 2026-10-18 | 82 recipes, waste-aware weekly rotation, cook once eat twice, seasons, weekday budget lean. Waste estimate 7.56 → 4.06 € a week. |
 | v0.4.1 | 2026-10-18 | Review fixes: link validation, 2032 range cap, restore on today, yearly use cap, smoother touch pinch and swipe, browser test suite. |
+| v0.5 | 2026-10-18 | Full HTML document for Pages (fixes iPhone quirks mode), plan built ahead, 1:1 pinch, continuous zoom, page-turn swipe, prepared layers; start-up 700 → 31 ms. |

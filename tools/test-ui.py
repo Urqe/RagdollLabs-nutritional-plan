@@ -2,8 +2,9 @@
 
 Needs Playwright with Chromium (pip install playwright && playwright install chromium).
 Usage: python3 tools/test-ui.py   (run python3 build.py first)
-Touches are sent through Chrome's input protocol, so the browser's own scrolling
-and touch-action rules apply, like on a real phone.
+Loads the real GitHub Pages file (index.html). Touches are sent through Chrome's
+input protocol, so the browser's own scrolling and touch-action rules apply, like
+on a real phone. Frame timing is checked at normal CPU speed and slowed 2x.
 """
 import asyncio
 import sys
@@ -11,13 +12,17 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
-BODY = (ROOT / "index.html").read_text(encoding="utf-8")
+INDEX = ROOT / "index.html"
 FAILS = []
 
 
-def page_html(hash_=""):
-    pre = f'<script>history.replaceState(null,"","{hash_}")</script>' if hash_ else ""
-    return f'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">{pre}</head><body>{BODY}</body></html>'
+def url(hash_=""):
+    return INDEX.as_uri() + hash_
+
+
+async def open_page(page, hash_=""):
+    await page.goto(url(hash_))
+    await page.wait_for_timeout(250)
 
 
 def check(name, ok, detail=""):
@@ -65,8 +70,7 @@ async def touch_suite(browser, name, w, h):
     page = await ctx.new_page()
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
-    await page.set_content(page_html())
-    await page.wait_for_timeout(300)
+    await open_page(page)
     cdp = await ctx.new_cdp_session(page)
     phone = w <= 640
     cell = ".ag" if phone else ".dc"
@@ -111,16 +115,15 @@ async def desktop_suite(browser):
     page = await browser.new_page(viewport={"width": 1400, "height": 900})
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
-    await page.set_content(page_html())
-    await page.wait_for_timeout(300)
+    await open_page(page)
     await page.keyboard.press("+")
-    await page.wait_for_timeout(150)
+    await page.wait_for_timeout(450)
     check("desktop: + key opens the month", (await level(page)).startswith("#m"))
     await page.keyboard.press("ArrowRight")
-    await page.wait_for_timeout(150)
+    await page.wait_for_timeout(450)
     m1 = await level(page)
     await page.keyboard.press("-")
-    await page.wait_for_timeout(150)
+    await page.wait_for_timeout(450)
     check("desktop: arrow moves month, - goes back to year", m1.startswith("#m") and await level(page) == "#year")
     x, y = await page.eval_on_selector(".month.now", "e=>{const r=e.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]}")
     await page.mouse.move(x, y)
@@ -130,9 +133,9 @@ async def desktop_suite(browser):
     await page.wait_for_timeout(500)
     check("desktop: Ctrl + scroll zooms in", (await level(page)).startswith("#m"))
     await page.click("#zin")
-    await page.wait_for_timeout(200)
+    await page.wait_for_timeout(450)
     await page.click('#months [data-recipe="l"]')
-    await page.wait_for_timeout(150)
+    await page.wait_for_timeout(450)
     back = await page.inner_text("#panel .back")
     check("desktop: recipe opened from day level goes back to the week", back.startswith("‹ Week"), back)
     check("desktop: no script errors", not errors, "; ".join(errors[:2]))
@@ -144,7 +147,7 @@ async def link_suite(browser):
     for h, want in [("#d2026-02-31", "today"), ("#m2026-13", "today"), ("#d2199-01-01", "today"), ("#d2026-10-18", "#d2026-10-18"), ("#m2026-11", "#m2026-11")]:
         page = await browser.new_page(viewport={"width": 1300, "height": 900})
         t0 = asyncio.get_event_loop().time()
-        await page.set_content(page_html(h))
+        await page.goto(url(h))
         await page.wait_for_timeout(100)
         ms = int((asyncio.get_event_loop().time() - t0) * 1000)
         crumbs = (await page.inner_text("#crumbs")).replace("\n", " ")
@@ -158,13 +161,48 @@ async def link_suite(browser):
         await page.close()
 
 
+def build_suite():
+    html = INDEX.read_text(encoding="utf-8")
+    check("build: Pages file is a full document with a viewport", html.lstrip().lower().startswith("<!doctype html>") and 'name="viewport"' in html)
+    frag = (ROOT / "artifact.html").read_text(encoding="utf-8")
+    check("build: Claude page file is a fragment", "<!doctype" not in frag.lower() and "<html" not in frag.lower())
+
+
+async def perf_suite(browser, rate, limit):
+    """Frame timing during pinch, zoom, swipe and zoom out. rate 1 is this machine's
+    normal speed (about a recent iPhone's single core); rate 2 stands in for an older iPhone."""
+    ctx = await browser.new_context(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True, device_scale_factor=3)
+    page = await ctx.new_page()
+    cdp = await ctx.new_cdp_session(page)
+    await cdp.send("Emulation.setCPUThrottlingRate", {"rate": rate})
+    await page.goto(url())
+    await page.wait_for_timeout(400)
+    if rate == 1:
+        ms = await page.evaluate("(() => { const a = performance.getEntriesByName('app-start')[0], b = performance.getEntriesByName('app-ready')[0]; return a && b ? b.startTime - a.startTime : 9999; })()")
+        check("perf: app start-up script under 300 ms", ms < 300, f"{ms:.0f} ms")
+    await page.evaluate("""() => { window.__gaps = []; let last = performance.now();
+      const tick = t => { window.__gaps.push(t - last); last = t; window.__raf = requestAnimationFrame(tick); }; window.__raf = requestAnimationFrame(tick); }""")
+    x, y = await centre(page, ".month.now")
+    await pinch(page, cdp, x, y, 1.7, steps=16)
+    await swipe(page, cdp, 300, 500, -250, steps=16)
+    await pinch(page, cdp, 195, 420, 0.55, steps=16)
+    gaps = await page.evaluate("cancelAnimationFrame(window.__raf), window.__gaps.slice(2)")
+    worst = max(gaps) if gaps else 0
+    slow = sum(1 for g_ in gaps if g_ > limit)
+    check(f"perf: CPU x{rate}, no frame over {limit} ms during pinch, zoom and swipe", slow == 0, f"worst {worst:.0f} ms over {len(gaps)} frames")
+    await ctx.close()
+
+
 async def main():
+    build_suite()
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         for name, w, h in [("phone", 390, 844), ("tablet", 820, 1180)]:
             await touch_suite(browser, name, w, h)
         await desktop_suite(browser)
         await link_suite(browser)
+        await perf_suite(browser, 1, 20)
+        await perf_suite(browser, 2, 50)
         await browser.close()
     print(f"\n{len(FAILS)} failed" if FAILS else "\nAll passed")
     sys.exit(1 if FAILS else 0)

@@ -2,7 +2,7 @@
 
 A year-view meal calendar for two people doing strength training while losing fat. The recipes adapt the style of Healthy Ivonne's "Come Conmigo" plans: Mexican home cooking, spicy, with every ingredient available in Finnish supermarkets.
 
-Open `index.html` in a browser. It is a single self-contained page with no server and no install.
+Open `index.html` in a browser, or use the GitHub Pages site. It is a single self-contained page with no server and no install. The meal plan is computed when the page is built, so it opens instantly.
 
 ## What it does
 
@@ -52,13 +52,14 @@ Each pick also weighs:
 ## Project layout
 
 ```
-index.html            built page (generated, do not edit by hand)
+index.html            built page for GitHub Pages, a full HTML document (generated, do not edit)
+artifact.html         the same page as a fragment, for the Claude-hosted copy (generated)
 src/data.js           targets, ingredient catalogue with nutrition values, recipes, optional snacks
 src/prices.js         prices, pack sizes, shelf life and freezing per ingredient
 src/pricing.js        recipe costs, cheapest pack mix and leftover advice
 src/engine.js         rotation engine and daily protein/calorie calculation
 src/app.html          page layout, styles and UI code
-build.py              inlines src/*.js into src/app.html and writes index.html
+build.py              computes the plan to 2032, inlines src/*.js into src/app.html, writes both pages
 tools/check-year.js   runs a year of the plan and reports protein, snacks and repeat violations
 tools/check-prices.js reports missing prices, remaining estimates, stale prices and cost levels
 tools/check-waste.js  estimates weekly food waste across a year of plans

@@ -1,7 +1,7 @@
 <title>RagdollLabs Nutritional Plan</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" id="fontcss">
 <style>
 /* Layout: year of month cards on the left, a sticky day/recipe panel on the right (bottom sheet on phones). Talavera cobalt on tile white, dried-chile red for heat and cheat nights. */
 :root {
@@ -149,20 +149,22 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
 .zoom-btns { display: flex; gap: 6px; flex: none; }
 .zoom-btns .btn { width: 38px; padding: 6px 0; font-size: 1.05rem; line-height: 1; }
 .cal { touch-action: pan-y; scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 84px); }
-.cal.pinching > * { will-change: transform; }
-.cal > .settle { transition: transform .18s ease-out, opacity .18s ease-out; }
 .pinch-target { outline: 2px solid var(--cobalt); outline-offset: 2px; transition: outline-color .1s; }
-.cal.will-in .pinch-target { outline-width: 3px; box-shadow: 0 0 0 6px var(--cobalt-soft); }
-.cal.will-out > * { opacity: .75; }
-.cal.zin > * { animation: zin .24s cubic-bezier(.2,.7,.2,1); }
-.cal.zout > * { animation: zout .24s cubic-bezier(.2,.7,.2,1); }
-@keyframes zin { from { opacity: .2; transform: scale(.82); } to { opacity: 1; transform: none; } }
-@keyframes zout { from { opacity: .2; transform: scale(1.15); } to { opacity: 1; transform: none; } }
-@keyframes slidel { from { opacity: .4; transform: translateX(24px); } to { opacity: 1; transform: none; } }
-@keyframes slider { from { opacity: .4; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
-.cal.sl > * { animation: slidel .2s ease-out; }
-.cal.sr > * { animation: slider .2s ease-out; }
-@media (prefers-reduced-motion: reduce) { .cal > * { animation: none !important; } }
+
+.cal { position: relative; overflow-x: clip; }
+@supports not (overflow: clip) { .cal { overflow-x: hidden; } }
+.pager { position: absolute; left: 0; right: 0; top: 0; pointer-events: none; }
+.prep { pointer-events: none; }
+.ghost { pointer-events: none; z-index: 15; }
+.ghost > * { margin: 0; }
+/* Off-screen months skip layout and paint until they scroll into view. */
+.month { content-visibility: auto; contain-intrinsic-size: auto 330px; }
+.ag { content-visibility: auto; contain-intrinsic-size: auto 66px; }
+.dmeal { content-visibility: auto; contain-intrinsic-size: auto 240px; }
+.dc { contain: layout paint; }
+/* iPhone tap feel: no grey flash or double-tap zoom delay, a pressed state instead. */
+button, .d, .dc, .ag, .meal { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.d:active, .dc:active, .ag:active, .meal:active, .btn:active, .wk:active { transform: scale(.96); transition: transform .08s; }
 
 /* Month level */
 .mbig { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
@@ -257,6 +259,9 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
 </div>
 
 <script>
+// Fonts load without blocking the first render; text shows in the fallback face until they arrive.
+(function () { var l = document.getElementById("fontcss"); if (l) { l.rel = "stylesheet"; } })();
+performance.mark && performance.mark("app-start");
 /*DATA*/
 </script>
 <script>
@@ -264,6 +269,9 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
 </script>
 <script>
 /*PRICING*/
+</script>
+<script>
+/*PLAN*/
 </script>
 <script>
 /*ENGINE*/
@@ -278,7 +286,7 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
   var state = { offset: 0, sel: { y: TODAY.y, m: TODAY.m, d: TODAY.d }, view: "day", prevView: "day", recipe: null, week: null, level: "year", focus: { y: TODAY.y, m: TODAY.m } };
   var ov = {};
   try { ov = JSON.parse(localStorage.getItem("mpd-swaps") || "{}") || {}; } catch (e) { ov = {}; }
-  function saveOv() { try { localStorage.setItem("mpd-swaps", JSON.stringify(ov)); } catch (e) {} }
+  function saveOv() { planCache = {}; try { localStorage.setItem("mpd-swaps", JSON.stringify(ov)); } catch (e) {} }
 
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -298,7 +306,13 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
   function mondayOf(o) { var w = dow(o) || 7; return addDays(o, 1 - w); }
   function same(a, b) { return a && b && a.y === b.y && a.m === b.m && a.d === b.d; }
   function before(a, b) { return Date.UTC(a.y, a.m, a.d) < Date.UTC(b.y, b.m, b.d); }
-  function dayPlan(o) { return Engine.day(o.y, o.m, o.d, ov); }
+  // Day plans are cached; swaps clear the cache.
+  var planCache = {};
+  function dayPlan(o) {
+    var k = o.y * 10000 + o.m * 100 + o.d;
+    if (!(k in planCache)) planCache[k] = Engine.day(o.y, o.m, o.d, ov);
+    return planCache[k];
+  }
   function mealName(r) { return (r.leftover ? "Leftovers: " : "") + r.name; }
   function mealTags(r) {
     return (r.cheat ? '<span class="tag cheat">Cheat night</span>' : "") +
@@ -366,8 +380,7 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
       }
       html += "</div></section>";
     }
-    $("months").className = "months";
-    $("months").innerHTML = html;
+    return { cls: "months", html: html };
   }
 
   // ---- Zoom levels ---------------------------------------------------------
@@ -376,10 +389,22 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     month: '<span><i class="dot"></i>Cheat night</span><span>Protein for Person 1 and Person 2. Pinch out on a day or press + to open it, swipe for the next month.</span>',
     day: '<span>Swipe for the next day. Pinch in or press − to go back to the month.</span>'
   };
+  // Render a level's HTML for a given view (used for the current view and for swipe neighbours).
+  function htmlFor(over) {
+    var saved = { level: state.level, focus: state.focus, sel: state.sel, offset: state.offset };
+    if (over) Object.keys(over).forEach(function (k) { if (!(k in saved)) saved[k] = state[k]; state[k] = over[k]; });
+    var r = state.level === "month" ? renderMonthBig() : state.level === "day" ? renderDayBig() : renderYear();
+    Object.keys(saved).forEach(function (k) { state[k] = saved[k]; });
+    return r;
+  }
   function renderMonths() {
-    if (state.level === "month") renderMonthBig();
-    else if (state.level === "day") renderDayBig();
-    else renderYear();
+    dropPrepared();
+    var r = htmlFor(null), mEl = $("months");
+    mEl.className = r.cls; mEl.innerHTML = r.html;
+    renderChrome();
+    prefetchNeighbours();
+  }
+  function renderChrome() {
     $("legend").innerHTML = LEGEND[state.level];
     var f = state.focus, s = state.sel, c = '<button data-level="year"' + (state.level === "year" ? ' aria-current="page"' : "") + ">Year</button>";
     if (state.level !== "year") c += '<span class="sep">›</span><button data-level="month"' + (state.level === "month" ? ' aria-current="page"' : "") + ">" + MONTHS[f.m] + " " + f.y + "</button>";
@@ -390,15 +415,18 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     $("prev").setAttribute("aria-label", lbl[0]); $("next").setAttribute("aria-label", lbl[1]);
   }
 
+  var phoneMq = window.matchMedia("(max-width: 640px)");
   function renderMonthBig() {
-    var y = state.focus.y, m = state.focus.m, mp = monthPlans(y, m), cost = mp.reduce(function (s, x) { return s + x.pl.cost; }, 0);
+    var y = state.focus.y, m = state.focus.m, mp = monthPlans(y, m), cost = mp.reduce(function (s, x) { return s + x.pl.cost; }, 0), phone = phoneMq.matches;
     var html = '<section class="mbig" id="m-' + y + "-" + m + '"><div class="mbig-head"><h2>' + MONTHS[m] + " " + y + "</h2>" +
       (mp.length ? '<button class="mh" data-month="' + y + "," + m + '"><span>≈ ' + eur(cost, 0) + " · " + eur(cost / mp.length) + " a day ›</span></button>" : "") + "</div>";
-    html += '<div class="mgrid"><span class="wd">wk</span>' + ["Mo","Tu","We","Th","Fr","Sa","Su"].map(function (w) { return '<span class="wd">' + w + "</span>"; }).join("");
+    html += '<div class="mgrid">' + (phone ? "" : '<span class="wd">wk</span>' + ["Mo","Tu","We","Th","Fr","Sa","Su"].map(function (w) { return '<span class="wd">' + w + "</span>"; }).join(""));
     var first = (new Date(Date.UTC(y, m, 1)).getUTCDay() + 6) % 7, days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(), cells = [], k;
+    if (phone) cells = []; else {
     for (k = 0; k < first; k++) cells.push(null);
     for (k = 1; k <= days; k++) cells.push(k);
     while (cells.length % 7) cells.push(null);
+    }
     for (var r = 0; r < cells.length; r += 7) {
       var anyDay = cells.slice(r, r + 7).filter(Boolean)[0], mon = mondayOf({ y: y, m: m, d: anyDay });
       html += '<button class="wk" data-wk="' + mon.y + "," + mon.m + "," + mon.d + '" aria-label="Week ' + isoWeek(y, m, anyDay) + ' summary">' + isoWeek(y, m, anyDay) + "</button>";
@@ -420,7 +448,7 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     }
     // Phones: an agenda list reads better than seven narrow columns.
     var list = '<div class="agenda">', lastWk = null;
-    mp.forEach(function (x) {
+    if (phone) mp.forEach(function (x) {
       var o = x.o, pl = x.pl, wk = isoWeek(o.y, o.m, o.d), cls = "ag";
       if (wk !== lastWk) { var mo = mondayOf(o); list += '<button class="ag-wk" data-wk="' + mo.y + "," + mo.m + "," + mo.d + '">Week ' + wk + " · shopping list ›</button>"; lastWk = wk; }
       if (same(o, TODAY)) cls += " today";
@@ -430,13 +458,12 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
         '<span class="ag-m"><span>' + esc(pl.meals.b.name) + "</span><span>" + esc(mealName(pl.meals.l)) + "</span><span>" + esc(pl.meals.d.name) + "</span></span>" +
         '<span class="ag-p">' + r0(pl.people.p1.p) + "<br>" + r0(pl.people.p2.p) + " g</span></button>";
     });
-    $("months").className = "";
-    $("months").innerHTML = html + "</div>" + list + "</div></section>";
+    return { cls: "", html: html + "</div>" + list + "</div></section>" };
   }
 
   function renderDayBig() {
     var o = state.sel, plan = dayPlan(o);
-    if (!plan) { $("months").innerHTML = '<p class="empty">No plan for this date. The plan runs from January 2025 to the end of 2032.</p>'; return; }
+    if (!plan) return { cls: "", html: '<p class="empty">No plan for this date. The plan runs from January 2025 to the end of 2032.</p>' };
     var h = '<section class="dbig"><div class="dbig-head"><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + "</div><h2>" + dateTitle(o) + "</h2></div>";
     h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
     h += '<div class="costline"><span>Food cost today</span><b>≈ ' + eur(plan.cost) + "</b></div>";
@@ -452,18 +479,16 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
       '<li><span class="amt">Juice</span><span>' + esc(plan.juice.name) + "</span></li>" +
       plan.snacks.map(function (sn, i) { return '<li><span class="amt">Snack ' + (i + 1) + "</span><span>" + esc(sn.name) + ' <span class="note">· ' + sn.p + " g protein each</span></span></li>"; }).join("") +
       '</ul><div class="row"><button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " shopping list</button></div></div>";
-    $("months").className = "";
-    $("months").innerHTML = h + "</section>";
+    return { cls: "", html: h + "</section>" };
   }
 
   function monthDiff(a, b) { return (a.y - b.y) * 12 + (a.m - b.m); }
-  function animate(cls) {
-    var c = $("cal"), m = $("months");
-    c.classList.remove("zin", "zout", "sl", "sr"); void c.offsetWidth; if (cls) c.classList.add(cls);
-    // Zooms grow out of (or shrink into) the point you pinched; buttons and keys use the centre.
-    if (!m.style.transformOrigin) m.style.transformOrigin = "50% 30%";
-    clearTimeout(animate.t); animate.t = setTimeout(function () { m.style.transformOrigin = ""; c.classList.remove("zin", "zout", "sl", "sr"); }, 300);
+  // Simple cross-fade, used when there is nothing to zoom from (Today button, date change).
+  function animate() {
+    var m = $("months");
+    if (m.animate && !reduceMotion()) m.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 180, easing: "ease-out" });
   }
+  function reduceMotion() { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
   function saveLevel() {
     var tok = state.level === "year" ? "year" : state.level === "month" ? "m" + state.focus.y + "-" + (state.focus.m + 1) : "d" + Engine.key(state.sel.y, state.sel.m, state.sel.d);
     try { history.replaceState(null, "", "#" + tok); } catch (e) {}
@@ -484,43 +509,242 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     else if (mm) state.level = "month";
     else if (dm) state.level = "day";
   }
-  function setLevel(lv, dir) {
-    state.level = lv;
-    if (lv === "day") state.focus = { y: state.sel.y, m: state.sel.m };
-    if (lv === "year") state.offset = Math.max(-60, Math.min(60, monthDiff(state.focus, TODAY)));
-    if (lv === "day" && mq.matches) { state.view = "week"; state.week = mondayOf(state.sel); }
-    saveLevel(); renderMonths(); renderPanel(); animate(dir);
-    if (lv === "year") requestAnimationFrame(centerNow); else $("cal").scrollIntoView({ block: "start" });
+  // ---- Views as layers ------------------------------------------------------
+  // #months is the live view. Neighbouring pages and the level a pinch is heading to
+  // are built ahead of time as hidden layers in #cal, so a gesture only has to move
+  // layers that already exist. A finished swipe or zoom promotes the prepared layer to
+  // be the live view instead of rebuilding it.
+  var EASE = "cubic-bezier(.2,.9,.25,1)", DUR = 380, busy = false;
+  var STICKY = function () { var t = document.querySelector(".top"); return t ? t.getBoundingClientRect().bottom : 0; };
+  function viewKey(s) { s = s || state; return s.level + ":" + (s.level === "year" ? s.offset : s.level === "month" ? s.focus.y + "-" + s.focus.m : s.sel.y + "-" + s.sel.m + "-" + s.sel.d); }
+
+  function buildLayer(over, cls) {
+    var r = htmlFor(over), el = document.createElement("div");
+    el.className = cls + " " + r.cls; el.setAttribute("aria-hidden", "true"); el.innerHTML = r.html;
+    el.dataset.cls = r.cls;
+    $("cal").appendChild(el);
+    return el;
   }
-  function zoomIn(target) {
-    if (state.level === "year") {
-      if (target && target.month) state.focus = target.month;
-      else state.focus = { y: state.sel.y, m: state.sel.m };
-      setLevel("month", "zin");
-    } else if (state.level === "month") {
-      if (target && target.day) state.sel = target.day;
-      else if (state.sel.y !== state.focus.y || state.sel.m !== state.focus.m) state.sel = same({ y: TODAY.y, m: TODAY.m, d: 1 }, { y: state.focus.y, m: state.focus.m, d: 1 }) ? { y: TODAY.y, m: TODAY.m, d: TODAY.d } : { y: state.focus.y, m: state.focus.m, d: 1 };
-      setLevel("day", "zin");
+  function promote(el) {
+    // A prepared layer becomes the live view: no rebuild, so no layout or paint spike.
+    el.removeAttribute("style"); el.removeAttribute("aria-hidden");
+    el.className = el.dataset.cls || ""; el.id = "months";
+    var cal = $("cal"); if (cal.firstChild !== el) cal.insertBefore(el, cal.firstChild);
+    return el;
+  }
+  function anchorFor(level, t, root) {
+    if (!t) return null;
+    var m = root || $("months"), el = null;
+    if (level === "year" && t.month) el = m.querySelector("#m-" + t.month.y + "-" + t.month.m) || m.querySelector('[data-mid="' + t.month.y + "-" + t.month.m + '"]');
+    if (level === "month" && t.day) {
+      var all = m.querySelectorAll('[data-day="' + t.day.y + "," + t.day.m + "," + t.day.d + '"]');
+      for (var i = 0; i < all.length; i++) if (all[i].offsetParent !== null) { el = all[i]; break; }
     }
+    return el;
   }
-  function zoomOut() {
-    if (state.level === "day") setLevel("month", "zout");
-    else if (state.level === "month") setLevel("year", "zout");
+  function reduceMotion() { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+  function animate() {
+    var m = $("months");
+    if (m.animate && !reduceMotion()) m.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 180, easing: "ease-out" });
+  }
+  var panelTimer = 0;
+  function panelLater() {
+    if (!mq.matches) { panelDirty = true; return; }
+    clearTimeout(panelTimer);
+    panelTimer = setTimeout(function () { (window.requestIdleCallback || function (f) { f(); })(function () { renderPanel(); }, { timeout: 600 }); }, DUR + 60);
+  }
+
+  // State a level change leads to, without touching the live state.
+  function nextState(lv, target) {
+    var s = { level: lv, focus: state.focus, sel: state.sel, offset: state.offset, view: state.view, week: state.week };
+    if (lv === "month") {
+      if (state.level === "year") s.focus = target && target.month ? target.month : { y: state.sel.y, m: state.sel.m };
+    }
+    if (lv === "day") {
+      var sel = target && target.day ? target.day : null;
+      if (!sel) sel = (state.sel.y === state.focus.y && state.sel.m === state.focus.m) ? state.sel
+        : (TODAY.y === state.focus.y && TODAY.m === state.focus.m) ? { y: TODAY.y, m: TODAY.m, d: TODAY.d } : { y: state.focus.y, m: state.focus.m, d: 1 };
+      s.sel = sel; s.focus = { y: sel.y, m: sel.m };
+      if (mq.matches) { s.view = "week"; s.week = mondayOf(sel); }
+    }
+    if (lv === "year") s.offset = Math.max(-60, Math.min(60, monthDiff(state.focus, TODAY)));
+    return s;
+  }
+
+  // ---- Zoom targets prepared ahead of time ------------------------------------------
+  // The likely zoom targets (the level above, and the selected month or day below) are
+  // built in idle time; a pinch towards anything else builds it while the fingers move.
+  var preparedSet = {}; // key -> element
+  function prepareZoom(dir, target) {
+    var lv = dir === "in" ? (state.level === "year" ? "month" : state.level === "month" ? "day" : null)
+                          : (state.level === "day" ? "month" : state.level === "month" ? "year" : null);
+    if (!lv) return;
+    var s = nextState(lv, target), key = viewKey(s);
+    if (preparedSet[key]) return;
+    var keys = Object.keys(preparedSet);
+    if (keys.length >= 3) { preparedSet[keys[0]].remove(); delete preparedSet[keys[0]]; }
+    var el = buildLayer(s, "prep");
+    el.style.cssText = "position:absolute;left:0;right:0;top:0;opacity:0.001;pointer-events:none;";
+    preparedSet[key] = el;
+  }
+  function takePrepared(key) { var el = preparedSet[key] || null; if (el) delete preparedSet[key]; return el; }
+  function dropPrepared() { Object.keys(preparedSet).forEach(function (k) { preparedSet[k].remove(); }); preparedSet = {}; }
+
+  // ---- Level change as one continuous zoom -------------------------------------
+  // pin: the pinch transform at release ({ s, cx, cy }: scale and offset, origin 0 0).
+  function zoomTo(lv, dir, target, pin) {
+    if (busy || lv === state.level) return;
+    pin = pin || { s: 1, cx: 0, cy: 0 };
+    var old = $("months"), cal = $("cal"), L = cal.getBoundingClientRect();
+    var oldAnchor = dir === "in" ? anchorFor(state.level, target) : null, A0 = oldAnchor ? oldAnchor.getBoundingClientRect() : null;
+    var V = old.getBoundingClientRect();
+    var s = nextState(lv, target), key = viewKey(s);
+    var back = dir === "out" ? (lv === "year" ? { month: state.focus } : { day: state.sel }) : null;
+    var motion = !reduceMotion() && !!old.animate && (A0 || dir === "out");
+
+    dropPager();
+    var el = takePrepared(key); dropPrepared();
+    if (!el) el = buildLayer(s, "prep");
+    Object.keys(s).forEach(function (k) { state[k] = s[k]; });
+
+    if (!motion) { old.remove(); promote(el); afterChange(); return; }
+    busy = true;
+    // The old view leaves the page flow but stays exactly where it is on screen.
+    old.removeAttribute("id");
+    old.style.cssText = "position:fixed;left:" + L.left + "px;top:" + L.top + "px;width:" + L.width + "px;margin:0;z-index:15;pointer-events:none;" +
+      "transform-origin:0 0;transform:translate(" + pin.cx + "px," + pin.cy + "px) scale(" + pin.s + ");";
+    promote(el);
+    if (lv === "year") { var a = anchorFor("year", back); if (a) a.scrollIntoView({ block: "center" }); else centerNow(); }
+    else window.scrollTo(0, window.scrollY + cal.getBoundingClientRect().top - STICKY() - 8);
+    afterChange();
+
+    var N = el.getBoundingClientRect(), opts = { duration: DUR, easing: EASE }, k, S, tx, ty;
+    if (dir === "in") {
+      el.style.transformOrigin = "0 0";
+      el.animate([{ transform: "translate(" + (A0.left - N.left) + "px," + (A0.top - N.top) + "px) scale(" + (A0.width / N.width) + ")", opacity: 0 },
+                  { opacity: 1, offset: 0.45 }, { transform: "none", opacity: 1 }], opts);
+      // Old view: keep zooming so the pinched month or day lands where the new view is.
+      k = N.width / A0.width; S = k * pin.s;
+      tx = (N.left - L.left) + k * (pin.cx - (A0.left - L.left)); ty = (N.top - L.top) + k * (pin.cy - (A0.top - L.top));
+    } else {
+      var na = anchorFor(lv, back), A = na ? na.getBoundingClientRect() : { left: N.left + N.width * 0.25, top: N.top + 40, width: N.width * 0.5 };
+      el.style.transformOrigin = (A.left - N.left) + "px " + (A.top - N.top) + "px";
+      el.animate([{ transform: "translate(" + (V.left - A.left) + "px," + (V.top - A.top) + "px) scale(" + (V.width / A.width) + ")", opacity: 0 },
+                  { opacity: 1, offset: 0.4 }, { transform: "none", opacity: 1 }], opts);
+      // Old view: shrink into its place in the level above.
+      k = A.width / V.width; S = k * pin.s;
+      tx = (A.left - L.left) + k * (pin.cx - (V.left - L.left)); ty = (A.top - L.top) + k * (pin.cy - (V.top - L.top));
+    }
+    old.animate([{ transform: "translate(" + pin.cx + "px," + pin.cy + "px) scale(" + pin.s + ")", opacity: 1 },
+                 { transform: "translate(" + tx + "px," + ty + "px) scale(" + S + ")", opacity: 0 }], { duration: DUR, easing: EASE, fill: "forwards" });
+    setTimeout(function () { old.remove(); el.style.transformOrigin = ""; busy = false; prefetchNeighbours(); }, DUR + 30);
+  }
+  function afterChange() { saveLevel(); renderChrome(); panelLater(); }
+
+  function setLevel(lv, dir) { zoomTo(lv, dir === "zout" ? "out" : "in", lv === "month" ? { month: state.focus } : { day: state.sel }); }
+  function zoomIn(target, pin) {
+    if (state.level === "year") zoomTo("month", "in", target && target.month ? { month: target.month } : { month: { y: state.sel.y, m: state.sel.m } }, pin);
+    else if (state.level === "month") zoomTo("day", "in", target && target.day ? { day: target.day } : { day: nextState("day", null).sel }, pin);
+  }
+  function zoomOut(pin) {
+    if (state.level === "day") zoomTo("month", "out", null, pin);
+    else if (state.level === "month") zoomTo("year", "out", null, pin);
+  }
+
+  // ---- Paging between months or days ----------------------------------------------
+  function neighbour(n) {
+    if (state.level === "month") {
+      var t2 = new Date(Date.UTC(state.focus.y, state.focus.m + n, 1)), f = { y: t2.getUTCFullYear(), m: t2.getUTCMonth() };
+      if (!Engine.inRange(f.y, f.m, 1) && !Engine.inRange(f.y, f.m, 28)) return null;
+      return { focus: f };
+    }
+    if (state.level === "day") {
+      var nd = addDays(state.sel, n); if (!Engine.inRange(nd.y, nd.m, nd.d)) return null;
+      return { sel: nd, focus: { y: nd.y, m: nd.m } };
+    }
+    return null;
+  }
+  var pager = null, prefetchTimer = 0;
+  function gapW() { return $("cal").getBoundingClientRect().width + 16; }
+  function buildPager() {
+    var p = { key: viewKey(), W: gapW(), prev: null, next: null, nPrev: neighbour(-1), nNext: neighbour(1) };
+    [["prev", p.nPrev, -1], ["next", p.nNext, 1]].forEach(function (x) {
+      if (!x[1]) return;
+      var el = buildLayer(x[1], "pager");
+      el.style.transform = "translateX(" + (x[2] * p.W) + "px)";
+      p[x[0]] = el;
+    });
+    return p;
+  }
+  // Build the neighbours when the page is idle, so a swipe starts with them ready.
+  function prefetchNeighbours() {
+    clearTimeout(prefetchTimer);
+    if (state.level === "year") {
+      dropPager();
+      prefetchTimer = setTimeout(function () { (window.requestIdleCallback || function (f) { setTimeout(f, 0); })(function () { if (!busy && !g) prepareZoom("in", null); }, { timeout: 1500 }); }, 150);
+      return;
+    }
+    prefetchTimer = setTimeout(function () {
+      var idle = window.requestIdleCallback || function (f) { setTimeout(f, 0); };
+      // One piece per idle slot, so no single slot gets long.
+      idle(function () {
+        if (busy) return;
+        if (!(pager && pager.key === viewKey())) { dropPager(); pager = buildPager(); }
+        idle(function () { if (!busy && !g) prepareZoom("out", null); }, { timeout: 1500 });
+        idle(function () { if (!busy && !g) prepareZoom("in", null); }, { timeout: 2000 });
+      }, { timeout: 800 });
+    }, 120);
+  }
+  function dropPager() { if (pager) { if (pager.prev) pager.prev.remove(); if (pager.next) pager.next.remove(); pager = null; } }
+  function pagerOpen() {
+    if (!pager || pager.key !== viewKey()) { dropPager(); pager = buildPager(); }
+    var top = Math.max(0, STICKY() + 8 - $("cal").getBoundingClientRect().top);
+    if (pager.prev) pager.prev.style.top = top + "px";
+    if (pager.next) pager.next.style.top = top + "px";
+    pager.top = top;
+    return pager;
+  }
+  function pagerMove(dx) {
+    var p = pagerOpen();
+    if ((dx > 0 && !p.prev) || (dx < 0 && !p.next)) dx = dx * 0.3; // rubber band at the ends of the plan
+    $("months").style.transform = "translateX(" + dx + "px)";
+    if (p.prev) p.prev.style.transform = "translateX(" + (dx - p.W) + "px)";
+    if (p.next) p.next.style.transform = "translateX(" + (dx + p.W) + "px)";
+    p.dx = dx;
+  }
+  // Finish a page turn (n = 1 next, -1 previous, 0 snap back), keeping the flick's speed.
+  function pagerFinish(n, v) {
+    var p = pagerOpen(), dx = p.dx || 0;
+    if (n !== 0 && !(n > 0 ? p.next : p.prev)) n = 0;
+    var to = n === 0 ? 0 : -n * p.W, dist = Math.abs(to - dx);
+    var dur = reduceMotion() ? 1 : Math.max(140, Math.min(340, v ? dist / Math.abs(v) : 300));
+    var ease = "cubic-bezier(.25,.8,.25,1)", m = $("months");
+    busy = true;
+    var go = function (el, base) { if (el && el.animate) el.animate([{ transform: "translateX(" + (dx + base) + "px)" }, { transform: "translateX(" + (to + base) + "px)" }], { duration: dur, easing: ease, fill: "forwards" }); };
+    go(m, 0); go(p.prev, -p.W); go(p.next, p.W);
+    setTimeout(function () {
+      var nb = n > 0 ? p.nNext : n < 0 ? p.nPrev : null, incoming = n > 0 ? p.next : n < 0 ? p.prev : null;
+      [m, p.prev, p.next].forEach(function (el) { if (el && el.getAnimations) el.getAnimations().forEach(function (a) { a.cancel(); }); });
+      if (!nb) { m.style.transform = ""; if (p.prev) p.prev.style.transform = "translateX(" + (-p.W) + "px)"; if (p.next) p.next.style.transform = "translateX(" + p.W + "px)"; busy = false; return; }
+      if (nb.sel) state.sel = nb.sel;
+      state.focus = nb.focus;
+      if (mq.matches && state.view === "week" && nb.sel) state.week = mondayOf(nb.sel);
+      // The page that slid in becomes the live view as it is.
+      var other = n > 0 ? p.prev : p.next; if (other) other.remove();
+      m.remove(); pager = null;
+      promote(incoming);
+      window.scrollTo(0, window.scrollY + $("cal").getBoundingClientRect().top - STICKY() - 8);
+      afterChange(); busy = false; prefetchNeighbours();
+    }, dur + 10);
   }
   function step(n) {
-    if (state.level === "month") {
-      var t2 = new Date(Date.UTC(state.focus.y, state.focus.m + n, 1));
-      if (!Engine.inRange(t2.getUTCFullYear(), t2.getUTCMonth(), 1) && !Engine.inRange(t2.getUTCFullYear(), t2.getUTCMonth(), 28)) return;
-      state.focus = { y: t2.getUTCFullYear(), m: t2.getUTCMonth() };
-    } else if (state.level === "day") {
-      var nd = addDays(state.sel, n); if (!Engine.inRange(nd.y, nd.m, nd.d)) return;
-      state.sel = nd; state.focus = { y: nd.y, m: nd.m };
-      if (mq.matches && state.view === "week") state.week = mondayOf(nd);
-    } else {
+    if (busy) return;
+    if (state.level === "year") {
       var lim = monthDiff({ y: 2032, m: 11 }, TODAY), low = monthDiff({ y: 2025, m: 0 }, TODAY);
       state.offset = Math.max(low + 5, Math.min(lim - 6, state.offset + 3 * n)); renderMonths(); centerNow(); return;
     }
-    saveLevel(); renderMonths(); renderPanel(); animate(n > 0 ? "sl" : "sr");
+    if (!neighbour(n)) return;
+    pagerOpen(); pagerMove(0); pagerFinish(n, 0);
   }
   function targetAt(x, y) {
     var el = document.elementFromPoint(x, y); if (!el) return null;
@@ -695,7 +919,12 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     return h + priceNote() + "</div>";
   }
 
-  function renderPanel() {
+  // On phones the panel is a sheet that is usually closed: render it when it opens.
+  var panelDirty = true;
+  function sheetOpen() { return mq.matches || $("panel").classList.contains("open"); }
+  function renderPanel(force) {
+    if (!force && !sheetOpen()) { panelDirty = true; return; }
+    panelDirty = false;
     var p = $("panel");
     p.innerHTML = state.view === "recipe" ? viewRecipe() : state.view === "week" ? viewWeek() : state.view === "month" ? viewMonth() : viewDay();
     p.scrollTop = 0;
@@ -713,7 +942,13 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
   }
 
   var mq = window.matchMedia("(min-width: 1100px)");
-  function openSheet(v) { if (mq.matches) return; $("panel").classList.toggle("open", v); $("backdrop").hidden = !v; }
+  function onBreakpoint() { if (state.level === "month") renderMonths(); }
+  if (window.matchMedia("(max-width: 640px)").addEventListener) window.matchMedia("(max-width: 640px)").addEventListener("change", onBreakpoint);
+  function openSheet(v) {
+    if (mq.matches) return;
+    if (v && panelDirty) renderPanel(true);
+    $("panel").classList.toggle("open", v); $("backdrop").hidden = !v;
+  }
 
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-day],[data-wk],[data-month],[data-recipe],[data-back],[data-close],[data-reset],[data-level],#backdrop");
@@ -730,7 +965,7 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     else if (t.hasAttribute("data-recipe")) { if (state.view !== "recipe") state.prevView = state.view; state.recipe = t.getAttribute("data-recipe"); state.view = "recipe"; }
     else if (t.hasAttribute("data-back")) { state.view = state.prevView === "week" ? "week" : "day"; }
     else if (t.hasAttribute("data-reset")) { var o = state.sel; delete ov[Engine.key(o.y, o.m, o.d) + "|" + state.recipe]; saveOv(); }
-    renderMonths(); renderPanel(); openSheet(true);
+    renderMonths(); panelDirty = true; if (mq.matches) renderPanel(); openSheet(true);
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") openSheet(false); });
 
@@ -745,62 +980,53 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
   $("today").addEventListener("click", function () {
     state.offset = 0; state.sel = { y: TODAY.y, m: TODAY.m, d: TODAY.d }; state.focus = { y: TODAY.y, m: TODAY.m };
     if (state.level === "year") { state.view = "day"; renderMonths(); renderPanel(); centerNow(); openSheet(true); }
-    else { saveLevel(); renderMonths(); renderPanel(); animate(null); }
+    else { saveLevel(); renderMonths(); renderPanel(); animate(); }
   });
 
-  // ---- Gestures: pinch to change level, swipe to move, taps unchanged ------
-  // Touch events, not pointer events: once the browser starts scrolling it takes a
-  // pointer away, which made pinches unreliable. With touch events the second finger
-  // can claim the gesture before a scroll starts.
+  // ---- Gestures: pinch to change level, swipe to page, taps unchanged -------
+  // Touch events: the second finger can claim the gesture before the browser starts
+  // scrolling. During a pinch the view follows the fingers 1:1; the level change on
+  // release continues from where the fingers left it.
   var cal = $("cal"), g = null, raf = 0, suppressUntil = 0, wheelAcc = 0, wheelLock = 0, tgtEl = null;
   var PINCH_IN = 1.25, PINCH_OUT = 0.8;
   function tdist(a, b) { return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
-  // Follow the fingers at first, then resist, so the view never jumps past the trigger point.
-  function rubber(r) { return r >= 1 ? 1 + Math.min(r - 1, 1) * 0.5 : 1 - Math.min(1 - r, 0.6) * 0.5; }
-  function markTarget(t) {
-    if (tgtEl) tgtEl.classList.remove("pinch-target");
-    tgtEl = null;
-    if (!t) return;
-    var sel = state.level === "year" && t.month ? "#m-" + t.month.y + "-" + t.month.m
-      : state.level === "month" && t.day ? '[data-day="' + t.day.y + "," + t.day.m + "," + t.day.d + '"]' : null;
-    if (sel) { tgtEl = $("months").querySelector(sel); if (tgtEl && tgtEl.offsetParent === null) tgtEl = null; }
-  }
+  function soft(r) { return r > 2.2 ? 2.2 + (r - 2.2) * 0.25 : r < 0.5 ? 0.5 - (0.5 - r) * 0.25 : r; }
+  function markTarget(el) { if (tgtEl) tgtEl.classList.remove("pinch-target"); tgtEl = el; }
+  function sample(arr, v) { var t = performance.now(); arr.push([t, v]); while (arr.length > 4) arr.shift(); }
+  function velocity(arr) { if (arr.length < 2) return 0; var a = arr[0], b = arr[arr.length - 1]; return b[0] > a[0] ? (b[1] - a[1]) / (b[0] - a[0]) : 0; }
   function paint() {
     raf = 0; if (!g) return;
-    var c = $("months");
+    var m = $("months");
     if (g.mode === "pinch") {
-      var s = rubber(g.r);
-      c.style.transformOrigin = g.ox + "px " + g.oy + "px";
-      c.style.transform = "translate(" + g.tx + "px," + g.ty + "px) scale(" + s + ")";
-      cal.classList.toggle("will-in", g.r >= PINCH_IN && state.level !== "day");
-      cal.classList.toggle("will-out", g.r <= PINCH_OUT && state.level !== "year");
-      if (tgtEl) tgtEl.classList.toggle("pinch-target", g.r > 1.05 && state.level !== "day");
-    } else if (g.mode === "swipe" && g.lock === "x") {
-      c.style.transform = "translateX(" + g.dx * 0.6 + "px)";
-      c.style.opacity = String(1 - Math.min(Math.abs(g.dx) / 600, 0.35));
-    }
+      m.style.transformOrigin = g.ox + "px " + g.oy + "px";
+      m.style.transform = "translate(" + (g.mx - g.mx0) + "px," + (g.my - g.my0) + "px) scale(" + soft(g.r) + ")";
+      if (tgtEl) tgtEl.classList.toggle("pinch-target", g.r > 1.04);
+      // Build the level the pinch is heading to while the fingers are still moving.
+      if (g.r > 1.08 && state.level !== "day") prepareZoom("in", g.target);
+      else if (g.r < 0.93 && state.level !== "year") prepareZoom("out", null);
+    } else if (g.mode === "swipe" && g.lock === "x") pagerMove(g.dx);
   }
   function schedule() { if (!raf) raf = requestAnimationFrame(paint); }
-  function settle(c) {
-    // Ease back to rest when a gesture does not change the view.
-    c.classList.add("settle"); c.style.transform = ""; c.style.opacity = "";
-    setTimeout(function () { c.classList.remove("settle"); }, 200);
+  function settleBack() {
+    var m = $("months"), tf = m.style.transform;
+    m.style.transform = "";
+    if (tf && m.animate && !reduceMotion()) m.animate([{ transform: tf }, { transform: "none" }], { duration: 260, easing: EASE });
+    setTimeout(function () { m.style.transformOrigin = ""; }, 280);
   }
-  function clearGesture() {
-    cal.classList.remove("will-in", "will-out", "pinching");
-    markTarget(null); g = null;
-  }
-  function originFor(c, x, y) { var b = c.getBoundingClientRect(); return { x: x - b.left, y: y - b.top }; }
 
   cal.addEventListener("touchstart", function (e) {
+    if (busy) { e.preventDefault(); return; }
     if (e.touches.length === 2) {
-      var a = e.touches[0], b = e.touches[1], mx = (a.clientX + b.clientX) / 2, my = (a.clientY + b.clientY) / 2, o = originFor($("months"), mx, my);
-      g = { mode: "pinch", d0: Math.max(tdist(a, b), 1), mx0: mx, my0: my, mx: mx, my: my, ox: o.x, oy: o.y, r: 1, tx: 0, ty: 0 };
-      g.target = targetAt(mx, my); markTarget(g.target);
-      cal.classList.add("pinching");
+      if (g && g.mode === "swipe" && g.lock === "x") return;
+      var a = e.touches[0], b = e.touches[1], mx = (a.clientX + b.clientX) / 2, my = (a.clientY + b.clientY) / 2;
+      var m = $("months"), L = m.getBoundingClientRect();
+      g = { mode: "pinch", d0: Math.max(tdist(a, b), 1), mx0: mx, my0: my, mx: mx, my: my, ox: mx - L.left, oy: my - L.top, r: 1, s: [] };
+      g.target = targetAt(mx, my);
+      markTarget(state.level === "day" ? null : anchorFor(state.level, g.target));
+      m.style.willChange = "transform";
       e.preventDefault();
     } else if (e.touches.length === 1 && !g) {
-      g = { mode: "swipe", x0: e.touches[0].clientX, y0: e.touches[0].clientY, dx: 0, dy: 0, lock: null };
+      g = { mode: "swipe", x0: e.touches[0].clientX, y0: e.touches[0].clientY, dx: 0, dy: 0, lock: null, s: [] };
     }
   }, { passive: false });
   cal.addEventListener("touchmove", function (e) {
@@ -808,51 +1034,60 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     if (g.mode === "pinch" && e.touches.length >= 2) {
       var a = e.touches[0], b = e.touches[1];
       g.r = tdist(a, b) / g.d0; g.mx = (a.clientX + b.clientX) / 2; g.my = (a.clientY + b.clientY) / 2;
-      g.tx = (g.mx - g.mx0) * 0.5; g.ty = (g.my - g.my0) * 0.5;
-      e.preventDefault(); schedule();
+      sample(g.s, g.r); e.preventDefault(); schedule();
     } else if (g.mode === "swipe" && e.touches.length === 1) {
       g.dx = e.touches[0].clientX - g.x0; g.dy = e.touches[0].clientY - g.y0;
-      if (!g.lock && (Math.abs(g.dx) > 10 || Math.abs(g.dy) > 10)) g.lock = Math.abs(g.dx) > Math.abs(g.dy) * 1.2 && state.level !== "year" ? "x" : "y";
-      if (g.lock === "x") { e.preventDefault(); schedule(); }
+      if (!g.lock && (Math.abs(g.dx) > 8 || Math.abs(g.dy) > 8)) g.lock = Math.abs(g.dx) > Math.abs(g.dy) * 1.2 && state.level !== "year" ? "x" : "y";
+      if (g.lock === "x") { sample(g.s, g.dx); e.preventDefault(); schedule(); }
     }
   }, { passive: false });
   function endTouch(e) {
     if (!g) return;
-    var c = $("months");
     if (g.mode === "pinch") {
-      if (e.touches.length >= 2) return; // still pinching with two fingers
-      var r = g.r, tgt = targetAt(g.mx0, g.my0) || g.target, ox = g.ox, oy = g.oy;
-      clearGesture(); suppressUntil = Date.now() + 350;
-      var lv = state.level;
-      if (r >= PINCH_IN && lv !== "day") { c.style.transform = ""; c.style.transformOrigin = ox + "px " + oy + "px"; zoomIn(tgt); }
-      else if (r <= PINCH_OUT && lv !== "year") { c.style.transform = ""; c.style.transformOrigin = ox + "px " + oy + "px"; zoomOut(); }
-      else settle(c);
+      if (e.touches.length >= 2) return;
+      cancelAnimationFrame(raf); raf = 0;
+      var r = g.r, v = velocity(g.s) * 1000, tgt = g.target, lv = state.level;
+      // The pinch transform as scale + offset with origin 0 0, so the zoom continues from it.
+      var sc = soft(r), pin = { s: sc, cx: g.ox * (1 - sc) + (g.mx - g.mx0), cy: g.oy * (1 - sc) + (g.my - g.my0) };
+      markTarget(null); $("months").style.willChange = ""; g = null; suppressUntil = Date.now() + 350;
+      var goIn = lv !== "day" && (r >= PINCH_IN || (r > 1.06 && v > 1.2));
+      var goOut = lv !== "year" && (r <= PINCH_OUT || (r < 0.95 && v < -1.2));
+      if (goIn) zoomIn(tgt, pin); else if (goOut) zoomOut(pin); else { dropPrepared(); settleBack(); }
       return;
     }
     if (g.mode === "swipe") {
-      var dx = g.dx, lock = g.lock; clearGesture();
-      if (lock === "x" && Math.abs(dx) > 60) { suppressUntil = Date.now() + 350; c.style.transform = ""; c.style.opacity = ""; step(dx < 0 ? 1 : -1); }
-      else if (lock === "x") settle(c);
+      var dx = g.dx, lock = g.lock, vx = velocity(g.s); g = null;
+      if (lock !== "x") return;
+      cancelAnimationFrame(raf); raf = 0; pagerMove(dx);
+      suppressUntil = Date.now() + 350;
+      var W = pager ? pager.W : 400, n = 0;
+      if (Math.abs(dx) > W * 0.3 || (Math.abs(dx) > 24 && Math.abs(vx) > 0.35)) n = dx < 0 ? 1 : -1;
+      if (n !== 0 && (dx < 0) !== (vx <= 0.05) && Math.abs(vx) > 0.35) n = 0; // flicked back the other way
+      pagerFinish(n, n ? vx : 0);
     }
   }
   cal.addEventListener("touchend", endTouch);
-  cal.addEventListener("touchcancel", function () { if (g) { clearGesture(); settle($("months")); } });
+  cal.addEventListener("touchcancel", function () {
+    if (!g) return;
+    var mode = g.mode; g = null; markTarget(null);
+    if (mode === "pinch") { dropPrepared(); settleBack(); } else if (pager) pagerFinish(0, 0);
+  });
   // Keep Safari's own page zoom out of the calendar, so the pinch reaches the app.
   ["gesturestart", "gesturechange"].forEach(function (n) { cal.addEventListener(n, function (e) { e.preventDefault(); }); });
-  // A pinch or swipe never turns into a tap.
-  document.addEventListener("click", function (e) { if (Date.now() < suppressUntil && cal.contains(e.target)) { e.stopPropagation(); e.preventDefault(); } }, true);
+  // A pinch or swipe never turns into a tap, and nothing is tappable mid-animation.
+  document.addEventListener("click", function (e) { if ((busy || Date.now() < suppressUntil) && cal.contains(e.target)) { e.stopPropagation(); e.preventDefault(); } }, true);
   // Trackpad pinch and Ctrl + scroll.
   cal.addEventListener("wheel", function (e) {
     if (!e.ctrlKey) return;
     e.preventDefault();
-    if (Date.now() < wheelLock) return;
+    if (busy || Date.now() < wheelLock) return;
     wheelAcc += e.deltaY;
     if (wheelAcc < -40) { wheelAcc = 0; wheelLock = Date.now() + 450; zoomIn(targetAt(e.clientX, e.clientY)); }
     else if (wheelAcc > 40) { wheelAcc = 0; wheelLock = Date.now() + 450; zoomOut(); }
   }, { passive: false });
   document.addEventListener("keydown", function (e) {
     var tag = (e.target.tagName || "").toLowerCase();
-    if (tag === "select" || tag === "input" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (busy || tag === "select" || tag === "input" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === "+" || e.key === "=") { e.preventDefault(); zoomIn(null); }
     else if (e.key === "-" || e.key === "_") { e.preventDefault(); zoomOut(); }
     else if (e.key === "ArrowLeft" && state.level !== "year") { e.preventDefault(); step(-1); }
@@ -874,5 +1109,6 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
   if (state.level === "day" && mq.matches) { state.view = "week"; state.week = mondayOf(state.sel); }
   renderMonths(); renderPanel();
   if (state.level === "year") requestAnimationFrame(centerNow);
+  if (performance.mark) performance.mark("app-ready");
 })();
 </script>

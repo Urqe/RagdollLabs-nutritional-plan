@@ -1,7 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161b35" media="(prefers-color-scheme: dark)">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-text-size-adjust: 100%; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
 <title>RagdollLabs Nutritional Plan</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" id="fontcss">
 <style>
 /* Layout: year of month cards on the left, a sticky day/recipe panel on the right (bottom sheet on phones). Talavera cobalt on tile white, dried-chile red for heat and cheat nights. */
 :root {
@@ -149,20 +165,22 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
 .zoom-btns { display: flex; gap: 6px; flex: none; }
 .zoom-btns .btn { width: 38px; padding: 6px 0; font-size: 1.05rem; line-height: 1; }
 .cal { touch-action: pan-y; scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 84px); }
-.cal.pinching > * { will-change: transform; }
-.cal > .settle { transition: transform .18s ease-out, opacity .18s ease-out; }
 .pinch-target { outline: 2px solid var(--cobalt); outline-offset: 2px; transition: outline-color .1s; }
-.cal.will-in .pinch-target { outline-width: 3px; box-shadow: 0 0 0 6px var(--cobalt-soft); }
-.cal.will-out > * { opacity: .75; }
-.cal.zin > * { animation: zin .24s cubic-bezier(.2,.7,.2,1); }
-.cal.zout > * { animation: zout .24s cubic-bezier(.2,.7,.2,1); }
-@keyframes zin { from { opacity: .2; transform: scale(.82); } to { opacity: 1; transform: none; } }
-@keyframes zout { from { opacity: .2; transform: scale(1.15); } to { opacity: 1; transform: none; } }
-@keyframes slidel { from { opacity: .4; transform: translateX(24px); } to { opacity: 1; transform: none; } }
-@keyframes slider { from { opacity: .4; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
-.cal.sl > * { animation: slidel .2s ease-out; }
-.cal.sr > * { animation: slider .2s ease-out; }
-@media (prefers-reduced-motion: reduce) { .cal > * { animation: none !important; } }
+
+.cal { position: relative; overflow-x: clip; }
+@supports not (overflow: clip) { .cal { overflow-x: hidden; } }
+.pager { position: absolute; left: 0; right: 0; top: 0; pointer-events: none; }
+.prep { pointer-events: none; }
+.ghost { pointer-events: none; z-index: 15; }
+.ghost > * { margin: 0; }
+/* Off-screen months skip layout and paint until they scroll into view. */
+.month { content-visibility: auto; contain-intrinsic-size: auto 330px; }
+.ag { content-visibility: auto; contain-intrinsic-size: auto 66px; }
+.dmeal { content-visibility: auto; contain-intrinsic-size: auto 240px; }
+.dc { contain: layout paint; }
+/* iPhone tap feel: no grey flash or double-tap zoom delay, a pressed state instead. */
+button, .d, .dc, .ag, .meal { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.d:active, .dc:active, .ag:active, .meal:active, .btn:active, .wk:active { transform: scale(.96); transition: transform .08s; }
 
 /* Month level */
 .mbig { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
@@ -227,6 +245,9 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
 .adv.freeze, .adv.keeps { color: var(--good); }
 .price-note { margin: 0; }
 </style>
+</head>
+<body>
+
 
 <header class="top">
   <div class="top-in">
@@ -257,6 +278,9 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
 </div>
 
 <script>
+// Fonts load without blocking the first render; text shows in the fallback face until they arrive.
+(function () { var l = document.getElementById("fontcss"); if (l) { l.rel = "stylesheet"; } })();
+performance.mark && performance.mark("app-start");
 // ---- Targets -------------------------------------------------------------
 var PEOPLE = {
   p1: { label: "Person 1", protein: 105 },
@@ -1268,6 +1292,9 @@ if (typeof module !== "undefined") module.exports = Pricing;
 
 </script>
 <script>
+var PLAN_TABLE = "b06|l25||d17|1|j2|s1|f1;b15|~d17|l20|d16|0|j6|s6|f4;b13|l20||d04|0|j2|s4|f2;b05|l06||d12|0|j6|s3|f5;b17|l23||d07|0|j2|s5|f8;b09|l14||c07|0|j6|s2|f7;b10|l18||d22|0|j2|s6|f3;b07|l19||d02|0|j3|s1|f6;b08|l10||d24|1|j4|s3|f1;b18|~d24|l11|d21|0|j3|s4|f4;b03|l01||d14|0|j4|s2|f2;b01|l21||d01|0|j3|s6|f5;b19|l13||c01|0|j4|s1|f7;b14|l26||d03|0|j3|s3|f3;b04|l27||d08|0|j2|s5|f8;b02|l29||d13|0|j6|s4|f6;b20|l17||d10|0|j2|s2|f1;b16|l16||d18|1|j6|s1|f4;b13|~d18|l12|d15|0|j2|s6|f2;b11|l04||c04|0|j6|s5|f5;b12|l11||d19|1|j2|s4|f7;b06|~d19|l03|d05|0|j4|s3|f3;b05|l03||d11|0|j3|s1|f8;b17|l12||d06|0|j4|s5|f6;b07|l08||d09|0|j3|s2|f1;b08|l02||d23|0|j4|s6|f4;b10|l15||c05|0|j3|s4|f2;b09|l07||d17|1|j4|s3|f5;b15|~d17|l30|d16|0|j6|s1|f7;b02|l09||d07|0|j2|s2|f3;b03|l30||d20|0|j6|s5|f8;b18|l24||d12|0|j2|s6|f6;b01|l28||d22|0|j6|s3|f1;b19|l05||c06|0|j2|s4|f4;b11|l22||d04|0|j6|s1|f2;b04|l20||d02|0|j3|s2|f5;b20|l25||d21|0|j4|s6|f7;b13|l14||d24|1|j3|s3|f3;b06|~d24|l23|d03|0|j4|s4|f6;b16|l23||d01|0|j3|s5|f8;b14|l06||c02|0|j4|s1|f1;b12|l10||d13|0|j3|s2|f4;b17|l27||d08|0|j2|s6|f2;b07|l19||d14|0|j6|s3|f5;b05|l21||d18|1|j2|s5|f7;b08|~d18|l18|d17|0|j6|s4|f3;b15|l18||d15|0|j2|s1|f8;b10|l13||c08|0|j6|s2|f6;b19|l01||d10|0|j2|s5|f1;b01|l17||d16|1|j5|s6|f4;b03|~d16|l26|d19|0|j4|s3|f2;b02|l26||d12|0|j5|s4|f5;b18|l16||d07|0|j4|s1|f7;b13|l11||d05|0|j5|s2|f3;b11|l29||c03|0|j4|s5|f8;b09|l04||d11|0|j5|s3|f1;b04|l25||d22|0|j6|s6|f6;b06|l03||d21|0|j2|s4|f4;b20|l08||d24|1|j6|s1|f2;b17|~d24|l12|d02|0|j2|s2|f5;b07|l12||d09|0|j6|s5|f7;b14|l07||c07|0|j2|s6|f3;b19|l20||d04|0|j6|s3|f8;b05|l02||d06|0|j1|s4|f1;b16|l15||d13|0|j4|s5|f4;b15|l23||d17|1|j1|s1|f6;b08|~d17|l30|d03|0|j4|s2|f2;b02|l30||d23|0|j1|s6|f5;b10|l06||c01|0|j4|s3|f7;b12|l14||d01|0|j1|s4|f3;b01|l27||d16|1|j2|s1|f1;b03|~d16|l19|d14|0|j6|s2|f4;b18|l19||d12|0|j2|s6|f6;b04|l10||d08|0|j6|s5|f8;b06|l09||d10|0|j2|s4|f2;b11|l24||c04|0|j6|s3|f5;b09|l28||d15|0|j2|s1|f7;b07|l25||d07|0|j4|s2|f3;b20|l21||d18|1|j3|s5|f1;b13|~d18|l18|d22|0|j4|s6|f6;b17|l01||d02|0|j3|s4|f4;b05|l05||d20|0|j4|s3|f8;b19|l18||c05|0|j3|s5|f2;b14|l13||d17|1|j4|s1|f5;b08|~d17|l17|d05|0|j6|s2|f7;b15|l17||d04|0|j2|s6|f3;b02|l11||d21|0|j6|s4|f1;b16|l22||d24|1|j2|s5|f6;b01|~d24|l26|d11|0|j6|s3|f4;b12|l29||c06|0|j2|s1|f8;b10|l26||d19|1|j6|s2|f2;b03|~d19|l16|d03|0|j4|s3|f5;b18|l16||d01|0|j3|s6|f7;b04|l03||d09|0|j4|s5|f3;b06|l04||d13|0|j3|s4|f1;b20|l08||d06|0|j4|s3|f6;b11|l02||c02|0|j3|s1|f4;b19|l07||d12|0|j4|s2|f8;b07|l12||d07|0|j2|s5|f2;b13|l15||d10|0|j6|s6|f5;b17|l30||d02|0|j2|s4|f7;b05|l06||d08|0|j6|s3|f3;b02|l19||d23|0|j2|s5|f1;b09|l14||c08|0|j6|s1|f6;b14|l21||d04|0|j2|s2|f4;b08|l27||d14|0|j4|s6|f2;b15|l01||d15|0|j3|s4|f5;b03|l10||d21|0|j4|s3|f7;b18|l20||d24|1|j3|s1|f3;b16|~d24|l23|d18|0|j4|s5|f8;b10|l18||c03|0|j3|s4|f1;b12|l23||d16|1|j4|s2|f6;b01|~d16|l09|d01|0|j6|s6|f4;b04|l17||d05|0|j2|s3|f2;b13|l09||d19|1|j6|s1|f7;b06|~d19|l28|d20|0|j2|s5|f5;b20|l24||d13|0|j6|s4|f3;b19|l28||c07|0|j2|s3|f8;b11|l22||d07|0|j6|s2|f1;b05|l05||d03|0|j4|s6|f6;b07|l29||d10|0|j3|s5|f4;b17|l13||d11|0|j4|s1|f2;b02|l25||d12|0|j3|s4|f5;b16|l26||d23|0|j4|s2|f7;b09|l11||c01|0|j3|s3|f8;b14|l04||d02|0|j4|s6|f3;b08|l03||d17|1|j2|s1|f1;b15|~d17|l08|d22|0|j6|s4|f4;b03|l06||d04|0|j2|s5|f6;b18|l16||d21|0|j6|s2|f5;b01|l07||d06|0|j2|s6|f2;b12|l19||c04|0|j6|s3|f7;b10|l12||d09|0|j2|s1|f3;b05|l08||d08|0|j1|s4|f1;b06|l21||d24|1|j3|s2|f4;b13|~d24|l15|d15|0|j1|s6|f6;b20|l09||d19|1|j3|s5|f8;b04|~d19|l30|d20|0|j1|s3|f5;b19|l02||c05|0|j3|s1|f2;b11|l30||d01|0|j1|s4|f7;b07|l27||d14|0|j2|s2|f3;b17|l24||d13|0|j6|s5|f1;b02|l14||d07|0|j2|s6|f4;b08|l15||d23|0|j6|s3|f6;b16|l18||d18|0|j2|s1|f8;b14|l01||c06|0|j6|s4|f5;b09|l05||d05|0|j2|s5|f2;b01|l28||d12|0|j3|s2|f7;b15|l10||d10|0|j4|s6|f3;b18|l22||d02|0|j3|s3|f1;b06|l17||d21|0|j4|s5|f4;b13|l13||d03|0|j3|s1|f8;b12|l29||c02|0|j4|s4|f6;b10|l20||d04|0|j3|s6|f5;b03|l03||d16|1|j6|s2|f2;b05|~d16|l09|d11|0|j2|s3|f7;b20|l09||d24|1|j6|s5|f3;b04|~d24|l26|d08|0|j2|s1|f1;b17|l19||d01|0|j6|s4|f4;b19|l26||c08|0|j2|s6|f8;b11|l23||d20|0|j6|s2|f6;b07|l06||d23|0|j5|s3|f5;b02|l11||d07|0|j4|s1|f2;b08|l16||d17|1|j5|s4|f7;b01|~d17|l08|d15|0|j4|s6|f3;b18|l25||d12|0|j5|s5|f1;b09|l04||c03|0|j4|s3|f4;b14|l07||d06|0|j5|s2|f8;b15|l21||d21|0|j2|s1|f6;b16|l12||d13|0|j6|s5|f5;b13|l24||d09|0|j2|s6|f2;b06|l08||d19|1|j6|s4|f7;b05|~d19|l05|d18|0|j2|s3|f3;b10|l05||c07|0|j6|s2|f1;b19|l27||d04|0|j2|s1|f4;b03|l02||d22|0|j3|s3|f6;b20|l28||d02|0|j4|s6|f5;b04|l17||d14|0|j3|s4|f2;b17|l14||d01|0|j4|s5|f8;b01|l30||d10|0|j3|s2|f7;b12|l22||c01|0|j4|s1|f3;b11|l10||d05|0|j3|s3|f1;b07|l09||d24|1|j6|s6|f4;b02|~d24|l01|d03|0|j2|s4|f6;b08|l01||d07|0|j6|s2|f5;b13|l13||d23|0|j2|s1|f2;b18|l15||d20|0|j6|s5|f8;b09|l18||c04|0|j2|s3|f7;b14|l19||d11|0|j6|s4|f3;b06|l29||d08|0|j4|s6|f1;b15|l24||d21|0|j3|s5|f4;b16|l03||d12|0|j4|s1|f6;b05|l26||d15|0|j3|s2|f5;b20|l06||d13|0|j4|s3|f2;b19|l11||c05|0|j3|s6|f8;b10|l07||d04|0|j4|s4|f7;b17|l05||d16|1|j6|s1|f3;b01|~d16|l09|d02|0|j2|s2|f1;b04|l16||d17|1|j6|s3|f4;b03|~d17|l20|d19|0|j2|s5|f6;b08|l20||d10|0|j6|s6|f5;b11|l04||c06|0|j2|s4|f8;b12|l21||d18|1|j6|s1|f2;b07|~d18|l28|d01|0|j4|s2|f7;b02|l28||d07|0|j3|s3|f3;b13|l08||d23|0|j4|s6|f1;b18|l27||d24|1|j3|s4|f6;b06|~d24|l09|d06|0|j4|s5|f4;b09|l09||c02|0|j3|s1|f8;b14|l12||d09|0|j4|s3|f5;b05|l25||d12|0|j6|s2|f2;b15|l17||d21|0|j2|s6|f7;b20|l23||d14|0|j6|s5|f3;b16|l18||d13|0|j2|s4|f1;b03|l22||d05|0|j6|s1|f6;b10|l24||c08|0|j2|s2|f4;b19|l01||d04|0|j6|s3|f8;b01|l14||d20|0|j3|s5|f5;b17|l30||d03|0|j4|s6|f2;b08|l29||d11|0|j3|s4|f7;b04|l02||d15|0|j4|s5|f3;b07|l19||d08|0|j3|s1|f1;b09|l10||c03|0|j4|s3|f4;b11|l03||d22|0|j3|s2|f6;b06|l05||d07|0|j2|s6|f5;b13|l06||d02|0|j6|s4|f2;b02|l13||d24|1|j2|s1|f7;b18|~d24|l26|d23|0|j6|s3|f3;b20|l26||d01|0|j2|s5|f8;b12|l15||c07|0|j6|s2|f1;b14|l11||d10|0|j2|s6|f6;b05|l28||d19|1|j4|s4|f4;b15|~d19|l09|d21|0|j5|s1|f5;b08|l16||d12|0|j4|s3|f7;b03|l07||d18|1|j5|s5|f2;b16|~d18|l21|d17|0|j4|s2|f3;b19|l22||c01|0|j5|s6|f8;b10|l04||d13|0|j4|s4|f1;b01|l27||d04|0|j6|s1|f6;b17|l21||d05|0|j3|s3|f4;b07|l08||d14|0|j6|s2|f5;b04|l18||d16|1|j3|s5|f7;b02|~d16|l17|d09|0|j6|s6|f2;b09|l01||c04|0|j3|s3|f3;b11|l12||d07|0|j6|s4|f8;b06|l17||d15|0|j4|s1|f1;b13|l19||d06|0|j2|s5|f6;b20|l29||d03|0|j4|s2|f4;b18|l09||d11|0|j2|s3|f5;b05|l30||d01|0|j4|s6|f7;b12|l14||c05|0|j2|s4|f2;b10|l20||d02|0|j4|s1|f3;b08|l03||d08|0|j6|s2|f1;b15|l25||d21|0|j3|s3|f6;b03|l10||d24|1|j6|s6|f4;b16|~d24|l13|d10|0|j3|s5|f8;b04|l13||d12|0|j6|s4|f5;b14|l23||c06|0|j3|s1|f7;b19|l24||d18|1|j6|s2|f2;b01|~d18|l06|d19|0|j4|s3|f3;b17|l06||d13|0|j2|s5|f6;b07|l02||d04|0|j4|s6|f1;b02|l26||d20|0|j2|s4|f4;b18|l18||d17|0|j4|s1|f8;b09|l15||c02|0|j2|s2|f5;b11|l11||d07|0|j4|s3|f7;b06|l16||d22|0|j6|s6|f2;b05|l21||d05|0|j5|s4|f3;b08|l05||d15|0|j6|s1|f6;b13|l19||d23|0|j5|s3|f1;b20|l27||d01|0|j6|s5|f4;b10|l07||c08|0|j5|s2|f8;b12|l01||d03|0|j6|s4|f5;b03|l08||d14|0|j3|s6|f7;b04|l17||d02|0|j2|s1|f2;b15|l04||d10|0|j3|s5|f3;b16|l29||d09|0|j2|s3|f6;b02|l12||d24|0|j3|s2|f1;b19|l30||c03|0|j2|s4|f4;b14|l10||d21|0|j3|s6|f8;b01|l28||d12|0|j6|s1|f5;b17|l14||d08|0|j4|s3|f7;b07|l09||d19|1|j6|s2|f2;b18|~d19|l03|d11|0|j4|s5|f3;b06|l22||d06|0|j6|s4|f6;b11|l03||c07|0|j4|s6|f1;b09|l06||d04|0|j6|s1|f4;b05|l13||d16|1|j3|s3|f5;b13|~d16|l18|d07|0|j2|s2|f7;b08|l21||d18|1|j3|s5|f8;b16|~d18|l18|d13|0|j2|s6|f3;b20|l18||d15|0|j3|s4|f2;b10|l19||c01|0|j2|s1|f1;b12|l11||d01|0|j3|s3|f6;b03|l20||d03|0|j6|s2|f4;b02|l02||d02|0|j4|s6|f5;b01|l26||d24|1|j6|s1|f7;b15|~d24|l16|d05|0|j4|s4|f3;b04|l01||d21|0|j6|s3|f2;b14|l25||c04|0|j4|s5|f8;b19|l23||d17|1|j6|s2|f6;b07|~d17|l16|d22|0|j3|s6|f1;b17|l24||d10|0|j2|s1|f4;b18|l27||d12|0|j3|s3|f5;b13|l15||d14|0|j2|s5|f7;b06|l16||d23|0|j3|s4|f3;b11|l08||c05|0|j2|s2|f2;b09|l17||d04|0|j3|s1|f8;b05|l07||d18|1|j6|s6|f6;b20|~d18|l29|d16|0|j4|s5|f1;b08|l29||d07|0|j6|s3|f4;b03|l04||d09|0|j4|s4|f5;b16|l18||d08|0|j6|s2|f7;b10|l10||c06|0|j4|s1|f3;b14|l05||d19|1|j6|s6|f2;b01|~d19|l14|d20|0|j3|s5|f8;b07|l30||d13|0|j2|s3|f6;b02|l12||d11|0|j3|s4|f1;b04|l19||d01|0|j2|s1|f4;b15|l14||d17|0|j3|s2|f5;b12|l03||c02|0|j2|s5|f7;b19|l20||d15|0|j3|s6|f3;b18|l25||d02|0|j6|s3|f2;b17|l06||d22|0|j5|s4|f6;b13|l21||d24|1|j6|s1|f1;b05|~d24|l13|d21|0|j5|s2|f4;b06|l13||d05|0|j6|s6|f5;b10|l09||c08|0|j5|s3|f7;b14|l11||d04|0|j6|s4|f3;b03|l28||d03|0|j1|s5|f8;b20|l23||d06|0|j4|s3|f2;b08|l01||d10|0|j1|s1|f6;b16|l26||d12|0|j4|s6|f1;b04|l22||d07|0|j1|s2|f4;b11|l16||c03|0|j4|s4|f5;b09|l02||d16|1|j1|s5|f7;b07|~d16|l27|d14|0|j6|s3|f3;b01|l27||d17|1|j3|s1|f2;b15|~d17|l17|d08|0|j6|s6|f6;b02|l17||d01|0|j3|s2|f1;b17|l15||d09|0|j6|s5|f8;b19|l29||c07|0|j3|s4|f4;b10|l08||d18|1|j6|s3|f5;b06|~d18|l25|d13|0|j4|s1|f7;b18|l10||d11|0|j2|s5|f3;b05|l25||d02|0|j4|s6|f2;b13|l07||d24|1|j2|s3|f6;b16|~d24|l04|d15|0|j4|s2|f1;b12|l18||c01|0|j2|s4|f4;b14|l12||d19|1|j4|s1|f5;b03|~d19|l20|d22|0|j6|s3|f3;b20|l20||d04|0|j3|s6|f7;b08|l03||d23|0|j6|s5|f8;b04|l04||d21|0|j3|s2|f2;b07|l30||d05|0|j6|s4|f6;b09|l24||c04|0|j3|s1|f1;b11|l19||d03|0|j6|s6|f4;b01|l21||d12|0|j4|s3|f5;b02|l13||d07|0|j2|s2|f3;b15|l14||d17|1|j4|s4|f7;b17|~d17|l06|d16|0|j2|s1|f6;b06|l01||d01|0|j4|s5|f8;b10|l23||c05|0|j2|s6|f2;b19|l06||d10|0|j4|s4|f1;b05|l26||d24|1|j6|s3|f4;b18|~d24|l11|d08|0|j3|s2|f5;b13|l05||d02|0|j6|s1|f3;b16|l16||d06|0|j3|s5|f7;b20|l11||d20|0|j6|s6|f8;b14|l09||c06|0|j3|s4|f6;b12|l29||d04|0|j6|s3|f2;b08|l27||d22|0|j4|s1|f1;b04|l25||d13|0|j2|s5|f4;b03|l02||d18|1|j4|s2|f5;b01|~d18|l18|d09|0|j2|s6|f3;b02|l17||d11|0|j4|s4|f8;b09|l20||c08|0|j2|s3|f6;b11|l18||d14|0|j4|s5|f7;b07|l08||d19|1|j6|s1|f2;b15|~d19|l10|d15|0|j3|s2|f1;b17|l15||d21|0|j6|s5|f4;b06|l07||d17|1|j3|s3|f5;b05|~d17|l10|d16|0|j6|s6|f3;b10|l21||c02|0|j3|s4|f8;b19|l22||d07|0|j6|s1|f6;b18|l28||d12|0|j4|s3|f7;b13|l10||d05|0|j2|s2|f2;b20|l19||d01|0|j4|s6|f1;b08|l03||d24|1|j2|s5|f4;b16|~d24|l12|d03|0|j4|s4|f5;b14|l04||c03|0|j2|s1|f3;b12|l12||d04|0|j4|s5|f6;b01|l23||d13|0|j6|s2|f8;b03|l30||d10|0|j3|s3|f7;b02|l14||d02|0|j6|s6|f2;b04|l01||d22|0|j3|s5|f1;b06|l25||d23|0|j6|s4|f4;b11|l13||c07|0|j3|s1|f5;b09|l11||d08|0|j6|s2|f3;b17|l06||d17|1|j4|s3|f6;b15|~d17|l20|d16|0|j2|s6|f7;b07|l26||d21|0|j4|s1|f2;b05|l16||d19|1|j2|s4|f1;b13|~d19|l17|d15|0|j4|s3|f4;b19|l20||c01|0|j2|s5|f8;b10|l27||d18|1|j4|s2|f5;b20|~d18|l24|d12|0|j6|s6|f3;b08|l17||d07|0|j5|s1|f6;b18|l24||d11|0|j6|s3|f7;b16|l18||d06|0|j5|s5|f2;b04|l29||d01|0|j6|s4|f1;b14|l02||c05|0|j5|s2|f4;b09|l05||d14|0|j6|s6|f5;b01|l21||d24|1|j3|s1|f3;b02|~d24|l08|d03|0|j2|s3|f6;b03|l09||d09|0|j3|s5|f8;b06|l07||d13|0|j2|s4|f7;b17|l08||d05|0|j3|s2|f2;b12|l19||c04|0|j2|s6|f1;b19|l10||d04|0|j3|s1|f4;b07|l03||d02|0|j6|s4|f5;b05|l25||d22|0|j5|s3|f3;b15|l23||d17|1|j6|s5|f6;b13|~d17|l15|d20|0|j5|s2|f8;b08|l15||d10|0|j6|s6|f7;b11|l12||c06|0|j5|s1|f2;b10|l04||d16|1|j6|s4|f1;b20|~d16|l01|d21|0|j3|s3|f4;b18|l14||d12|0|j2|s6|f5;b04|l20||d07|0|j3|s2|f3;b01|l01||d08|0|j2|s5|f6;b16|l30||d15|0|j3|s1|f8;b14|l11||c08|0|j2|s3|f7;b09|l13||d19|1|j3|s4|f2;b06|~d19|l06|d01|0|j6|s6|f1;b02|l06||d24|1|j1|s2|f4;b03|~d24|l28|d18|0|j6|s5|f5;b17|l26||d11|0|j1|s1|f3;b07|l18||d23|0|j6|s3|f6;b12|l22||c02|0|j1|s4|f8;b19|l28||d04|0|j6|s6|f7;b05|l27||d17|1|j3|s2|f2;b13|~d17|l16|d22|0|j2|s1|f1;b08|l16||d03|0|j3|s3|f4;b15|l21||d02|0|j2|s4|f5;b18|l17||d05|0|j3|s5|f3;b11|l29||c03|0|j2|s6|f8;b10|l23||d13|0|j3|s2|f6;b20|l25||d16|1|j6|s1|f7;b02|~d16|l19|d07|0|j4|s3|f2;b01|l02||d14|0|j6|s4|f1;b04|l19||d06|0|j4|s5|f4;b16|l07||d09|0|j6|s6|f5;b09|l24||c01|0|j4|s2|f3;b14|l10||d10|0|j6|s1|f7;b06|l03||d12|0|j3|s3|f6;b08|l08||d21|0|j2|s4|f2;b17|l05||d24|1|j3|s6|f1;b03|~d24|l13|d08|0|j2|s2|f4;b07|l09||d19|0|j3|s1|f5;b19|l14||c07|0|j2|s5|f8;b12|l12||d04|0|j3|s4|f3;b05|l01||d15|0|j6|s6|f7;b13|l11||d01|0|j4|s3|f6;b18|l15||d18|1|j6|s5|f2;b15|~d18|l04|d11|0|j4|s2|f1;b02|l04||d02|0|j6|s1|f5;b11|l30||c05|0|j4|s4|f4;b10|l26||d07|0|j6|s6|f8;b01|l06||d13|0|j3|s5|f3;b20|l13||d03|0|j2|s3|f7;b16|l18||d05|0|j3|s2|f6;b04|l21||d10|0|j2|s5|f2;b08|l27||d23|0|j3|s1|f1;b14|l16||c04|0|j2|s4|f5;b09|l17||d20|0|j3|s6|f4;b06|l20||d17|1|j6|s2|f3;b17|~d17|l19|d14|0|j4|s3|f7;b03|l29||d12|0|j6|s5|f8;b05|l28||d21|0|j4|s1|f6;b07|l22||d24|0|j6|s4|f2;b19|l24||c06|0|j4|s5|f1;b12|l05||d04|0|j6|s6|f5;b01|l09||d22|0|j3|s2|f4;b13|l19||d08|0|j2|s3|f3;b15|l10||d01|0|j3|s1|f7;b18|l03||d16|1|j2|s4|f6;b02|~d16|l25|d19|0|j3|s6|f2;b10|l02||c08|0|j2|s2|f1;b11|l25||d06|0|j3|s5|f8;b04|l08||d07|0|j6|s1|f5;b08|l07||d09|0|j1|s3|f4;b16|l01||d18|1|j6|s5|f3;b20|~d18|l18|d02|0|j1|s6|f7;b17|l14||d23|0|j6|s4|f6;b09|l18||c02|0|j1|s2|f2;b14|l11||d15|0|j6|s1|f1;b06|l21||d13|0|j3|s5|f8;b07|l12||d11|0|j2|s3|f5;b05|l24||d03|0|j3|s6|f4;b03|l15||d10|0|j2|s4|f3;b15|l26||d04|0|j3|s2|f6;b19|l06||c03|0|j2|s1|f7;b12|l23||d24|1|j3|s5|f2;b01|~d24|l27|d05|0|j6|s3|f1;b18|l09||d21|0|j4|s6|f5;b13|l13||d12|0|j6|s4|f4;b02|l27||d08|0|j4|s2|f6;b04|l05||d07|0|j6|s1|f3;b10|l04||c01|0|j4|s5|f8;b11|l28||d20|0|j6|s3|f7;b08|l17||d01|0|j2|s6|f2;b20|l16||d23|0|j3|s4|f1;b17|l30||d14|0|j2|s5|f4;b16|l29||d18|1|j3|s1|f5;b06|~d18|l22|d17|0|j2|s2|f6;b19|l22||c07|0|j3|s4|f3;b09|l03||d19|1|j2|s3|f7;b03|~d19|l10|d02|0|j6|s6|f2;b18|l02||d04|0|j1|s1|f1;b07|l10||d13|0|j6|s5|f8;b05|l19||d06|0|j1|s2|f4;b15|l01||d10|0|j6|s4|f5;b14|l18||c05|0|j1|s3|f6;b11|l20||d21|0|j6|s6|f3;b01|l08||d22|0|j3|s1|f7;b02|l24||d09|0|j2|s5|f2;b13|l09||d16|1|j3|s2|f8;b08|~d16|l05|d15|0|j2|s4|f1;b04|l07||d24|0|j3|s3|f4;b12|l14||c04|0|j2|s6|f5;b10|l11||d11|0|j3|s1|f6;b06|l21||d07|0|j6|s2|f3;b17|l26||d23|0|j5|s4|f7;b20|l13||d12|0|j6|s6|f2;b18|l06||d03|0|j5|s3|f1;b07|l25||d01|0|j6|s5|f8;b19|l12||c06|0|j5|s1|f4;b09|l05||d05|0|j6|s4|f5;b05|l28||d08|0|j2|s2|f6;b15|l27||d04|0|j4|s6|f3;b13|l15||d20|0|j2|s3|f7;b16|l22||d18|1|j4|s5|f2;b03|~d18|l16|d02|0|j2|s1|f1;b11|l16||c08|0|j4|s4|f8;b14|l17||d21|0|j2|s6|f5;b01|l03||d19|1|j6|s2|f4;b02|~d19|l04|d14|0|j5|s3|f6;b04|l19||d13|0|j6|s5|f3;b08|l04||d10|0|j5|s1|f7;b20|l30||d07|0|j6|s4|f2;b10|l29||c02|0|j5|s6|f1;b09|l02||d23|0|j6|s3|f5;b06|l10||d24|1|j1|s2|f4;b13|~d24|l09|d15|0|j4|s1|f6;b18|l09||d17|1|j1|s3|f3;b07|~d17|l08|d06|0|j4|s5|f8;b17|l24||d11|0|j1|s4|f7;b12|l18||c03|0|j4|s6|f2;b19|l08||d12|0|j1|s2|f1;b05|l23||d04|0|j6|s5|f5;b15|l01||d09|0|j2|s1|f4;b16|l05||d01|0|j6|s3|f6;b03|l11||d03|0|j2|s6|f3;b01|l21||d05|0|j6|s5|f8;b11|l07||c01|0|j2|s4|f7;b14|l14||d08|0|j6|s2|f2;b08|l28||d02|0|j3|s1|f1;b02|l26||d21|0|j5|s3|f5;b04|l13||d16|1|j3|s6|f6;b13|~d16|l06|d22|0|j5|s4|f4;b06|l06||d23|0|j3|s2|f3;b10|l16||c07|0|j5|s5|f8;b19|l22||d13|0|j3|s3|f7;b20|l20||d07|0|j2|s1|f2;b18|l27||d20|0|j6|s5|f1;b07|l12||d10|0|j2|s3|f5;b17|l15||d18|1|j6|s6|f6;b16|~d18|l24|d24|0|j2|s4|f4;b09|l17||c05|0|j6|s2|f3;b14|l03||d19|1|j2|s1|f7;b05|~d19|l09|d14|0|j5|s3|f2;b15|l09||d04|0|j4|s6|f1;b03|l10||d12|0|j5|s4|f5;b08|l19||d15|0|j4|s5|f8;b01|l24||d01|0|j5|s1|f6;b12|l30||c04|0|j4|s2|f4;b11|l04||d02|0|j5|s3|f3;b02|l25||d03|0|j6|s6|f7;b04|l05||d21|0|j3|s4|f2;b13|l29||d11|0|j6|s5|f1;b06|l18||d17|1|j3|s1|f5;b20|~d17|l02|d06|0|j6|s2|f8;b19|l01||c06|0|j3|s3|f6;b10|l02||d23|0|j6|s6|f4;b07|l08||d09|0|j4|s5|f3;b17|l21||d07|0|j2|s4|f7;b16|l22||d13|0|j4|s1|f2;b18|l28||d24|1|j2|s3|f1;b15|~d24|l07|d05|0|j4|s2|f5;b11|l07||c08|0|j2|s6|f8;b14|l11||d04|0|j4|s4|f6;b05|l14||d08|0|j6|s1|f4;b03|l06||d01|0|j5|s5|f3;b08|l26||d10|0|j6|s3|f7;b13|l13||d12|0|j5|s2|f2;b01|l16||d19|0|j6|s6|f1;b09|l23||c02|0|j5|s5|f5;b19|l27||d02|0|j6|s4|f6;b02|l03||d16|1|j3|s1|f3;b04|~d16|l17|d15|0|j2|s3|f4;b06|l17||d21|0|j3|s2|f7;b20|l10||d18|1|j2|s5|f8;b07|~d18|l19|d14|0|j3|s6|f2;b12|l19||c03|0|j2|s4|f1;b10|l15||d22|0|j3|s3|f5;b17|l12||d03|0|j6|s1|f6;b16|l18||d13|0|j5|s5|f4;b15|l04||d07|0|j6|s2|f3;b05|l30||d11|0|j5|s6|f7;b18|l21||d04|0|j6|s3|f2;b14|l20||c01|0|j5|s4|f1;b11|l29||d20|0|j6|s5|f8;b03|l01||d24|1|j3|s1|f5;b13|~d24|l08|d05|0|j2|s2|f6;b08|l09||d01|0|j3|s3|f4;b02|l08||d17|1|j2|s6|f3;b04|~d17|l02|d08|0|j3|s4|f7;b19|l24||c07|0|j2|s5|f2;b09|l07||d06|0|j3|s1|f8;b01|l25||d12|0|j6|s2|f1;b07|l02||d10|0|j4|s6|f5;b06|l14||d09|0|j6|s3|f6;b17|l05||d02|0|j4|s5|f4;b20|l06||d23|0|j6|s4|f3;b10|l16||c05|0|j4|s1|f7;b12|l11||d21|0|j6|s6|f2;b05|l27||d19|1|j3|s2|f1;b15|~d19|l26|d15|0|j2|s3|f5;b18|l26||d07|0|j3|s4|f6;b16|l03||d18|1|j2|s5|f8;b08|~d18|l18|d13|0|j3|s1|f4;b14|l13||c04|0|j2|s6|f3;b11|l10||d04|0|j3|s2|f7;b03|l17||d01|0|j6|s3|f2;b13|l28||d03|0|j5|s4|f1;b02|l19||d16|1|j6|s1|f6;b04|~d16|l21|d14|0|j5|s6|f5;b06|l21||d24|0|j6|s3|f4;b19|l22||c06|0|j5|s5|f8;b09|l18||d11|0|j6|s2|f7;b07|l01||d12|0|j3|s4|f3;b01|l15||d10|0|j2|s6|f2;b17|l12||d08|0|j3|s1|f1;b20|l29||d21|0|j2|s5|f6;b05|l04||d05|0|j3|s3|f5;b10|l30||c08|0|j2|s4|f4;b12|l23||d02|0|j3|s2|f7;b15|l08||d22|0|j6|s6|f3;b08|l09||d15|0|j5|s1|f2;b18|l16||d07|0|j6|s3|f1;b03|l27||d17|1|j5|s4|f6;b13|~d17|l14|d01|0|j6|s5|f8;b14|l07||c02|0|j5|s2|f5;b11|l20||d04|0|j6|s6|f4;b06|l25||d16|1|j2|s1|f7;b04|~d16|l14|d13|0|j3|s5|f3;b16|l06||d18|1|j2|s3|f2;b02|~d18|l02|d06|0|j3|s4|f1;b01|l02||d09|0|j2|s2|f6;b19|l14||c01|0|j3|s6|f5;b10|l11||d19|1|j2|s1|f4;b07|~d19|l03|d03|0|j6|s3|f7;b17|l19||d12|0|j4|s4|f3;b20|l10||d24|1|j6|s6|f2;b18|~d24|l26|d20|0|j4|s5|f8;b05|l24||d21|0|j6|s2|f1;b09|l03||c03|0|j4|s1|f6;b12|l26||d23|0|j6|s4|f5;b08|l13||d02|0|j2|s3|f4;b15|l17||d07|0|j1|s6|f7;b13|l21||d14|0|j2|s2|f3;b06|l05||d10|0|j1|s5|f2;b16|l23||d17|0|j2|s1|f8;b11|l18||c07|0|j1|s4|f1;b14|l15||d22|0|j2|s3|f6;b03|l01||d16|1|j6|s6|f5;b02|~d16|l29|d04|0|j4|s2|f4;b04|l16||d08|0|j6|s1|f7;b01|l25||d05|0|j4|s3|f3;b07|l29||d01|0|j6|s5|f2;b10|l04||c05|0|j4|s4|f8;b19|l30||d11|0|j6|s6|f1;b05|l20||d15|0|j3|s2|f5;b17|l27||d13|0|j2|s1|f6;b20|l12||d18|1|j3|s5|f4;b08|~d18|l08|d12|0|j2|s3|f7;b18|l08||d21|0|j3|s4|f3;b09|l28||c04|0|j2|s6|f8;b14|l06||d24|1|j3|s2|f2;b15|~d24|l14|d03|0|j6|s1|f1;b13|l09||d19|1|j5|s3|f5;b02|~d19|l22|d06|0|j6|s5|f4;b16|l07||d07|0|j5|s4|f6;b06|l22||d17|0|j6|s6|f3;b12|l11||c06|0|j5|s2|f7;b11|l19||d09|0|j6|s3|f8;b03|l25||d02|0|j4|s1|f2;b01|l02||d16|1|j2|s6|f1;b04|~d16|l14|d04|0|j4|s4|f5;b07|l14||d10|0|j2|s5|f4;b20|l03||d22|0|j4|s3|f6;b19|l18||c08|0|j2|s2|f3;b10|l23||d01|0|j4|s1|f7;b05|l10||d05|0|j1|s6|f2;b17|l21||d08|0|j5|s3|f1;b18|l13||d21|0|j1|s4|f5;b08|l26||d14|0|j5|s2|f4;b15|l01||d12|0|j1|s6|f6;b14|l17||c01|0|j5|s1|f3;b09|l15||d13|0|j1|s5|f8;b06|l20||d07|0|j6|s4|f7;b02|l16||d23|0|j2|s3|f2;b13|l27||d15|0|j6|s2|f1;b01|l29||d20|0|j2|s6|f5;b16|l24||d24|0|j6|s5|f4;b11|l30||c02|0|j2|s1|f3;b10|l04||d17|1|j6|s4|f6;b07|~d17|l08|d16|0|j4|s3|f7;b03|l05||d19|1|j3|s2|f2;b20|~d19|l06|d03|0|j4|s6|f1;b04|l25||d02|0|j3|s1|f5;b17|l12||d11|0|j4|s5|f8;b12|l19||c07|0|j3|s4|f4;b19|l06||d18|1|j4|s3|f3;b05|~d18|l08|d04|0|j2|s6|f6;b08|l08||d22|0|j6|s2|f7;b18|l11||d01|0|j2|s1|f2;b02|l14||d10|0|j6|s5|f1;b06|l07||d06|0|j2|s3|f5;b09|l18||c03|0|j6|s4|f8;b14|l23||d21|0|j2|s6|f4;b15|l28||d07|0|j3|s1|f3;b13|l20||d12|0|j5|s2|f6;b07|l03||d09|0|j3|s5|f7;b01|l01||d13|0|j5|s3|f2;b16|l10||d17|0|j3|s6|f1;b11|l17||c05|0|j5|s4|f5;b10|l21||d05|0|j3|s1|f8;b20|l09||d24|1|j2|s2|f4;b04|~d24|l13|d08|0|j6|s6|f3;b03|l25||d14|0|j2|s3|f6;b17|l13||d16|1|j6|s5|f7;b05|~d16|l02|d15|0|j2|s4|f2;b19|l29||c04|0|j6|s1|f1;b12|l02||d04|0|j2|s2|f5;b18|l26||d02|0|j4|s6|f4;b08|l16||d22|0|j3|s3|f3;b02|l22||d18|1|j4|s5|f8;b06|~d18|l15|d03|0|j3|s4|f6;b07|l15||d19|0|j4|s1|f7;b09|l27||c06|0|j3|s2|f2;b14|l30||d01|0|j4|s6|f1;b01|l20||d07|0|j6|s3|f5;b13|l06||d17|1|j2|s1|f4;b15|~d17|l19|d11|0|j6|s5|f3;b16|l18||d10|0|j2|s4|f8;b03|l04||d23|0|j6|s2|f7;b11|l12||c08|0|j2|s3|f6;b19|l19||d21|0|j6|s6|f2;b20|l14||d12|0|j3|s1|f1;b04|l11||d16|1|j4|s4|f5;b17|~d16|l08|d13|0|j3|s5|f4;b05|l23||d06|0|j4|s3|f3;b08|l24||d24|0|j3|s2|f8;b10|l07||c01|0|j4|s6|f7;b14|l08||d05|0|j3|s1|f6;b02|l25||d22|0|j2|s4|f2;b18|l05||d04|0|j6|s3|f1;b06|l17||d08|0|j2|s2|f5;b07|l01||d20|0|j6|s5|f4;b01|l10||d09|0|j2|s6|f8;b12|l21||c02|0|j6|s1|f3;b09|l03||d15|0|j2|s4|f7;b13|l29||d02|0|j4|s5|f6;b15|l13||d18|1|j3|s3|f2;b16|~d18|l26|d17|0|j4|s2|f1;b20|l16||d03|0|j3|s6|f5;b03|l18||d10|0|j4|s1|f8;b11|l28||c03|0|j3|s4|f4;b19|l20||d07|0|j4|s3|f3;b05|l26||d14|0|j2|s2|f7;b17|l25||d01|0|j6|s6|f2;b04|l27||d16|1|j2|s5|f6;b08|~d16|l19|d13|0|j6|s1|f1;b02|l02||d19|0|j2|s4|f8;b10|l30||c07|0|j6|s5|f5;b14|l06||d21|0|j2|s2|f4;b06|l14||d12|0|j3|s6|f3;b07|l09||d22|0|j4|s3|f7;b18|l19||d11|0|j3|s5|f2;b13|l15||d24|1|j4|s1|f6;b16|~d24|l23|d08|0|j3|s4|f8;b09|l23||c05|0|j4|s2|f1;b12|l08||d04|0|j3|s6|f4;b01|l12||d17|1|j2|s5|f5;b15|~d17|l04|d05|0|j6|s3|f3;b03|l01||d10|0|j2|s1|f7;b20|l04||d02|0|j6|s4|f2;b17|l11||d23|0|j2|s2|f8;b19|l17||c04|0|j6|s6|f6;b11|l22||d15|0|j2|s3|f1;b05|l21||d07|0|j3|s1|f4;b04|l07||d06|0|j4|s5|f5;b08|l24||d18|1|j3|s4|f3;b07|~d18|l18|d09|0|j4|s2|f7;b02|l10||d01|0|j3|s6|f2;b10|l13||c06|0|j4|s3|f8;b14|l18||d21|0|j3|s5|f1;b06|l03||d12|0|j6|s1|f6;b18|l16||d03|0|j2|s4|f4;b13|l29||d13|0|j6|s3|f5;b16|l26||d24|1|j2|s2|f3;b01|~d24|l27|d14|0|j6|s6|f7;b12|l19||c08|0|j2|s5|f2;b09|l05||d04|0|j6|s4|f6;b15|l27||d08|0|j3|s1|f1;b04|l14||d19|1|j4|s2|f4;b03|~d19|l06|d11|0|j3|s3|f8;b20|l30||d10|0|j4|s5|f5;b17|l06||d07|0|j3|s6|f3;b11|l02||c01|0|j4|s4|f7;b19|l28||d20|0|j3|s1|f2;b05|l25||d02|0|j2|s2|f6;b02|l20||d16|1|j6|s3|f1;b07|~d16|l01|d01|0|j2|s6|f4;b08|l08||d05|0|j6|s4|f5;b18|l01||d15|0|j2|s5|f8;b10|l15||c02|0|j6|s1|f3;b14|l12||d18|1|j2|s2|f7;b06|~d18|l21|d12|0|j4|s6|f2;b01|l17||d21|0|j5|s3|f6;b13|l13||d22|0|j4|s4|f1;b16|l21||d13|0|j5|s5|f4;b04|l04||d17|0|j4|s1|f5;b09|l22||c03|0|j5|s6|f8;b19|l09||d23|0|j4|s2|f3;b03|l11||d24|1|j6|s3|f7;b15|~d24|l10|d03|0|j2|s4|f6;b02|l24||d04|0|j6|s5|f2;b20|l07||d06|0|j2|s1|f1;b17|l18||d10|0|j6|s6|f4;b11|l10||c05|0|j2|s2|f5;b12|l05||d09|0|j6|s5|f8;b05|l03||d02|0|j3|s4|f3;b07|l23||d07|0|j5|s3|f6;b08|l26||d20|0|j3|s1|f7;b06|l29||d11|0|j5|s5|f2;b13|l19||d08|0|j3|s6|f1;b14|l16||c07|0|j5|s2|f4;b10|l30||d19|1|j3|s4|f8;b18|~d19|l28|d14|0|j2|s3|f5;b01|l28||d01|0|j6|s1|f6;b04|l27||d15|0|j2|s6|f3;b03|l14||d12|0|j6|s2|f7;b15|l06||d21|0|j2|s4|f2;b19|l09||c04|0|j6|s5|f1;b09|l22||d18|1|j2|s3|f4;b02|~d18|l01|d23|0|j3|s1|f5;b16|l08||d13|0|j4|s6|f8;b05|l12||d04|0|j3|s5|f6;b17|l02||d05|0|j4|s2|f3;b20|l24||d24|0|j3|s4|f7;b11|l01||c06|0|j4|s3|f2;b12|l05||d02|0|j3|s1|f1;b07|l17||d10|0|j6|s5|f4;b08|l25||d03|0|j2|s6|f5;b06|l21||d16|1|j6|s2|f8;b13|~d16|l15|d07|0|j2|s5|f6;b18|l15||d17|0|j6|s3|f3;b10|l13||c08|0|j2|s4|f7;b14|l18||d01|0|j6|s1|f2;b03|l20||d19|1|j4|s6|f1;b01|~d19|l11|d06|0|j3|s5|f4;b04|l04||d11|0|j4|s3|f5;b02|l11||d20|0|j3|s2|f8;b15|l10||d23|0|j4|s4|f6;b19|l07||c01|0|j3|s1|f3;b09|l16||d18|1|j4|s5|f7;b05|~d18|l19|d12|0|j2|s6|f2;b20|l03||d08|0|j6|s2|f1;b17|l19||d22|0|j2|s3|f4;b08|l09||d21|0|j6|s4|f5;b16|l26||d09|0|j2|s5|f8;b11|l29||c02|0|j6|s1|f6;b12|l28||d04|0|j2|s6|f3;b06|l27||d15|0|j3|s2|f7;b07|l05||d14|0|j4|s3|f2;b13|l06||d07|0|j3|s4|f1;b18|l30||d13|0|j4|s5|f4;b03|l22||d24|0|j3|s1|f8;b10|l24||c03|0|j4|s6|f5;b14|l14||d10|0|j3|s3|f3;b04|l08||d02|0|j2|s2|f6;b01|l17||d05|0|j6|s4|f7;b02|l01||d03|0|j2|s6|f2;b15|l21||d01|0|j6|s1|f1;b20|l02||d23|0|j2|s3|f4;b19|l13||c05|0|j6|s5|f8;b09|l23||d19|1|j2|s2|f5;b05|~d19|l12|d08|0|j5|s6|f3;b08|l12||d20|0|j4|s4|f6;b16|l18||d11|0|j5|s3|f7;b17|l09||d12|0|j4|s5|f2;b13|l15||d21|0|j5|s1|f1;b11|l04||c04|0|j4|s2|f4;b12|l07||d18|1|j5|s4|f8;b06|~d18|l19|d17|0|j6|s6|f5;b07|l28||d16|1|j2|s3|f3;b18|~d16|l05|d04|0|j6|s1|f6;b04|l11||d15|0|j2|s2|f7;b01|l19||d06|0|j6|s5|f2;b10|l05||c07|0|j2|s4|f1;b19|l10||d07|0|j6|s6|f4;b03|l03||d13|0|j3|s3|f8;b02|l16||d23|0|j4|s5|f5;b08|l22||d01|0|j3|s1|f3;b20|l25||d09|0|j4|s2|f6;b15|l24||d10|0|j3|s4|f7;b14|l26||c06|0|j4|s3|f2;b09|l29||d24|1|j3|s5|f1;b05|~d24|l20|d03|0|j2|s6|f4;b17|l27||d02|0|j6|s1|f5;b13|l20||d14|0|j2|s2|f3;b06|l06||d12|0|j6|s4|f6;b07|l14||d19|0|j2|s3|f7;b10|l17||c08|0|j6|s6|f2;b19|l09||d21|0|j2|s1|f1;b18|l30||d04|0|j4|s5|f8;b16|l08||d05|0|j3|s3|f4;b04|l21||d11|0|j4|s2|f5;b08|l01||d22|0|j3|s4|f3;b01|l18||d20|0|j4|s6|f7;b11|l05||c01|0|j3|s1|f6;b09|l13||d08|0|j4|s3|f2;b02|l02||d07|0|j6|s2|f1;b03|l28||d23|0|j2|s4|f4;b15|l11||d15|0|j6|s5|f8;b20|l19||d13|0|j2|s6|f5;b05|l12||d18|0|j6|s3|f3;b12|l24||c02|0|j2|s1|f7;b14|l07||d01|0|j6|s5|f6;b17|l04||d10|0|j3|s2|f1;b07|l22||d12|0|j4|s4|f2;b13|l15||d17|1|j3|s6|f4;b06|~d17|l23|d06|0|j4|s5|f8;b18|l03||d02|0|j3|s3|f5;b10|l10||c03|0|j4|s1|f3;b19|l16||d04|0|j3|s2|f6;b08|l27||d03|0|j2|s4|f7;b04|l09||d24|1|j6|s6|f1;b16|~d24|l23|d16|0|j2|s5|f4;b02|l23||d21|0|j6|s3|f2;b01|l26||d09|0|j2|s4|f8;b09|l29||c05|0|j6|s1|f6;b11|l06||d23|0|j2|s2|f5;b03|l17||d19|1|j3|s6|f3;b15|~d19|l14|d14|0|j4|s4|f7;b13|l25||d08|0|j3|s3|f1;b20|l21||d07|0|j4|s1|f4;b05|l14||d05|0|j3|s5|f2;b14|l18||c04|0|j4|s3|f8;b12|l08||d13|0|j3|s2|f5;b07|l30||d11|0|j2|s6|f6;b17|l01||d01|0|j6|s4|f3;b06|l13||d15|0|j2|s5|f7;b16|l19||d12|0|j6|s1|f1;b08|l11||d10|0|j2|s3|f4;b10|l07||c07|0|j6|s2|f2;b19|l02||d04|0|j2|s4|f8;b18|l20||d02|0|j5|s6|f5;b02|l12||d18|1|j4|s5|f6;b04|~d18|l15|d24|0|j5|s3|f3;b01|l15||d21|0|j4|s1|f7;b13|l04||d22|0|j5|s2|f1;b09|l05||c06|0|j4|s4|f4;b11|l24||d03|0|j5|s6|f2;b03|l03||d19|1|j2|s3|f5;b05|~d19|l16|d08|0|j6|s1|f3;b06|l10||d07|0|j2|s5|f8;b20|l16||d06|0|j6|s2|f6;b15|l29||d20|0|j2|s4|f7;b14|l18||c08|0|j6|s6|f1;b12|l27||d17|1|j2|s3|f4;b17|~d17|l28|d05|0|j3|s1|f2;b07|l21||d01|0|j5|s2|f5;b08|l26||d14|0|j3|s4|f3;b18|l17||d12|0|j5|s6|f6;b02|l28||d04|0|j3|s3|f7;b10|l06||c01|0|j5|s5|f8;b19|l22||d24|1|j3|s1|f1;b04|~d24|l14|d16|0|j2|s2|f4;b16|l19||d13|0|j6|s5|f2;b01|l30||d09|0|j2|s4|f5;b05|l09||d10|0|j6|s6|f3;b06|l08||d11|0|j2|s3|f6;b09|l01||c03|0|j6|s1|f7;b11|l14||d18|1|j2|s5|f8;b13|~d18|l25|d02|0|j3|s2|f1;b20|l11||d15|0|j5|s6|f4;b15|l13||d21|0|j3|s4|f2;b03|l07||d07|0|j5|s5|f5;b07|l23||d23|0|j3|s1|f3;b14|l15||c02|0|j5|s3|f6;b10|l12||d03|0|j3|s2|f7;b17|l25||d12|0|j6|s6|f1;b02|l03||d19|1|j2|s4|f4;b18|~d19|l02|d08|0|j6|s3|f2;b08|l02||d04|0|j2|s1|f5;b04|l27||d01|0|j6|s2|f3;b19|l06||c05|0|j2|s5|f8;b12|l04||d06|0|j6|s4|f7;b01|l29||d13|0|j3|s6|f6;b05|l10||d05|0|j4|s3|f1;b16|l18||d10|0|j3|s5|f4;b06|l16||d24|1|j4|s1|f2;b13|~d24|l21|d17|0|j3|s2|f5;b11|l20||c04|0|j4|s4|f3;b10|l17||d22|0|j3|s6|f7;b20|l21||d16|1|j6|s3|f6;b15|~d16|l26|d07|0|j2|s1|f1;b03|l26||d21|0|j6|s2|f4;b08|l05||d14|0|j2|s5|f8;b18|l19||d15|0|j6|s4|f2;b09|l24||c07|0|j2|s3|f5;b14|l30||d02|0|j6|s6|f3;b07|l08||d19|1|j4|s1|f7;b17|~d19|l11|d11|0|j3|s5|f6;b02|l01||d18|1|j4|s2|f4;b16|~d18|l25|d09|0|j3|s3|f1;b01|l25||d20|0|j4|s4|f8;b19|l14||c06|0|j3|s6|f2;b11|l11||d01|0|j4|s1|f5;b05|l28||d04|0|j2|s2|f3;b04|l23||d17|1|j6|s5|f7;b13|~d17|l12|d03|0|j2|s3|f6;b03|l13||d12|0|j6|s6|f4;b06|l07||d10|0|j2|s4|f8;b12|l09||c08|0|j6|s1|f1;b10|l18||d13|0|j2|s2|f2;b20|l27||d08|0|j3|s6|f5;b08|l03||d16|1|j4|s3|f3;b15|~d16|l20|d07|0|j3|s5|f7;b07|l15||d06|0|j4|s1|f6;b18|l12||d23|0|j3|s4|f4;b09|l20||c01|0|j4|s2|f8;b14|l22||d24|1|j3|s6|f1;b17|~d24|l06|d22|0|j6|s3|f2;b01|l06||d02|0|j2|s1|f5;b02|l02||d05|0|j6|s4|f3;b05|l19||d21|0|j2|s2|f7;b04|l10||d15|0|j6|s3|f6;b19|l29||c03|0|j2|s5|f4;b11|l04||d18|1|j6|s6|f8;b06|~d18|l21|d01|0|j5|s1|f1;b03|l16||d17|1|j3|s3|f2;b13|~d17|l17|d14|0|j5|s4|f5;b16|l21||d11|0|j3|s5|f3;b20|l25||d13|0|j5|s2|f7;b10|l17||c02|0|j3|s3|f6;b12|l26||d04|0|j5|s6|f4;b08|l08||d12|0|j6|s1|f1;b07|l01||d19|1|j2|s4|f2;b15|~d19|l11|d03|0|j6|s2|f5;b18|l05||d07|0|j2|s3|f3;b02|l14||d16|0|j6|s6|f7;b09|l30||c05|0|j2|s5|f8;b14|l23||d10|0|j6|s4|f6;b01|l20||d09|0|j3|s1|f4;b17|l24||d22|0|j4|s2|f1;b05|l18||d08|0|j3|s5|f2;b04|l11||d21|0|j4|s3|f5;b13|l13||d24|0|j3|s6|f3;b11|l07||c04|0|j4|s4|f7;b19|l27||d17|1|j3|s1|f8;b06|~d17|l03|d05|0|j2|s2|f6;b03|l03||d02|0|j6|s3|f4;b08|l12||d06|0|j2|s5|f1;b20|l25||d01|0|j6|s6|f2;b07|l15||d20|0|j2|s4|f5;b10|l29||c07|0|j6|s1|f3;b16|l28||d18|1|j2|s5|f7;b18|~d18|l19|d07|0|j3|s2|f4;b15|l06||d15|0|j4|s3|f6;b02|l19||d12|0|j3|s6|f1;b01|l09||d16|1|j4|s4|f2;b04|~d16|l21|d04|0|j3|s1|f5;b12|l10||c06|0|j4|s5|f8;b09|l04||d23|0|j3|s3|f3;b17|l02||d13|0|j5|s2|f7;b05|l23||d11|0|j6|s6|f4;b13|l01||d10|0|j5|s5|f6;b03|l16||d19|1|j6|s4|f1;b08|~d19|l21|d03|0|j5|s3|f2;b19|l21||c08|0|j6|s1|f8;b14|l17||d17|1|j5|s2|f5;b06|~d17|l20|d14|0|j2|s6|f3;b18|l20||d21|0|j3|s4|f7;b07|l26||d22|0|j2|s3|f4;b20|l08||d24|1|j3|s1|f6;b15|~d24|l14|d08|0|j2|s5|f1;b11|l22||c01|0|j3|s2|f2;b10|l14||d02|0|j2|s4|f8;b01|l25||d16|1|j1|s6|f5;b02|~d16|l05|d07|0|j6|s3|f3;b16|l30||d01|0|j1|s5|f7;b04|l18||d09|0|j6|s1|f4;b13|l05||d05|0|j1|s2|f6;b09|l11||c03|0|j6|s4|f1;b12|l13||d10|0|j1|s6|f2;b05|l27||d04|0|j2|s3|f5;b17|l03||d12|0|j3|s1|f3;b08|l06||d15|0|j2|s2|f7;b03|l29||d13|0|j3|s5|f8;b15|l07||d18|0|j2|s4|f4;b19|l12||c02|0|j3|s6|f1;b14|l23||d17|1|j2|s3|f6;b06|~d17|l20|d03|0|j5|s1|f2;b07|l19||d06|0|j6|s5|f5;b20|l24||d11|0|j5|s2|f3;b18|l15||d21|0|j6|s4|f7;b02|l04||d24|0|j5|s3|f8;b10|l10||c05|0|j6|s6|f4;b11|l17||d19|1|j5|s5|f1;b04|~d19|l20|d22|0|j2|s1|f6;b13|l25||d16|1|j3|s2|f2;b01|~d16|l01|d02|0|j2|s4|f5;b15|l20||d07|0|j3|s6|f3;b16|l16||d10|0|j2|s5|f7;b09|l01||c04|0|j3|s3|f8;b12|l02||d14|0|j2|s1|f4;b05|l21||d04|0|j5|s6|f1;b17|l26||d23|0|j6|s2|f2;b07|l08||d01|0|j5|s4|f6;b08|l28||d17|1|j6|s3|f5;b03|~d17|l14|d08|0|j5|s1|f3;b19|l09||c07|0|j6|s5|f7;b14|l14||d20|0|j5|s6|f8;b06|l27||d12|0|j2|s2|f4;b20|l03||d05|0|j4|s4|f1;b04|l19||d13|0|j2|s5|f2;b02|l23||d09|0|j4|s3|f6;b18|l18||d21|0|j2|s1|f5;b10|l30||c06|0|j4|s6|f3;b11|l29||d15|0|j2|s4|f7;b01|l25||d03|0|j5|s2|f4;b17|l11||d22|0|j6|s3|f1;b13|l06||d16|1|j5|s1|f6;b15|~d16|l13|d07|0|j6|s5|f8;b16|l13||d18|0|j5|s6|f2;b12|l07||c08|0|j6|s4|f5;b09|l05||d04|0|j5|s3|f3;b05|l20||d17|1|j2|s2|f7;b08|~d17|l17|d24|0|j4|s1|f4;b07|l10||d02|0|j2|s6|f1;b06|l22||d11|0|j4|s5|f8;b03|l12||d19|0|j2|s3|f6;b14|l15||c01|0|j4|s4|f2;b19|l04||d10|0|j2|s2|f5;b04|l17||d06|0|j6|s1|f3;b02|l01||d01|0|j1|s5|f7;b18|l16||d21|0|j6|s3|f4;b20|l02||d12|0|j1|s6|f1;b16|l21||d14|0|j6|s5|f8;b10|l25||c03|0|j1|s4|f6;b11|l26||d13|0|j6|s2|f2;b17|l08||d08|0|j2|s1|f5;b01|l19||d16|1|j3|s3|f3;b13|~d16|l24|d07|0|j2|s6|f7;b15|l27||d05|0|j3|s4|f4;b08|l14||d17|0|j2|s2|f1;b19|l03||c05|0|j3|s1|f6;b09|l24||d15|0|j2|s5|f8;b07|l18||d18|1|j5|s6|f2;b05|~d18|l29|d24|0|j6|s3|f5;b18|l30||d03|0|j5|s4|f3;b06|l29||d09|0|j6|s5|f7;b04|l28||d04|0|j5|s2|f4;b12|l06||c02|0|j6|s1|f6;b14|l07||d23|0|j5|s6|f1;b03|l11||d02|0|j2|s3|f2;b02|l09||d11|0|j4|s5|f8;b20|l13||d21|0|j2|s4|f5;b16|l17||d10|0|j4|s2|f3;b01|l12||d13|0|j2|s6|f7;b11|l10||c04|0|j4|s1|f4;b10|l23||d19|1|j2|s5|f6;b17|~d19|l16|d12|0|j3|s3|f1;b15|l01||d22|0|j6|s4|f2;b13|l16||d01|0|j3|s6|f5;b07|l19||d20|0|j6|s5|f8;b08|l05||d07|0|j3|s2|f3;b19|l15||c07|0|j6|s1|f7;b09|l04||d14|0|j3|s3|f4;b06|l21||d08|0|j2|s4|f6;b05|l08||d24|1|j4|s6|f1;b18|~d24|l02|d05|0|j2|s3|f2;b04|l26||d04|0|j4|s2|f5;b02|l02||d15|0|j2|s1|f3;b14|l20||c06|0|j4|s4|f7;b10|l27||d06|0|j2|s5|f8;b03|l22||d23|0|j3|s3|f4;b16|l18||d18|1|j6|s6|f6;b13|~d18|l09|d21|0|j3|s5|f1;b20|l28||d03|0|j6|s2|f2;b01|l24||d02|0|j3|s1|f5;b12|l09||c08|0|j6|s4|f3;b11|l29||d11|0|j3|s5|f7;b17|l03||d12|0|j2|s6|f4;b15|l14||d17|1|j4|s3|f6;b07|~d17|l06|d16|0|j2|s2|f1;b08|l25||d13|0|j4|s5|f8;b06|l30||d09|0|j2|s1|f2;b19|l06||c01|0|j4|s4|f5;b09|l11||d10|0|j2|s6|f3;b05|l17||d07|0|j3|s3|f7;b18|l10||d01|0|j6|s2|f4;b04|l05||d08|0|j3|s1|f1;b02|l01||d19|1|j6|s4|f6;b13|~d19|l13|d23|0|j3|s3|f2;b14|l07||c03|0|j6|s5|f8;b10|l13||d24|1|j3|s6|f5;b03|~d24|l16|d20|0|j2|s2|f3;b01|l19||d14|0|j4|s5|f7;b20|l12||d04|0|j2|s1|f4;b16|l16||d21|0|j4|s4|f1;b07|l04||d02|0|j2|s3|f6;b11|l15||c05|0|j4|s6|f2;b12|l21||d15|0|j2|s2|f5;b17|l08||d05|0|j5|s1|f3;b06|l09||d12|0|j6|s4|f7;b08|l28||d03|0|j5|s3|f4;b15|l24||d13|0|j6|s5|f8;b05|l22||d22|0|j5|s6|f1;b19|l18||c02|0|j6|s2|f6;b09|l26||d07|0|j5|s1|f2;b04|l27||d18|1|j3|s5|f5;b18|~d18|l02|d11|0|j2|s3|f3;b16|l29||d10|0|j3|s4|f7;b02|l23||d01|0|j2|s6|f8;b13|l02||d23|0|j3|s2|f4;b14|l03||c04|0|j2|s5|f6;b10|l14||d06|0|j3|s1|f1;b01|l05||d19|1|j4|s3|f2;b07|~d19|l17|d08|0|j6|s6|f5;b03|l17||d21|0|j4|s4|f3;b20|l06||d04|0|j6|s2|f7;b08|l10||d17|0|j4|s1|f4;b19|l11||c07|0|j6|s5|f8;b11|l30||d24|1|j4|s3|f1;b17|~d24|l20|d16|0|j3|s6|f6;b06|l20||d12|0|j2|s4|f2;b04|l19||d03|0|j3|s2|f5;b05|l01||d02|0|j2|s1|f3;b15|l09||d09|0|j3|s5|f7;b12|l24||c06|0|j2|s3|f4;b09|l25||d20|0|j3|s6|f8;b18|l21||d07|0|j5|s4|f1;b02|l13||d05|0|j6|s2|f2;b13|l28||d15|0|j5|s1|f6;b16|l07||d13|0|j6|s5|f5;b01|l22||d23|0|j5|s3|f3;b10|l16||c08|0|j6|s6|f7;b14|l18||d14|0|j5|s4|f8;b03|l05||d01|0|j2|s2|f4;b07|l08||d10|0|j3|s5|f1;b20|l12||d11|0|j2|s3|f6;b08|l04||d18|1|j3|s1|f2;b17|~d18|l29|d21|0|j2|s6|f5;b19|l15||c01|0|j3|s4|f3;b11|l27||d04|0|j2|s2|f7;b05|l26||d08|0|j5|s1|f4;b06|l09||d24|1|j6|s6|f1;b04|~d24|l03|d22|0|j5|s3|f2;b15|l29||d19|1|j6|s5|f8;b16|~d19|l14|d06|0|j5|s4|f6;b09|l24||c03|0|j6|s2|f5;b10|l14||d12|0|j5|s1|f3;b02|l03||d07|0|j2|s6|f7;b13|l17||d02|0|j3|s3|f4;b18|l02||d03|0|j2|s4|f1;b03|l06||d23|0|j3|s2|f2;b01|l10||d01|0|j2|s5|f8;b12|l19||c05|0|j3|s1|f5;b14|l11||d17|1|j2|s6|f6;b07|~d17|l28|d20|0|j4|s5|f3;b08|l30||d13|0|j6|s3|f7;b20|l28||d15|0|j4|s4|f4;b17|l05||d10|0|j6|s2|f1;b15|l01||d05|0|j4|s5|f2;b19|l21||c02|0|j6|s1|f8;b11|l18||d09|0|j4|s6|f5;b06|l09||d21|0|j2|s3|f6;b05|l13||d16|1|j3|s4|f3;b04|~d16|l16|d04|0|j2|s2|f7;b02|l16||d12|0|j3|s1|f4;b13|l22||d18|0|j2|s5|f1;b10|l23||c04|0|j3|s6|f2;b09|l07||d14|0|j2|s4|f8;b01|l25||d08|0|j5|s3|f6;b18|l20||d07|0|j6|s2|f5;b08|l08||d23|0|j5|s1|f3;b20|l27||d11|0|j6|s5|f7;b16|l24||d24|0|j5|s6|f4;b12|l04||c07|0|j6|s3|f1;b14|l12||d19|1|j5|s4|f2;b03|~d19|l26|d03|0|j2|s2|f5;b07|l26||d02|0|j4|s3|f6;b17|l14||d10|0|j2|s5|f8;b15|l15||d13|0|j4|s1|f3;b13|l29||d06|0|j2|s6|f7;b19|l19||c06|0|j4|s4|f4;b11|l05||d01|0|j2|s5|f1;b05|l03||d20|0|j3|s2|f5;b06|l17||d15|0|j6|s3|f2;b02|l28||d04|0|j3|s1|f6;b04|l06||d22|0|j6|s5|f8;b08|l09||d21|0|j3|s6|f3;b10|l18||c08|0|j6|s4|f7;b09|l01||d23|0|j3|s2|f4;b01|l10||d12|0|j5|s1|f1;b20|l02||d07|0|j4|s3|f5;b18|l11||d05|0|j5|s6|f2;b03|l21||d24|1|j4|s4|f6;b17|~d24|l13|d17|0|j5|s5|f8;b12|l30||c01|0|j4|s3|f3;b14|l07||d18|1|j5|s2|f7;b07|~d18|l13|d02|0|j2|s1|f4;b16|l13||d09|0|j6|s5|f1;b15|l16||d10|0|j2|s6|f5;b13|l08||d13|0|j6|s4|f2;b02|l27||d08|0|j2|s2|f8;b11|l29||c03|0|j6|s1|f6;b19|l14||d04|0|j2|s3|f3;b05|l26||d16|1|j3|s6|f7;b06|~d16|l19|d19|0|j1|s4|f4;b04|l17||d03|0|j3|s2|f1;b08|l19||d14|0|j1|s5|f5;b01|l04||d01|0|j3|s1|f2;b10|l23||c05|0|j1|s3|f8;b09|l15||d11|0|j3|s4|f6;b03|l25||d21|0|j6|s6|f3;b18|l06||d24|1|j2|s2|f7;b17|~d24|l03|d15|0|j6|s1|f4;b20|l03||d12|0|j2|s4|f1;b07|l12||d06|0|j6|s5|f5;b14|l18||c02|0|j2|s3|f8;b12|l22||d07|0|j6|s6|f2;b15|l20||d02|0|j4|s2|f6;b02|l11||d05|0|j3|s1|f3;b13|l01||d13|0|j4|s5|f7;b16|l10||d18|1|j3|s4|f4;b08|~d18|l24|d10|0|j4|s6|f1;b19|l24||c04|0|j3|s3|f5;b10|l16||d04|0|j4|s2|f6;b05|l21||d08|0|j6|s1|f2;b06|l09||d01|0|j2|s6|f3;b04|l05||d22|0|j6|s4|f7;b01|l19||d17|1|j2|s5|f8;b17|~d17|l30|d09|0|j6|s3|f4;b11|l29||c07|0|j2|s2|f1;b09|l30||d20|0|j6|s1|f5;b18|l02||d03|0|j3|s6|f6;b03|l27||d21|0|j4|s4|f2;b20|l28||d24|1|j3|s3|f3;b07|~d24|l13|d23|0|j4|s2|f7;b13|l13||d19|0|j3|s5|f8;b14|l07||c06|0|j4|s1|f4;b10|l18||d12|0|j3|s6|f1;b02|l08||d07|0|j5|s4|f5;b15|l14||d14|0|j6|s3|f6;b05|l17||d15|0|j5|s2|f2;b06|l26||d02|0|j6|s1|f3;b08|l06||d11|0|j5|s5|f7;b12|l04||c08|0|j6|s4|f8;b19|l15||d04|0|j5|s6|f4;b04|l03||d01|0|j2|s3|f1;b18|l10||d16|1|j3|s2|f5;b16|~d16|l12|d10|0|j2|s5|f6;b01|l12||d13|0|j3|s1|f2;b17|l01||d06|0|j2|s4|f3;b09|l25||c01|0|j3|s6|f7;b10|l11||d05|0|j2|s3|f4;b07|l21||d18|1|j5|s5|f8;b03|~d18|l19|d21|0|j6|s2|f1;b20|l23||d17|1|j5|s3|f5;b13|~d17|l20|d22|0|j6|s1|f6;b02|l20||d08|0|j5|s4|f2;b11|l19||c03|0|j6|s5|f3;b14|l16||d24|1|j5|s6|f7;b05|~d24|l27|d03|0|j2|s2|f4;b15|l29||d07|0|j4|s3|f8;b08|l30||d12|0|j2|s5|f1;b06|l27||d09|0|j4|s1|f6;b17|l24||d19|0|j2|s4|f5;b19|l22||c05|0|j4|s3|f2;b12|l09||d16|1|j2|s6|f3;b18|~d16|l25|d02|0|j3|s2|f7;b04|l02||d04|0|j6|s1|f4;b01|l17||d01|0|j3|s3|f1;b20|l14||d15|0|j6|s4|f6;b16|l18||d11|0|j3|s5|f8;b09|l05||c02|0|j6|s6|f5;b10|l08||d10|0|j3|s2|f2;b07|l13||d14|0|j2|s3|f3;b03|l25||d17|1|j4|s1|f7;b02|~d17|l26|d22|0|j2|s4|f4;b13|l01||d13|0|j4|s5|f6;b06|l07||d23|0|j2|s6|f1;b11|l26||c04|0|j4|s3|f8;b14|l04||d21|0|j2|s2|f5;b05|l03||d12|0|j5|s1|f2;b08|l06||d07|0|j6|s4|f3;b15|l10||d05|0|j5|s6|f7;b17|l19||d16|1|j6|s3|f4;b01|~d16|l20|d24|0|j5|s5|f6;b19|l15||c07|0|j6|s4|f1;b12|l23||d20|0|j5|s2|f8;b04|l20||d08|0|j2|s1|f5;b18|l21||d18|1|j3|s6|f2;b16|~d18|l12|d06|0|j2|s3|f3;b20|l12||d02|0|j3|s5|f7;b07|l11||d19|0|j2|s2|f4;b09|l28||c06|0|j3|s4|f6;b10|l29||d03|0|j2|s1|f1;b03|l16||d01|0|j4|s3|f5;b06|l27||d17|1|j6|s6|f2;b02|~d17|l17|d04|0|j4|s2|f7;b13|l17||d15|0|j6|s1|f3;b05|l25||d22|0|j4|s5|f8;b11|l30||c08|0|j6|s4|f4;b14|l18||d09|0|j4|s3|f1;b08|l14||d10|0|j2|s6|f6;b15|l02||d07|0|j3|s5|f5;b17|l23||d13|0|j2|s2|f2;b01|l24||d14|0|j3|s1|f7;b04|l09||d11|0|j2|s3|f3;b19|l01||c01|0|j3|s4|f8;b12|l08||d21|0|j2|s6|f4;b07|l03||d12|0|j4|s2|f1;b18|l13||d16|1|j6|s3|f6;b20|~d16|l21|d24|0|j4|s1|f5;b13|l20||d02|0|j6|s5|f2;b16|l07||d05|0|j4|s4|f7;b09|l19||c03|0|j6|s6|f3;b10|l22||d18|1|j4|s2|f8;b06|~d18|l05|d17|0|j2|s1|f4;b05|l26||d08|0|j3|s3|f1;b03|l05||d19|1|j2|s6|f6;b02|~d19|l06|d03|0|j3|s4|f5;b15|l21||d04|0|j2|s5|f2;b14|l10||c05|0|j3|s1|f7;b19|l06||d23|0|j2|s2|f3;b08|l25||d22|0|j4|s3|f4;b04|l04||d01|0|j6|s6|f8;b01|l15||d06|0|j4|s5|f1;b17|l29||d07|0|j6|s4|f6;b18|l12||d10|0|j4|s1|f5;b11|l23||c02|0|j6|s2|f2;b12|l27||d15|0|j4|s3|f7;b07|l11||d13|0|j2|s5|f4;b13|l17||d21|0|j5|s6|f3;b20|l18||d16|1|j2|s4|f8;b16|~d16|l01|d24|0|j5|s1|f6;b05|l16||d17|0|j2|s2|f1;b10|l30||c04|0|j5|s3|f5;b09|l14||d12|0|j2|s6|f2;b03|l20||d14|0|j3|s1|f4;b02|l01||d02|0|j6|s4|f7;b15|l08||d04|0|j3|s5|f8;b06|l03||d20|0|j6|s2|f3;b08|l19||d11|0|j3|s3|f6;b19|l25||c07|0|j6|s6|f1;b14|l02||d09|0|j3|s4|f5;b01|l28||d05|0|j2|s1|f2;b04|l09||d08|0|j4|s2|f4;b18|l13||d07|0|j2|s5|f7;b13|l07||d18|1|j4|s3|f8;b17|~d18|l21|d01|0|j2|s6|f3;b11|l26||c06|0|j4|s4|f6;b12|l21||d10|0|j2|s1|f1;b07|l24||d22|0|j3|s5|f5;b16|l29||d03|0|j6|s2|f2;b20|l18||d17|1|j3|s3|f4;b02|~d17|l23|d16|0|j6|s6|f7;b05|l23||d13|0|j3|s4|f8;b10|l10||c08|0|j6|s1|f3;b09|l17||d19|1|j3|s3|f6;b03|~d19|l06|d15|0|j2|s2|f1;b15|l06||d21|0|j5|s6|f5;b08|l27||d24|1|j2|s5|f2;b06|~d24|l15|d06|0|j5|s3|f4;b18|l05||d04|0|j2|s4|f7;b19|l04||c01|0|j5|s1|f8;b14|l15||d12|0|j2|s2|f3;b01|l20||d07|0|j3|s6|f6;b04|l16||d02|0|j6|s3|f1;b17|l11||d23|0|j3|s1|f5;b13|l25||d08|0|j6|s4|f2;b07|l01||d01|0|j3|s5|f4;b11|l12||c03|0|j6|s2|f7;b12|l14||d11|0|j3|s6|f8;b05|l22||d17|1|j2|s1|f3;b16|~d17|l19|d22|0|j5|s5|f6;b02|l19||d18|1|j2|s3|f1;b20|~d18|l30|d10|0|j5|s4|f5;b03|l30||d05|0|j2|s6|f2;b10|l03||c05|0|j5|s2|f4;b19|l08||d14|0|j2|s1|f7;b08|l21||d16|1|j3|s3|f3;b18|~d16|l13|d21|0|j6|s4|f6;b15|l13||d04|0|j3|s5|f8;b06|l07||d13|0|j6|s6|f1;b17|l23||d09|0|j3|s2|f5;b09|l18||c02|0|j6|s1|f2;b14|l26||d15|0|j3|s5|f4;b04|l02||d03|0|j2|s3|f7;b13|l25||d07|0|j5|s4|f3;b01|l17||d12|0|j2|s6|f6;b07|l20||d19|1|j5|s2|f1;b02|~d19|l29|d17|0|j2|s1|f5;b19|l28||c04|0|j5|s5|f8;b11|l10||d24|1|j2|s3|f2;b05|~d24|l06|d02|0|j3|s4|f4;b20|l06||d22|0|j6|s6|f7;b18|l29||d20|0|j3|s5|f3;b16|l09||d10|0|j6|s2|f6;b03|l04||d06|0|j3|s3|f1;b09|l16||c06|0|j6|s1|f5;b10|l27||d01|0|j3|s4|f2;b08|l24||d08|0|j2|s5|f8;b15|l01||d04|0|j1|s6|f4;b06|l15||d13|0|j2|s2|f7;b17|l11||d11|0|j1|s1|f3;b04|l19||d23|0|j2|s3|f1;b12|l12||c07|0|j1|s5|f6;b14|l14||d18|1|j2|s4|f5;b01|~d18|l05|d21|0|j3|s6|f2;b13|l21||d05|0|j6|s2|f4;b07|l05||d12|0|j3|s1|f7;b02|l08||d07|0|j6|s3|f3;b20|l03||d14|0|j3|s4|f1;b19|l18||c08|0|j6|s5|f8;b11|l07||d15|0|j3|s6|f6;b05|l30||d03|0|j2|s1|f5;b16|l13||d24|1|j4|s2|f2;b18|~d24|l26|d09|0|j2|s3|f4;b08|l26||d10|0|j4|s5|f7;b04|l22||d02|0|j2|s4|f3;b10|l10||c01|0|j4|s6|f1;b09|l17||d19|1|j2|s1|f8;b03|~d19|l02|d16|0|j3|s3|f6;b17|l02||d04|0|j6|s2|f5;b06|l06||d01|0|j3|s4|f2;b01|l27||d08|0|j6|s6|f4;b15|l29||d21|0|j3|s5|f3;b14|l23||c03|0|j6|s1|f7;b19|l04||d13|0|j3|s3|f1;b07|l16||d17|1|j4|s2|f5;b13|~d17|l11|d05|0|j2|s4|f6;b02|l01||d07|0|j4|s6|f2;b05|l11||d12|0|j2|s3|f4;b20|l25||d15|0|j4|s1|f3;b12|l19||c05|0|j2|s5|f8;b11|l15||d06|0|j4|s2|f7;b18|l21||d18|1|j3|s3|f1;b08|~d18|l24|d20|0|j6|s4|f5;b16|l24||d23|0|j3|s6|f6;b04|l28||d24|1|j6|s5|f2;b06|~d24|l09|d11|0|j3|s1|f4;b09|l09||c02|0|j6|s3|f3;b10|l20||d04|0|j3|s2|f7;b17|l05||d22|0|j2|s4|f1;b03|l14||d14|0|j4|s6|f5;b01|l03||d19|1|j2|s1|f6;b07|~d19|l12|d03|0|j4|s3|f2;b15|l18||d10|0|j2|s5|f8;b19|l12||c04|0|j4|s4|f4;b14|l08||d01|0|j2|s2|f3;b05|l26||d07|0|j3|s6|f7;b02|l13||d02|0|j6|s1|f1;b20|l22||d21|0|j3|s3|f5;b13|l07||d13|0|j6|s5|f2;b08|l30||d09|0|j3|s4|f6;b11|l17||c06|0|j6|s2|f8;b10|l06||d12|0|j3|s6|f4;b18|l02||d08|0|j2|s3|f3;b04|l10||d23|0|j4|s1|f7;b03|l27||d05|0|j2|s4|f1;b06|l01||d24|1|j4|s2|f5;b16|~d24|l29|d18|0|j2|s5|f6;b12|l29||c07|0|j4|s6|f2;b09|l04||d15|0|j2|s3|f4;b07|l24||d20|0|j3|s1|f8;b17|l09||d10|0|j6|s5|f3;b01|l11||d16|1|j3|s4|f7;b15|~d16|l05|d04|0|j6|s2|f1;b05|l16||d17|0|j3|s6|f6;b19|l28||c08|0|j6|s5|f5;b14|l21||d21|0|j3|s3|f2;b02|l05||d03|0|j2|s1|f4;b13|l19||d01|0|j4|s4|f3;b08|l15||d06|0|j2|s5|f8;b20|l18||d11|0|j4|s2|f7;b18|l25||d07|0|j2|s6|f1;b11|l13||c01|0|j4|s3|f6;b10|l14||d19|1|j2|s4|f5;b04|~d19|l23|d14|0|j5|s1|f2;b06|l03||d02|0|j6|s2|f4;b03|l23||d13|0|j5|s5|f3;b16|l22||d23|0|j6|s6|f8;b17|l12||d24|0|j5|s3|f7;b09|l08||c03|0|j6|s4|f1;b19|l07||d12|0|j5|s1|f6;b07|l26||d22|0|j2|s2|f5;b01|l09||d10|0|j4|s5|f2;b15|l30||d04|0|j2|s6|f4;b05|l06||d18|1|j4|s3|f3;b13|~d18|l24|d05|0|j2|s4|f8;b12|l24||c05|0|j4|s1|f7;b14|l17||d08|0|j2|s2|f6;b02|l05||d15|0|j3|s6|f1;b08|l01||d21|0|j6|s3|f5;b18|l27||d07|0|j3|s5|f2;b06|l10||d09|0|j6|s1|f4;b04|l29||d20|0|j3|s4|f3;b10|l21||c02|0|j6|s2|f8;b11|l28||d01|0|j3|s6|f6;b20|l20||d03|0|j2|s3|f7;b03|l02||d02|0|j4|s1|f1;b17|l16||d23|0|j2|s4|f5;b01|l11||d12|0|j4|s2|f2;b15|l04||d11|0|j2|s5|f4;b19|l19||c04|0|j4|s3|f3;b09|l15||d19|1|j2|s6|f6;b07|~d19|l03|d16|0|j3|s1|f7;b05|l09||d24|1|j6|s4|f1;b16|~d24|l22|d06|0|j3|s5|f8;b13|l18||d13|0|j6|s2|f5;b02|l22||d17|0|j3|s6|f2;b14|l14||c06|0|j6|s3|f4;b10|l13||d14|0|j3|s1|f3;b08|l03||d04|0|j2|s4|f6;b06|l08||d08|0|j5|s6|f7;b04|l05||d07|0|j2|s2|f1;b18|l12||d10|0|j5|s5|f8;b03|l24||d05|0|j2|s3|f2;b12|l25||c07|0|j5|s1|f5;b19|l26||d21|0|j2|s4|f4;b20|l06||d02|0|j3|s6|f3;b01|l17||d15|0|j6|s2|f6;b17|l01||d01|0|j3|s3|f7;b15|l28||d23|0|j6|s1|f1;b07|l10||d12|0|j3|s5|f8;b11|l07||c08|0|j6|s4|f2;b09|l30||d18|1|j3|s6|f5;b05|~d18|l27|d20|0|j2|s2|f4;b16|l27||d24|1|j5|s5|f3;b13|~d24|l23|d03|0|j2|s3|f6;b02|l29||d09|0|j5|s1|f7;b18|l21||d22|0|j2|s4|f1;b10|l09||c01|0|j5|s6|f8;b14|l23||d11|0|j2|s2|f2;b08|l19||d13|0|j3|s5|f5;b04|l22||d04|0|j6|s1|f4;b06|l04||d10|0|j3|s3|f3;b03|l16||d19|1|j6|s6|f7;b20|~d19|l11|d06|0|j3|s4|f6;b19|l05||c03|0|j6|s2|f1;b12|l15||d07|0|j3|s5|f8;b01|l11||d21|0|j2|s1|f2;b15|l02||d23|0|j5|s6|f5;b07|l18||d08|0|j2|s5|f4;b17|l24||d01|0|j5|s3|f6;b05|l13||d05|0|j2|s4|f3;b11|l03||c05|0|j5|s2|f7;b09|l14||d24|1|j2|s5|f1;b02|~d24|l20|d16|0|j3|s1|f2;b13|l09||d02|0|j6|s6|f5;b18|l20||d14|0|j3|s3|f4;b20|l01||d12|0|j6|s4|f6;b03|l08||d17|0|j3|s2|f3;b10|l28||c02|0|j6|s5|f8;b16|l26||d18|1|j3|s1|f7;b06|~d18|l17|d15|0|j2|s6|f1;b04|l05||d04|0|j4|s3|f2;b08|l17||d03|0|j2|s4|f5;b01|l06||d20|0|j4|s5|f6;b15|l29||d10|0|j2|s2|f4;b19|l12||c04|0|j4|s1|f3;b14|l10||d13|0|j2|s3|f8;b07|l27||d07|0|j3|s6|f7;b17|l30||d11|0|j6|s5|f1;b05|l25||d09|0|j3|s4|f2;b02|l21||d24|1|j6|s2|f6;b13|~d24|l07|d21|0|j3|s1|f5;b12|l07||c06|0|j6|s6|f4;b09|l19||d01|0|j3|s3|f3;b06|l16||d19|1|j2|s4|f7;b03|~d19|l11|d08|0|j4|s2|f2;b18|l03||d02|0|j2|s1|f1;b20|l11||d22|0|j4|s6|f6;b15|l04||d06|0|j2|s5|f8;b11|l18||c07|0|j4|s4|f5;b10|l15||d12|0|j2|s3|f4;b08|l14||d05|0|j3|s2|f3;b04|l01||d04|0|j6|s1|f2;b01|l13||d14|0|j3|s6|f7;b07|l02||d15|0|j6|s4|f1;b16|l29||d18|0|j3|s5|f6;b19|l23||c08|0|j6|s3|f8;b14|l22||d23|0|j3|s2|f5;b05|l08||d07|0|j2|s1|f4;b17|l26||d03|0|j4|s6|f3;b02|l21||d24|1|j2|s3|f2;b13|~d24|l06|d16|0|j4|s4|f7;b06|l09||d21|0|j2|s2|f6;b09|l24||c01|0|j4|s5|f1;b12|l17||d10|0|j2|s1|f8;b03|l06||d17|1|j3|s6|f5;b20|~d17|l20|d13|0|j6|s3|f4;b15|l12||d11|0|j3|s4|f3;b18|l19||d01|0|j6|s5|f2;b04|l27||d09|0|j3|s2|f6;b11|l30||c03|0|j6|s1|f7;b10|l10||d19|1|j3|s3|f8;b08|~d19|l20|d08|0|j2|s6|f1;b02|l20||d04|0|j4|s4|f5;b01|l16||d02|0|j2|s2|f4;b07|l28||d12|0|j4|s3|f3;b13|l11||d05|0|j2|s1|f2;b19|l05||c05|0|j4|s6|f6;b14|l07||d07|0|j2|s5|f7;b17|l03||d06|0|j6|s2|f8;b16|l18||d15|0|j1|s4|f1;b05|l29||d20|0|j6|s3|f5;b06|l01||d18|1|j1|s6|f4;b03|~d18|l25|d24|0|j6|s1|f3;b09|l04||c02|0|j1|s5|f2;b11|l15||d21|0|j6|s2|f6;b18|l25||d14|0|j2|s4|f7;b20|l14||d10|0|j3|s6|f8;b15|l13||d03|0|j2|s5|f1;b02|l21||d13|0|j3|s3|f5;b01|l08||d22|0|j2|s1|f4;b12|l26||c04|0|j3|s4|f3;b19|l02||d04|0|j2|s2|f2;b04|l17||d01|0|j4|s6|f7;b08|l06||d17|1|j6|s1|f6;b07|~d17|l27|d19|0|j4|s3|f1;b17|l23||d16|1|j6|s5|f8;b13|~d16|l19|d11|0|j4|s4|f5;b10|l19||c06|0|j6|s2|f4;b14|l20||d23|0|j4|s6|f3;b05|l27||d07|0|j3|s1|f2;b06|l10||d12|0|j2|s3|f7;b02|l12||d08|0|j3|s5|f6;b16|l18||d02|0|j2|s4|f1;b03|l30||d09|0|j3|s2|f8;b09|l09||c07|0|j2|s1|f5;b11|l22||d24|1|j3|s6|f4;b20|~d24|l11|d05|0|j4|s3|f3;b18|l16||d22|0|j6|s4|f2;b15|l25||d15|0|j4|s2|f6;b01|l01||d21|0|j6|s5|f7;b08|l07||d18|0|j4|s1|f1;b12|l24||c08|0|j6|s3|f8;b19|l29||d10|0|j4|s6|f5;b04|l03||d17|1|j2|s4|f4;b07|~d17|l11|d06|0|j3|s5|f3;b13|l11||d13|0|j2|s2|f2;b17|l04||d16|1|j3|s1|f6;b06|~d16|l15|d01|0|j2|s4|f7;b14|l15||c01|0|j3|s3|f1;b10|l13||d03|0|j2|s6|f8;b05|l21||d04|0|j5|s2|f5;b03|l14||d14|0|j6|s1|f4;b02|l05||d07|0|j5|s3|f3;b16|l23||d12|0|j6|s5|f2;b15|l28||d19|0|j5|s4|f7;b11|l08||c03|0|j6|s6|f6;b09|l26||d11|0|j5|s2|f1;b20|l20||d02|0|j2|s1|f5;b08|l17||d24|1|j3|s3|f4;b18|~d24|l06|d22|0|j2|s4|f3;b01|l19||d21|0|j3|s6|f2;b13|l10||d17|0|j2|s2|f7;b19|l06||c05|0|j3|s1|f6;b14|l02||d08|0|j2|s5|f8;b04|l25||d20|0|j4|s3|f1;b06|l18||d10|0|j6|s4|f5;b16|l12||d05|0|j4|s6|f4;b07|l27||d13|0|j6|s5|f3;b17|l30||d15|0|j4|s2|f2;b10|l01||c02|0|j6|s1|f7;b12|l16||d16|1|j4|s4|f8;b05|~d16|l09|d23|0|j2|s6|f6;b03|l03||d09|0|j3|s3|f1;b02|l29||d04|0|j2|s5|f5;b15|l07||d18|1|j3|s2|f4;b08|~d18|l09|d07|0|j2|s1|f3;b09|l15||c04|0|j3|s4|f2;b19|l11||d01|0|j2|s6|f7;b01|l20||d03|0|j4|s3|f1;b20|l09||d12|0|j6|s1|f6;b18|l04||d06|0|j4|s5|f8;b13|l21||d24|1|j6|s2|f5;b16|~d24|l23|d22|0|j4|s6|f4;b11|l25||c06|0|j6|s4|f3;b14|l24||d17|1|j4|s1|f2;b06|~d17|l23|d14|0|j2|s3|f7;b04|l23||d19|1|j3|s5|f1;b17|~d19|l14|d11|0|j2|s2|f6;b07|l19||d02|0|j3|s6|f8;b05|l22||d10|0|j2|s4|f5;b10|l14||c07|0|j3|s1|f4;b12|l08||d21|0|j2|s3|f3;b03|l13||d16|1|j6|s2|f2;b02|~d16|l26|d04|0|j4|s6|f7;b08|l26||d08|0|j6|s4|f1;b15|l17||d07|0|j4|s5|f8;b16|l10||d13|0|j6|s1|f6;b09|l12||c08|0|j4|s3|f5;b19|l18||d18|1|j6|s4|f3;b01|~d18|l05|d12|0|j2|s2|f4;b18|l06||d15|0|j3|s6|f2;b20|l05||d05|0|j2|s1|f7;b13|l01||d22|0|j3|s3|f1;b06|l27||d17|0|j2|s5|f8;b11|l02||c01|0|j3|s2|f6;b14|l16||d01|0|j2|s4|f5;b17|l03||d24|1|j5|s6|f3;b04|~d24|l28|d03|0|j6|s3|f4;b07|l29||d09|0|j5|s1|f2;b05|l28||d02|0|j6|s5|f7;b03|l30||d20|0|j5|s4|f1;b10|l25||c03|0|j6|s6|f8;b12|l20||d04|0|j5|s2|f6;b08|l07||d23|0|j2|s5|f5;b16|l23||d16|1|j4|s1|f4;b02|~d16|l21|d10|0|j2|s3|f3;b15|l15||d11|0|j4|s4|f2;b20|l21||d19|0|j2|s6|f7;b19|l11||c05|0|j4|s2|f1;b09|l04||d21|0|j2|s3|f6;b01|l14||d14|0|j5|s1|f5;b13|l19||d17|1|j6|s4|f4;b18|~d17|l08|d08|0|j5|s5|f8;b06|l24||d07|0|j6|s6|f3;b17|l08||d06|0|j5|s2|f2;b11|l09||c02|0|j6|s3|f6;b10|l26||d22|0|j5|s4|f7;b05|l25||d12|0|j2|s1|f1;b04|l17||d15|0|j3|s6|f5;b07|l01||d02|0|j2|s2|f4;b03|l13||d24|1|j3|s3|f3;b08|~d24|l10|d05|0|j2|s5|f8;b14|l18||c04|0|j3|s1|f2;b12|l12||d13|0|j2|s4|f6;b02|l10||d04|0|j5|s6|f7;b15|l16||d01|0|j4|s2|f1;b13|l06||d16|1|j5|s3|f5;b20|~d16|l20|d21|0|j4|s1|f4;b16|l27||d18|0|j5|s5|f3;b09|l22||c06|0|j4|s6|f8;b19|l29||d10|0|j5|s4|f6;b01|l20||d03|0|j6|s2|f2;b17|l03||d17|1|j2|s1|f7;b06|~d17|l02|d08|0|j6|s3|f1;b18|l05||d07|0|j2|s6|f5;b04|l02||d22|0|j6|s4|f4;b10|l19||c07|0|j2|s5|f3;b11|l23||d09|0|j6|s2|f8;b05|l25||d11|0|j5|s1|f2;b07|l30||d19|1|j4|s5|f6;b03|~d19|l07|d14|0|j5|s6|f7;b08|l21||d02|0|j4|s3|f1;b16|l07||d23|0|j5|s4|f5;b19|l15||c08|0|j4|s2|f4;b14|l04||d12|0|j5|s1|f8;b13|l11||d24|1|j2|s6|f3;b02|~d24|l08|d16|0|j6|s3|f2;b15|l01||d04|0|j2|s4|f6;b20|l28||d15|0|j6|s5|f7;b04|l18||d01|0|j2|s2|f1;b12|l14||c01|0|j6|s1|f5;b10|l08||d13|0|j2|s6|f4;b06|l26||d17|1|j4|s3|f3;b01|~d17|l17|d06|0|j3|s5|f8;b17|l24||d21|0|j4|s4|f2;b18|l17||d20|0|j3|s2|f6;b07|l29||d10|0|j4|s1|f7;b09|l13||c03|0|j3|s3|f1;b19|l16||d05|0|j4|s6|f5;b05|l20||d07|0|j6|s4|f4;b08|l27||d03|0|j2|s2|f3;b13|l09||d22|0|j6|s1|f2;b03|l10||d18|1|j2|s5|f8;b16|~d18|l25|d08|0|j6|s3|f6;b11|l19||c05|0|j2|s6|f7;b14|l06||d04|0|j6|s4|f1;b20|l03||d02|0|j5|s2|f5;b02|l12||d11|0|j3|s5|f4;b15|l21||d24|1|j5|s1|f3;b04|~d24|l30|d09|0|j3|s6|f2;b01|l05||d19|0|j5|s3|f6;b10|l07||c02|0|j3|s4|f8;b12|l02||d12|0|j5|s2|f7;b07|l30||d14|0|j2|s5|f1;b06|l18||d01|0|j6|s1|f5;b17|l04||d21|0|j2|s6|f4;b18|l22||d13|0|j6|s4|f3;b05|l15||d10|0|j2|s3|f2;b19|l11||c04|0|j6|s5|f8;b11|l08||d07|0|j2|s2|f6;b08|l01||d15|0|j3|s1|f7;b13|l25||d23|0|j5|s6|f1;b03|l14||d16|1|j3|s3|f5;b02|~d16|l16|d04|0|j5|s4|f4;b04|l26||d03|0|j3|s2|f3;b09|l29||c06|0|j5|s5|f2;b14|l23||d18|1|j3|s1|f8;b20|~d18|l17|d02|0|j2|s6|f7;b16|l13||d06|0|j6|s3|f6;b01|l16||d05|0|j2|s5|f1;b06|l17||d17|1|j6|s4|f5;b07|~d17|l27|d09|0|j2|s2|f4;b10|l27||c07|0|j6|s1|f3;b12|l28||d24|1|j2|s6|f2;b15|~d24|l03|d08|0|j4|s3|f6;b13|l19||d12|0|j3|s4|f7;b17|l09||d20|0|j4|s5|f8;b05|l24||d13|0|j3|s2|f1;b18|l10||d11|0|j4|s1|f5;b19|l05||c01|0|j3|s6|f4;b11|l06||d21|0|j4|s3|f3;b08|l03||d01|0|j2|s4|f2;b02|l20||d19|1|j6|s1|f7;b04|~d19|l21|d14|0|j2|s2|f6;b03|l21||d07|0|j6|s6|f1;b01|l12||d23|0|j2|s5|f8;b14|l07||c08|0|j6|s4|f5;b09|l18||d10|0|j2|s3|f4;b20|l22||d04|0|j4|s1|f3;b16|l30||d18|1|j3|s5|f2;b07|~d18|l08|d02|0|j4|s6|f6;b06|l04||d22|0|j3|s2|f7;b15|l01||d15|0|j4|s3|f1;b10|l29||c03|0|j3|s4|f8;b12|l02||d03|0|j4|s5|f5;b05|l14||d12|0|j6|s1|f4;b13|l11||d24|1|j2|s6|f3;b17|~d24|l08|d05|0|j6|s2|f2;b08|l09||d21|0|j2|s3|f7;b18|l26||d01|0|j6|s4|f6;b19|l08||c05|0|j2|s1|f1;b11|l15||d13|0|j6|s5|f8;b01|l28||d08|0|j4|s6|f5;b04|l05||d07|0|j5|s2|f4;b02|l17||d16|1|j4|s3|f3;b03|~d16|l24|d20|0|j5|s5|f2;b06|l24||d06|0|j4|s4|f7;b09|l19||c02|0|j5|s1|f6;b14|l13||d11|0|j4|s6|f1;b07|l25||d23|0|j6|s2|f5;b20|l16||d04|0|j2|s3|f4;b15|l27||d17|1|j6|s4|f3;b13|~d17|l10|d09|0|j2|s5|f8;b16|l21||d19|0|j6|s1|f2;b10|l10||c04|0|j2|s3|f7;b12|l22||d10|0|j6|s6|f6;b05|l03||d02|0|j4|s2|f1;b08|l06||d14|0|j3|s4|f5;b17|l09||d12|0|j4|s3|f4;b18|l23||d21|0|j3|s5|f8;b02|l18||d18|0|j4|s1|f3;b19|l07||c06|0|j3|s6|f2;b11|l01||d24|1|j4|s4|f7;b01|~d24|l28|d15|0|j6|s2|f6;b06|l05||d07|0|j2|s3|f1;b04|l28||d03|0|j6|s1|f5;b03|l29||d13|0|j2|s5|f8;b20|l12||d23|0|j6|s6|f4;b09|l30||c07|0|j2|s4|f3;b14|l14||d01|0|j6|s2|f2;b07|l20||d05|0|j3|s3|f7;b13|l04||d20|0|j4|s5|f6;b15|l24||d04|0|j3|s1|f1;b16|l26||d08|0|j4|s6|f5;b08|l19||d11|0|j3|s4|f8;b12|l11||c01|0|j4|s3|f4;b10|l02||d22|0|j3|s2|f3;b05|l08||d12|0|j6|s1|f2;b02|l17||d10|0|j2|s5|f7;b17|l15||d02|0|j6|s6|f6;b18|l22||d19|1|j2|s3|f1;b01|~d19|l16|d09|0|j6|s4|f5;b11|l09||c08|0|j2|s2|f8;b19|l16||d07|0|j6|s1|f4;b06|l27||d17|1|j5|s6|f3;b04|~d17|l13|d21|0|j3|s3|f6;b20|l13||d24|1|j5|s5|f2;b03|~d24|l10|d06|0|j3|s4|f7;b16|l05||d13|0|j5|s2|f1;b09|l21||c03|0|j3|s1|f5;b14|l10||d18|1|j5|s3|f4;b07|~d18|l03|d14|0|j6|s6|f3;b13|l01||d16|1|j2|s4|f6;b15|~d16|l28|d23|0|j6|s1|f2;b05|l06||d04|0|j2|s2|f7;b08|l03||d15|0|j6|s5|f8;b12|l24||c05|0|j2|s3|f1;b10|l28||d01|0|j6|s4|f5;b02|l25||d03|0|j3|s6|f4;b18|l18||d10|0|j4|s3|f3;b16|l29||d11|0|j3|s5|f6;b01|l07||d12|0|j4|s1|f2;b17|l12||d20|0|j3|s2|f7;b19|l19||c02|0|j4|s3|f8;b11|l30||d05|0|j3|s4|f1;b06|l14||d08|0|j6|s6|f5;b03|l09||d02|0|j2|s1|f4;b04|l11||d07|0|j6|s2|f3;b20|l26||d21|0|j2|s5|f6;b15|l04||d13|0|j6|s3|f2;b09|l17||c04|0|j2|s4|f8;b14|l22||d19|1|j6|s6|f7;b07|~d19|l08|d23|0|j3|s1|f1;b05|l08||d24|1|j4|s2|f5;b13|~d24|l05|d22|0|j3|s3|f4;b08|l05||d04|0|j4|s6|f3;b02|l16||d09|0|j3|s5|f6;b12|l23||c06|0|j4|s4|f2;b10|l15||d18|1|j3|s1|f8;b01|~d18|l21|d01|0|j6|s2|f7;b06|l27||d17|1|j2|s3|f1;b18|~d17|l02|d15|0|j6|s6|f5;b17|l02||d12|0|j2|s4|f4;b03|l20||d14|0|j6|s1|f3;b19|l21||c01|0|j2|s5|f6;b11|l13||d10|0|j6|s2|f2;b20|l28||d07|0|j1|s3|f7;b16|l24||d06|0|j4|s5|f8;b15|l18||d20|0|j1|s6|f1;b04|l01||d11|0|j4|s1|f5;b07|l09||d02|0|j1|s4|f6;b14|l10||c07|0|j4|s5|f4;b09|l06||d21|0|j1|s3|f3;b05|l03||d03|0|j2|s2|f2;b08|l19||d23|0|j6|s6|f7;b13|l14||d05|0|j2|s1|f1;b02|l05||d04|0|j6|s4|f5;b06|l29||d08|0|j2|s5|f8;b12|l12||c08|0|j6|s2|f6;b10|l07||d13|0|j2|s3|f3;b01|l30||d16|1|j3|s5|f4;b17|~d16|l25|d01|0|j4|s6|f2;b03|l17||d24|1|j3|s1|f7;b18|~d24|l26|d18|0|j4|s4|f1;b16|l25||d19|0|j3|s3|f5;b19|l26||c03|0|j4|s5|f8;b11|l16||d12|0|j3|s2|f6;b20|l11||d07|0|j2|s6|f4;b15|l08||d15|0|j6|s1|f3;b07|l21||d02|0|j2|s4|f2;b04|l04||d10|0|j6|s5|f7;b13|l27||d09|0|j2|s3|f1;b14|l18||c05|0|j6|s2|f8;b09|l15||d21|0|j2|s6|f5;b05|l02||d04|0|j5|s1|f4;b08|l10||d03|0|j4|s4|f6;b02|l19||d17|1|j5|s3|f3;b03|~d17|l13|d14|0|j4|s6|f2;b06|l01||d22|0|j5|s2|f7;b10|l13||c02|0|j4|s5|f1;b12|l22||d24|1|j5|s4|f8;b17|~d24|l06|d11|0|j6|s1|f5;b01|l23||d13|0|j2|s3|f4;b16|l06||d06|0|j6|s5|f6;b18|l29||d12|0|j2|s6|f3;b15|l14||d08|0|j6|s2|f2;b19|l03||c06|0|j2|s4|f7;b14|l09||d05|0|j6|s1|f1;b20|l20||d07|0|j3|s3|f5;b04|l17||d01|0|j4|s6|f6;b07|l28||d19|1|j3|s2|f4;b13|~d19|l30|d02|0|j4|s4|f3;b08|l24||d18|0|j3|s5|f8;b11|l30||c04|0|j4|s3|f2;b09|l12||d21|0|j3|s1|f7;b02|l26||d04|0|j2|s6|f1;b05|l07||d23|0|j6|s5|f5;b16|l08||d10|0|j2|s2|f4;b03|l04||d20|0|j6|s4|f6;b06|l18||d15|0|j2|s3|f3;b10|l21||c01|0|j6|s1|f8;b19|l16||d24|1|j2|s6|f2;b17|~d24|l27|d03|0|j4|s2|f7;b01|l05||d16|1|j1|s4|f1;b15|~d16|l11|d12|0|j4|s3|f5;b18|l11||d09|0|j1|s5|f6;b20|l19||d13|0|j4|s1|f4;b12|l15||c07|0|j1|s6|f8;b14|l27||d07|0|j4|s4|f3;b07|l02||d14|0|j6|s2|f2;b04|l25||d17|1|j3|s3|f7;b13|~d17|l06|d08|0|j6|s1|f1;b08|l01||d01|0|j3|s6|f5;b05|l10||d11|0|j6|s5|f6;b09|l29||c08|0|j3|s3|f4;b11|l06||d04|0|j6|s2|f8;b02|l03||d02|0|j4|s4|f3;b03|l13||d19|1|j2|s6|f2;b06|~d19|l17|d05|0|j4|s1|f7;b17|l17||d21|0|j2|s3|f1;b16|l23||d22|0|j4|s5|f5;b19|l20||c03|0|j2|s2|f6;b10|l14||d06|0|j4|s4|f4;b01|l21||d18|1|j6|s6|f8;b18|~d18|l12|d10|0|j3|s5|f3;b15|l22||d12|0|j6|s3|f2;b20|l30||d16|1|j3|s1|f7;b08|~d16|l18|d24|0|j6|s2|f1;b14|l04||c05|0|j3|s4|f5;b11|l26||d17|1|j6|s6|f6;b07|~d17|l08|d03|0|j5|s3|f4;b05|l25||d13|0|j4|s5|f8;b13|l12||d15|0|j5|s1|f3;b04|l18||d07|0|j4|s4|f2;b16|l07||d01|0|j5|s6|f7;b12|l08||c06|0|j4|s2|f1;b19|l09||d04|0|j5|s3|f6;b02|l27||d08|0|j6|s1|f5;b06|l19||d23|0|j3|s4|f4;b03|l16||d02|0|j6|s3|f3;b01|l28||d21|0|j3|s6|f2;b15|l11||d22|0|j6|s5|f8;b09|l24||c02|0|j3|s2|f7;b10|l15||d09|0|j6|s4|f1;b17|l01||d14|0|j1|s1|f6;b18|l05||d12|0|j2|s3|f5;b20|l20||d16|1|j1|s6|f4;b08|~d16|l10|d17|0|j2|s2|f3;b13|l10||d19|0|j1|s3|f2;b14|l02||c04|0|j2|s5|f8;b11|l23||d11|0|j1|s4|f7;b07|l06||d07|0|j6|s1|f1;b04|l17||d10|0|j3|s6|f6;b02|l29||d20|0|j6|s5|f5;b05|l25||d13|0|j3|s2|f4;b16|l13||d05|0|j6|s3|f3;b19|l21||c01|0|j3|s4|f2;b12|l03||d24|1|j6|s1|f8;b06|~d24|l14|d18|0|j5|s5|f7;b03|l18||d06|0|j2|s6|f1;b15|l14||d04|0|j5|s3|f6;b08|l30||d03|0|j2|s2|f5;b01|l19||d01|0|j5|s4|f4;b09|l04||c07|0|j2|s1|f2;b10|l26||d21|0|j5|s6|f3;b17|l20||d17|1|j6|s3|f7;b20|~d17|l08|d15|0|j3|s2|f1;b18|l01||d02|0|j6|s5|f8;b07|l12||d22|0|j3|s4|f6;b04|l08||d08|0|j6|s1|f5;b14|l27||c08|0|j3|s6|f4;b11|l07||d16|1|j6|s5|f2;b13|~d16|l25|d12|0|j5|s3|f3;b02|l16||d07|0|j2|s2|f7;b15|l11||d14|0|j5|s4|f6;b05|l25||d13|0|j2|s1|f1;b16|l22||d19|0|j5|s5|f8;b19|l23||c03|0|j2|s6|f5;b12|l15||d09|0|j5|s3|f4;b01|l09||d10|0|j6|s2|f2;b03|l06||d11|0|j3|s5|f3;b06|l10||d23|0|j6|s4|f7;b08|l17||d04|0|j3|s1|f6;b20|l29||d03|0|j6|s6|f8;b09|l24||c05|0|j3|s2|f1;b10|l20||d17|1|j6|s3|f5;b17|~d17|l02|d05|0|j4|s4|f2;b07|l21||d24|1|j2|s1|f4;b04|~d24|l13|d22|0|j4|s6|f6;b13|l19||d21|0|j2|s5|f7;b02|l13||d01|0|j4|s2|f3;b11|l03||c06|0|j2|s4|f8;b14|l18||d18|1|j4|s3|f1;b18|~d18|l05|d07|0|j6|s1|f5;b15|l28||d16|1|j3|s6|f4;b05|~d16|l05|d02|0|j6|s4|f2;b01|l02||d15|0|j3|s2|f7;b08|l05||d12|0|j6|s5|f6;b19|l14||c02|0|j3|s1|f3;b12|l30||d06|0|j6|s3|f8;b03|l25||d08|0|j4|s6|f1;b06|l01||d14|0|j2|s4|f4;b17|l04||d13|0|j4|s5|f5;b16|l12||d17|1|j2|s2|f2;b20|~d17|l26|d20|0|j4|s3|f7;b09|l26||c04|0|j2|s1|f6;b10|l08||d10|0|j4|s5|f3;b07|l27||d19|1|j6|s6|f1;b04|~d19|l23|d22|0|j5|s4|f4;b13|l16||d04|0|j6|s2|f5;b02|l11||d21|0|j5|s3|f6;b15|l07||d09|0|j6|s5|f8;b11|l23||c01|0|j5|s1|f2;b14|l15||d11|0|j6|s6|f7;b05|l20||d03|0|j4|s4|f3;b01|l06||d07|0|j2|s3|f1;b18|l10||d01|0|j4|s2|f4;b08|l17||d24|1|j2|s6|f5;b06|~d24|l13|d05|0|j4|s1|f6;b19|l21||c08|0|j2|s4|f2;b10|l29||d16|1|j4|s5|f8;b03|~d16|l25|d12|0|j6|s3|f7;b04|l13||d17|1|j3|s2|f3;b17|~d17|l19|d02|0|j6|s6|f1;b20|l19||d15|0|j3|s1|f4;b16|l18||d23|0|j6|s5|f5;b12|l03||c07|0|j3|s4|f2;b09|l22||d18|1|j6|s3|f6;b07|~d18|l25|d13|0|j5|s2|f8;b05|l25||d06|0|j2|s6|f7;b13|l09||d10|0|j5|s5|f3;b02|l14||d04|0|j2|s1|f1;b15|l02||d08|0|j5|s3|f4;b11|l24||c03|0|j2|s4|f5;b19|l01||d22|0|j5|s2|f6;b01|l20||d07|0|j3|s6|f2;b18|l26||d21|0|j6|s3|f7;b08|l30||d19|1|j3|s5|f8;b16|~d19|l04|d14|0|j6|s1|f3;b03|l23||d01|0|j3|s4|f1;b14|l04||c05|0|j6|s5|f4;b10|l16||d17|1|j3|s2|f5;b06|~d17|l27|d03|0|j4|s3|f6;b04|l05||d24|1|j2|s6|f2;b17|~d24|l28|d16|0|j4|s1|f7;b20|l27||d02|0|j2|s4|f3;b13|l08||d05|0|j4|s3|f1;b19|l12||c06|0|j2|s5|f8;b09|l28||d12|0|j4|s2|f4;b05|l06||d04|0|j6|s6|f5;b07|l11||d09|0|j1|s1|f6;b02|l15||d11|0|j6|s5|f2;b15|l19||d13|0|j1|s4|f7;b01|l07||d15|0|j6|s3|f3;b11|l21||c02|0|j1|s5|f1;b12|l10||d10|0|j6|s2|f8;b03|l25||d22|0|j3|s6|f4;b18|l17||d07|0|j2|s1|f5;b08|l20||d21|0|j3|s4|f6;b04|l13||d17|1|j2|s3|f2;b06|~d17|l03|d20|0|j3|s5|f7;b14|l18||c04|0|j2|s2|f3;b19|l03||d18|1|j3|s4|f1;b17|~d18|l29|d08|0|j6|s6|f4;b07|l29||d01|0|j4|s1|f8;b16|l23||d24|1|j6|s5|f5;b13|~d24|l26|d06|0|j4|s3|f6;b20|l02||d23|0|j6|s2|f2;b10|l14||c01|0|j4|s4|f7;b09|l26||d19|1|j6|s6|f3;b05|~d19|l01|d16|0|j3|s1|f1;b02|l01||d02|0|j2|s2|f4;b15|l09||d03|0|j3|s3|f5;b01|l16||d12|0|j2|s4|f6;b08|l27||d04|0|j3|s5|f8;b11|l30||c08|0|j2|s6|f2;b12|l24||d14|0|j3|s3|f7;b03|l08||d07|0|j6|s1|f3;b18|l06||d13|0|j5|s2|f1;b04|l22||d05|0|j6|s5|f5;b06|l04||d10|0|j5|s4|f4;b16|l12||d11|0|j6|s6|f6;b10|l19||c07|0|j5|s3|f8;b19|l11||d21|0|j6|s5|f2;b07|l21||d15|0|j3|s1|f7;b17|l05||d24|1|j2|s2|f3;b02|~d24|l17|d08|0|j3|s4|f5;b20|l13||d01|0|j2|s6|f1;b13|l17||d09|0|j3|s5|f6;b14|l07||c03|0|j2|s3|f4;b09|l15||d18|1|j3|s1|f8;b05|~d18|l28|d12|0|j6|s2|f2;b15|l10||d04|0|j5|s4|f7;b08|l03||d17|1|j6|s6|f3;b01|~d17|l28|d02|0|j5|s3|f5;b04|l14||d07|0|j6|s1|f1;b19|l28||c05|0|j5|s2|f6;b10|l01||d03|0|j6|s4|f4;b03|l29||d19|1|j4|s5|f8;b18|~d19|l18|d06|0|j2|s6|f2;b16|l18||d13|0|j4|s3|f7;b07|l09||d20|0|j2|s5|f3;b06|l24||d23|0|j4|s1|f5;b11|l02||c06|0|j2|s2|f1;b12|l25||d10|0|j4|s4|f6;b02|l20||d22|0|j6|s6|f4;b17|l05||d24|1|j3|s3|f2;b13|~d24|l26|d21|0|j6|s1|f7;b20|l26||d01|0|j3|s2|f3;b15|l27||d05|0|j6|s4|f5;b14|l16||c04|0|j3|s5|f8;b09|l22||d11|0|j6|s3|f1;b08|l19||d16|1|j5|s6|f4;b05|~d16|l06|d12|0|j2|s1|f6;b04|l08||d04|0|j5|s2|f2;b01|l06||d02|0|j2|s4|f7;b18|l11||d15|0|j5|s3|f3;b19|l21||c02|0|j2|s5|f8;b10|l04||d14|0|j5|s6|f5;b07|l30||d13|0|j6|s1|f1;b03|l23||d07|0|j3|s2|f4;b16|l12||d18|1|j6|s5|f6;b02|~d18|l09|d08|0|j3|s4|f2;b06|l24||d23|0|j6|s3|f7;b11|l07||c01|0|j3|s6|f8;b14|l17||d24|1|j6|s5|f3;b17|~d24|l13|d03|0|j4|s1|f5;b20|l28||d21|0|j2|s2|f1;b13|l13||d09|0|j4|s4|f4;b15|l09||d10|0|j2|s5|f6;b08|l10||d20|0|j4|s3|f2;b12|l05||c08|0|j2|s6|f7;b09|l18||d17|1|j4|s1|f8;b05|~d17|l03|d19|0|j6|s2|f3;b01|l03||d12|0|j3|s4|f1;b04|l14||d04|0|j6|s6|f5;b18|l01||d01|0|j3|s3|f4;b07|l15||d06|0|j6|s5|f6;b10|l29||c07|0|j3|s1|f2;b19|l22||d11|0|j6|s4|f7;b03|l19||d05|0|j4|s2|f3;b02|l02||d07|0|j2|s6|f1;b06|l27||d02|0|j4|s3|f5;b20|l16||d23|0|j2|s1|f4;b17|l26||d13|0|j4|s5|f8;b11|l08||c03|0|j2|s4|f6;b14|l04||d18|1|j4|s3|f2;b08|~d18|l25|d15|0|j6|s2|f7;b13|l24||d22|0|j1|s6|f3;b16|l21||d24|1|j6|s5|f1;b15|~d24|l11|d14|0|j1|s1|f5;b05|l09||d21|0|j6|s3|f4;b09|l11||c05|0|j1|s4|f6;b19|l20||d10|0|j6|s5|f8;b01|l06||d16|1|j4|s2|f2;b07|~d16|l25|d08|0|j2|s6|f7;b04|l25||d12|0|j4|s1|f3;b18|l28||d04|0|j2|s4|f1;b03|l17||d01|0|j4|s3|f5;b10|l05||c06|0|j2|s2|f4;b12|l30||d20|0|j4|s5|f6;b06|l12||d03|0|j6|s6|f8;b02|l07||d09|0|j3|s1|f2;b08|l18||d23|0|j6|s4|f7;b17|l22||d07|0|j3|s5|f1;b20|l10||d17|0|j6|s3|f3;b11|l13||c04|0|j3|s2|f5;b14|l03||d19|1|j6|s6|f6;b05|~d19|l14|d05|0|j5|s1|f4;b01|l19||d02|0|j2|s4|f7;b13|l14||d24|1|j5|s3|f2;b16|~d24|l23|d11|0|j2|s5|f8;b04|l01||d13|0|j5|s2|f3;b09|l23||c02|0|j2|s6|f1;b19|l27||d21|0|j5|s4|f6;b15|l29||d06|0|j4|s1|f5;b07|l24||d10|0|j1|s5|f4;b02|l15||d15|0|j4|s3|f7;b18|l09||d18|1|j1|s2|f2;b06|~d18|l21|d12|0|j4|s6|f3;b10|l26||c01|0|j1|s4|f6;b14|l16||d04|0|j4|s1|f1;b03|l02||d01|0|j2|s3|f5;b08|l08||d23|0|j6|s2|f4;b20|l11||d07|0|j2|s6|f7;b17|l04||d14|0|j6|s5|f8;b01|l05||d08|0|j2|s4|f2;b12|l21||c08|0|j6|s1|f3;b11|l18||d20|0|j2|s3|f6;b05|l28||d03|0|j5|s6|f1;b13|l06||d22|0|j4|s2|f4;b04|l17||d16|1|j5|s4|f5;b02|~d16|l22|d02|0|j4|s1|f7;b07|l03||d19|0|j5|s5|f8;b09|l30||c07|0|j4|s6|f2;b19|l22||d24|1|j5|s3|f3;b06|~d24|l10|d05|0|j6|s2|f6;b16|l12||d13|0|j2|s4|f1;b18|l07||d09|0|j6|s5|f4;b15|l24||d21|0|j2|s1|f7;b03|l13||d12|0|j6|s3|f5;b10|l10||c03|0|j2|s6|f8;b14|l14||d01|0|j6|s4|f2;b08|l19||d15|0|j4|s2|f3;b20|l09||d10|0|j3|s5|f1;b01|l20||d11|0|j4|s1|f6;b17|l01||d04|0|j3|s3|f4;b13|l29||d06|0|j4|s6|f7;b12|l25||c05|0|j3|s4|f5;b11|l27||d23|0|j4|s5|f8;b07|l26||d07|0|j6|s2|f2;b05|l05||d18|1|j2|s1|f3;b02|~d18|l18|d17|0|j6|s5|f1;b04|l28||d02|0|j2|s3|f6;b15|l15||d20|0|j6|s6|f4;b09|l18||c06|0|j2|s4|f7;b19|l21||d08|0|j6|s1|f8;b06|l16||d03|0|j3|s2|f5;b03|l08||d14|0|j4|s3|f2;b18|l11||d24|1|j3|s6|f3;b16|~d24|l04|d13|0|j4|s5|f1;b08|l04||d21|0|j3|s4|f4;b10|l17||c04|0|j4|s1|f6;b14|l22||d19|1|j3|s2|f7;b20|~d19|l02|d12|0|j2|s6|f5;b01|l03||d10|0|j6|s5|f8;b13|l23||d04|0|j2|s3|f2;b17|l02||d01|0|j6|s4|f3;b02|l06||d05|0|j2|s1|f1;b11|l19||c02|0|j6|s2|f4;b12|l30||d07|0|j2|s6|f6;b07|l13||d02|0|j4|s3|f7;b05|l14||d22|0|j5|s4|f5;b15|l01||d16|1|j4|s1|f2;b04|~d16|l10|d15|0|j5|s5|f8;b18|l07||d11|0|j4|s2|f3;b19|l12||c01|0|j5|s3|f1;b09|l10||d09|0|j4|s6|f4;b06|l27||d08|0|j3|s4|f6;b03|l29||d06|0|j6|s5|f7;b13|l24||d18|1|j3|s1|f5;b16|~d18|l18|d17|0|j6|s3|f2;b08|l26||d24|0|j3|s2|f8;b14|l16||c08|0|j6|s4|f3;b10|l09||d21|0|j3|s6|f1;b20|l08||d12|0|j2|s1|f4;b02|l21||d03|0|j5|s3|f6;b01|l18||d13|0|j2|s5|f7;b17|l15||d10|0|j5|s2|f5;b18|l25||d14|0|j2|s6|f2;b11|l20||c07|0|j5|s4|f8;b19|l17||d04|0|j2|s1|f3;b07|l03||d02|0|j3|s3|f1;b04|l11||d23|0|j6|s6|f4;b05|l04||d01|0|j3|s5|f6;b15|l28||d07|0|j6|s2|f7;b13|l05||d05|0|j3|s4|f5;b12|l19||c03|0|j6|s1|f2;b09|l06||d19|1|j3|s5|f3;b06|~d19|l02|d08|0|j2|s6|f1;b08|l02||d11|0|j4|s3|f8;b03|l30||d20|0|j2|s5|f4;b16|l01||d18|1|j4|s2|f6;b01|~d18|l29|d21|0|j2|s4|f7;b14|l13||c05|0|j4|s1|f5;b10|l14||d24|1|j2|s3|f2;b20|~d24|l27|d15|0|j5|s6|f3;b02|l27||d12|0|j6|s2|f1;b17|l10||d17|1|j5|s4|f6;b04|~d17|l08|d03|0|j6|s5|f8;b13|l29||d13|0|j5|s3|f4;b19|l22||c06|0|j6|s1|f7;b11|l07||d04|0|j5|s6|f5;b05|l26||d22|0|j2|s2|f2;b18|l21||d07|0|j4|s4|f3;b07|l12||d10|0|j2|s5|f1;b15|l23||d06|0|j4|s3|f6;b16|l18||d09|0|j2|s6|f4;b12|l08||c04|0|j4|s1|f8;b09|l16||d16|1|j2|s5|f7;b06|~d16|l19|d01|0|j3|s2|f5;b08|l17||d02|0|j6|s4|f2;b01|l03||d19|1|j3|s6|f3;b20|~d19|l11|d14|0|j6|s3|f1;b03|l19||d21|0|j3|s1|f6;b14|l20||c01|0|j6|s4|f4;b10|l25||d05|0|j3|s2|f7;b17|l24||d11|0|j2|s5|f8;b04|l15||d17|1|j5|s3|f5;b02|~d17|l11|d08|0|j2|s6|f2;b13|l09||d12|0|j5|s1|f3;b18|l04||d23|0|j2|s4|f1;b19|l11||c02|0|j5|s3|f6;b11|l06||d04|0|j2|s2|f4;b07|l30||d13|0|j3|s5|f7;b05|l23||d18|1|j6|s6|f8;b16|~d18|l01|d24|0|j3|s1|f5;b15|l01||d22|0|j6|s4|f2;b06|l29||d03|0|j3|s3|f3;b10|l13||c08|0|j6|s2|f1;b14|l05||d15|0|j3|s6|f6;b08|l27||d07|0|j2|s1|f4;b20|l02||d16|1|j5|s4|f7;b01|~d16|l14|d02|0|j2|s5|f8;b03|l14||d10|0|j5|s3|f5;b17|l28||d01|0|j2|s6|f2;b12|l10||c07|0|j5|s2|f3;b09|l07||d21|0|j2|s4|f1;b02|l20||d17|1|j4|s1|f6;b13|~d17|l26|d06|0|j6|s5|f4;b04|l18||d20|0|j4|s3|f7;b18|l21||d09|0|j6|s6|f8;b05|l25||d11|0|j4|s2|f5;b19|l26||c03|0|j6|s1|f2;b10|l12||d19|1|j4|s4|f3;b07|~d19|l17|d14|0|j2|s3|f1;b06|l19||d08|0|j5|s6|f6;b03|l08||d12|0|j2|s2|f4;b15|l17||d04|0|j5|s5|f7;b08|l16||d13|0|j2|s1|f8;b11|l03||c05|0|j5|s3|f5;b14|l23||d18|1|j2|s4|f2;b16|~d18|l22|d24|0|j3|s5|f3;b20|l04||d22|0|j6|s6|f1;b01|l01||d05|0|j3|s2|f6;b17|l22||d07|0|j6|s5|f4;b04|l15||d17|0|j3|s1|f7;b10|l11||c06|0|j6|s3|f5;b19|l06||d02|0|j3|s4|f2;b13|l20||d16|1|j2|s6|f3;b02|~d16|l29|d03|0|j4|s2|f1;b05|l25||d15|0|j2|s1|f6;b18|l29||d21|0|j4|s5|f8;b07|l30||d01|0|j2|s3|f4;b09|l27||c04|0|j4|s4|f7;b12|l13||d10|0|j2|s6|f5;b06|l24||d11|0|j3|s5|f2;b08|l09||d23|0|j6|s2|f3;b15|l14||d04|0|j3|s1|f6;b16|l07||d13|0|j6|s4|f1;b20|l02||d06|0|j3|s3|f4;b14|l21||c01|0|j6|s6|f7;b10|l10||d19|1|j3|s2|f5;b03|~d19|l05|d22|0|j2|s1|f2;b17|l05||d07|0|j4|s4|f3;b01|l26||d17|1|j2|s5|f8;b04|~d17|l18|d08|0|j4|s3|f6;b13|l18||d09|0|j2|s6|f1;b11|l23||c02|0|j4|s2|f4;b19|l12||d12|0|j2|s1|f7;b05|l19||d14|0|j3|s4|f5;b02|l25||d05|0|j6|s6|f2;b18|l08||d24|1|j3|s3|f3;b06|~d24|l17|d16|0|j6|s5|f8;b07|l17||d21|0|j3|s2|f6;b09|l03||c08|0|j6|s1|f1;b12|l28||d18|1|j3|s4|f4;b08|~d18|l01|d02|0|j2|s6|f7;b20|l20||d04|0|j4|s3|f5;b03|l16||d01|0|j2|s2|f2;b17|l11||d15|0|j4|s1|f3;b15|l01||d03|0|j2|s4|f6;b10|l06||c07|0|j4|s5|f8;b14|l04||d10|0|j2|s6|f1;b01|l27||d17|1|j3|s3|f4;b04|~d17|l15|d22|0|j6|s2|f7;b13|l29||d20|0|j3|s5|f5;b16|l15||d13|0|j6|s1|f2;b02|l30||d07|0|j3|s4|f3;b19|l13||c03|0|j6|s3|f6;b11|l14||d19|1|j3|s6|f1;b05|~d19|l21|d11|0|j2|s5|f8;b06|l21||d08|0|j5|s2|f4;b18|l22||d12|0|j2|s1|f7;b08|l07||d16|1|j5|s3|f5;b07|~d16|l25|d24|0|j2|s4|f2;b09|l23||c05|0|j5|s6|f3;b14|l18||d23|0|j2|s2|f6;b03|l02||d06|0|j1|s5|f1;b20|l25||d02|0|j4|s1|f8;b17|l10||d21|0|j1|s3|f4;b15|l26||d04|0|j4|s4|f7;b16|l12||d17|0|j1|s6|f5;b12|l16||c06|0|j4|s2|f2;b10|l24||d01|0|j1|s3|f3;b04|l19||d05|0|j2|s1|f6;b13|l09||d09|0|j6|s5|f1;b01|l05||d22|0|j2|s4|f8;b06|l20||d13|0|j6|s6|f4;b05|l17||d10|0|j2|s2|f7;b11|l08||c04|0|j6|s3|f5;b19|l03||d14|0|j2|s1|f2;b02|l01||d07|0|j4|s4|f3;b18|l11||d03|0|j3|s3|f6;b08|l06||d15|0|j4|s6|f1;b15|l27||d18|1|j3|s5|f8;b07|~d18|l21|d19|0|j4|s2|f4;b14|l04||c01|0|j3|s1|f7;b09|l15||d16|1|j4|s3|f5;b17|~d16|l25|d12|0|j6|s4|f2;b20|l25||d08|0|j2|s6|f3;b04|l29||d04|0|j6|s5|f6;b03|l23||d17|1|j2|s3|f8;b16|~d17|l30|d24|0|j6|s2|f1;b10|l30||c02|0|j2|s1|f4;b12|l28||d21|0|j6|s4|f7;b01|l14||d02|0|j3|s6|f5;b13|l21||d11|0|j4|s5|f2;b06|l18||d01|0|j3|s3|f3;b02|l13||d22|0|j4|s1|f6;b08|l07||d06|0|j3|s2|f8;b11|l10||c08|0|j4|s4|f1;b19|l19||d23|0|j3|s6|f4;b05|l20||d07|0|j2|s3|f7;b18|l26||d13|0|j6|s5|f5;b16|l02||d10|0|j2|s1|f2;b15|l12||d20|0|j6|s2|f6;b07|l01||d09|0|j2|s6|f3;b14|l17||c07|0|j6|s4|f1;b10|l08||d05|0|j2|s3|f4;b17|l25||d17|1|j3|s1|f7;b20|~d17|l16|d16|0|j4|s2|f5;b04|l16||d15|0|j3|s6|f2;b03|l06||d12|0|j4|s4|f6;b13|l22||d03|0|j3|s5|f8;b09|l11||c03|0|j4|s3|f3;b19|l03||d04|0|j3|s1|f1;b01|l27||d14|0|j2|s2|f4;b08|l09||d19|1|j6|s6|f7;b06|~d19|l04|d08|0|j2|s4|f5;b02|l05||d21|0|j6|s3|f2;b05|l23||d18|0|j2|s5|f6;b12|l24||c05|0|j6|s1|f8;b11|l15||d24|1|j2|s2|f3;b18|~d24|l20|d22|0|j3|s6|f1;b15|l29||d07|0|j4|s4|f4;b07|l04||d02|0|j3|s5|f7;b16|l30||d11|0|j4|s3|f6;b04|l21||d01|0|j3|s1|f5;b10|l07||c06|0|j4|s2|f2;b14|l18||d10|0|j3|s4|f3;b03|l14||d13|0|j6|s5|f8;b17|l13||d06|0|j2|s3|f1;b20|l19||d12|0|j6|s6|f4;b13|l10||d15|0|j2|s1|f6;b06|l01||d05|0|j6|s2|f7;b19|l12||c04|0|j2|s3|f5;b09|l26||d04|0|j6|s4|f2;b08|l17||d21|0|j3|s6|f3;b02|l28||d03|0|j4|s1|f1;b01|l06||d23|0|j3|s5|f8;b05|l08||d09|0|j4|s2|f6;b18|l16||d19|0|j3|s3|f4;b11|l02||c01|0|j4|s4|f7;b10|l11||d07|0|j3|s5|f5;b07|l27||d08|0|j6|s6|f2;b15|l20||d17|1|j2|s1|f3;b04|~d17|l03|d14|0|j6|s2|f1;b06|l03||d24|1|j2|s3|f6;b03|~d24|l14|d18|0|j6|s5|f8;b12|l29||c02|0|j2|s4|f4;b14|l15||d02|0|j6|s6|f7;b17|l25||d16|1|j4|s1|f5;b20|~d16|l21|d01|0|j3|s2|f2;b13|l09||d20|0|j4|s3|f3;b16|l18||d10|0|j3|s5|f1;b08|l04||d13|0|j4|s4|f6;b19|l22||c08|0|j3|s6|f4;b10|l05||d12|0|j4|s1|f7;b01|l24||d11|0|j6|s5|f8;b05|l19||d23|0|j2|s3|f5;b18|l07||d04|0|j6|s2|f2;b02|l21||d15|0|j2|s4|f3;b15|l01||d21|0|j6|s6|f1;b09|l30||c07|0|j2|s1|f6;b11|l13||d05|0|j6|s2|f4;b07|l14||d19|1|j3|s3|f7;b04|~d19|l28|d22|0|j4|s5|f8;b03|l28||d06|0|j3|s4|f5;b06|l10||d07|0|j4|s6|f2;b13|l12||d03|0|j3|s1|f3;b12|l08||c03|0|j4|s3|f1;b14|l23||d24|1|j3|s2|f6;b17|~d24|l06|d08|0|j6|s4|f4;b20|l17||d02|0|j2|s6|f7;b08|l06||d17|1|j6|s1|f5;b01|~d17|l26|d14|0|j2|s5|f8;b16|l26||d18|0|j6|s3|f2;b19|l05||c05|0|j2|s4|f3;b10|l11||d23|0|j6|s2|f1;b05|l27||d01|0|j1|s6|f4;b02|l16||d04|0|j4|s1|f6;b15|l09||d09|0|j1|s5|f7;b18|l29||d10|0|j4|s3|f5;b04|l03||d13|0|j1|s4|f8;b09|l02||c06|0|j4|s2|f2;b11|l24||d20|0|j1|s5|f3;b07|l18||d12|0|j6|s6|f1;b13|l22||d21|0|j2|s1|f4;b06|l15||d11|0|j6|s5|f6;b03|l19||d05|0|j2|s3|f7;b20|l04||d19|0|j6|s4|f5;b14|l21||c04|0|j2|s2|f8;b10|l28||d24|1|j6|s6|f2;b17|~d24|l20|d03|0|j4|s1|f3;b08|l25||d07|0|j3|s3|f1;b01|l20||d15|0|j4|s4|f4;b02|l01||d16|1|j3|s2|f6;b05|~d16|l05|d23|0|j4|s5|f7;b12|l13||c01|0|j3|s6|f5;b19|l07||d04|0|j4|s3|f8;b16|l30||d02|0|j6|s1|f2;b07|l14||d06|0|j2|s5|f3;b15|l05||d13|0|j6|s4|f1;b04|l10||d08|0|j2|s2|f6;b18|l09||d18|0|j6|s6|f4;b09|l08||c02|0|j2|s3|f7;b11|l12||d10|0|j6|s5|f5;b06|l17||d01|0|j4|s1|f2;b13|l11||d22|0|j3|s4|f3;b02|l16||d14|0|j4|s2|f1;b03|l24||d20|0|j3|s5|f8;b08|l06||d12|0|j4|s3|f6;b19|l22||c08|0|j3|s6|f4;b10|l29||d09|0|j4|s4|f7;b20|l26||d21|0|j6|s1|f5;b01|l27||d17|1|j2|s2|f2;b17|~d17|l03|d24|0|j6|s6|f3;b05|l03||d23|0|j2|s3|f1;b07|l19||d05|0|j6|s4|f6;b14|l18||c07|0|j2|s5|f8;b12|l28||d07|0|j6|s1|f4;b04|l23||d11|0|j4|s2|f7;b16|l21||d04|0|j3|s6|f5;b06|l04||d13|0|j4|s5|f2;b15|l15||d19|1|j3|s3|f3;b18|~d19|l13|d03|0|j4|s4|f1;b11|l09||c03|0|j3|s1|f6;b09|l02||d15|0|j4|s5|f8;b03|l05||d02|0|j2|s6|f4;b13|l01||d08|0|j6|s2|f7;b02|l13||d12|0|j2|s3|f5;b08|l14||d18|1|j6|s5|f2;b20|~d18|l24|d10|0|j2|s4|f3;b19|l07||c05|0|j6|s1|f1;b10|l30||d01|0|j2|s6|f6;b17|l10||d16|1|j1|s2|f4;b01|~d16|l24|d21|0|j4|s3|f7;b07|l11||d24|1|j1|s1|f5;b05|~d24|l08|d14|0|j4|s4|f2;b04|l24||d06|0|j1|s5|f8;b14|l08||c06|0|j4|s6|f6;b12|l25||d23|0|j1|s3|f3;b06|l17||d07|0|j6|s2|f1;b15|l16||d20|0|j2|s1|f4;b16|l12||d04|0|j6|s5|f7;b18|l22||d13|0|j2|s4|f5;b02|l06||d09|0|j6|s6|f2;b11|l18||c04|0|j2|s3|f8;b09|l20||d05|0|j6|s5|f6;b03|l27||d17|1|j3|s1|f3;b13|~d17|l28|d15|0|j5|s2|f1;b08|l19||d22|0|j3|s3|f4;b17|l09||d12|0|j5|s4|f7;b20|l28||d19|0|j3|s6|f5;b19|l03||c01|0|j5|s1|f2;b10|l26||d24|1|j3|s2|f6;b07|~d24|l29|d03|0|j6|s3|f3;b01|l29||d10|0|j2|s5|f8;b15|l05||d11|0|j6|s4|f1;b05|l21||d18|1|j2|s6|f7;b04|~d18|l04|d02|0|j6|s1|f4;b14|l04||c02|0|j2|s2|f5;b12|l15||d01|0|j6|s5|f2;b06|l01||d08|0|j3|s3|f3;b18|l24||d21|0|j4|s4|f6;b16|l13||d23|0|j3|s5|f8;b02|l14||d04|0|j4|s6|f1;b13|l30||d13|0|j3|s1|f7;b11|l10||c08|0|j4|s2|f5;b09|l02||d07|0|j3|s4|f4;b17|l11||d14|0|j6|s3|f3;b03|l09||d20|0|j2|s5|f2;b08|l07||d06|0|j6|s6|f8;b20|l18||d12|0|j2|s1|f6;b07|l23||d15|0|j6|s2|f1;b19|l17||c07|0|j2|s3|f7;b10|l06||d05|0|j6|s4|f5;b01|l08||d19|1|j4|s6|f3;b05|~d19|l22|d16|0|j3|s1|f4;b04|l16||d24|1|j4|s2|f2;b15|~d24|l12|d03|0|j3|s3|f6;b06|l19||d09|0|j4|s5|f8;b14|l12||c03|0|j3|s4|f1;b11|l27||d10|0|j4|s6|f5;b02|l03||d02|0|j2|s1|f7;b18|l26||d21|0|j6|s3|f3;b13|l25||d11|0|j2|s2|f4;b16|l29||d01|0|j6|s5|f2;b17|l22||d17|0|j2|s6|f6;b12|l13||c05|0|j6|s4|f8;b09|l01||d08|0|j2|s1|f1;b08|l21||d04|0|j4|s3|f5;b20|l10||d18|1|j5|s5|f7;b03|~d18|l04|d13|0|j4|s2|f3;b07|l04||d12|0|j5|s6|f4;b01|l15||d07|0|j4|s4|f6;b19|l20||c06|0|j5|s3|f2;b14|l18||d22|0|j4|s1|f8;b05|l14||d14|0|j6|s6|f1;b15|l05||d15|0|j2|s2|f5;b04|l28||d24|1|j6|s5|f7;b06|~d24|l30|d03|0|j2|s3|f3;b13|l30||d23|0|j6|s4|f4;b10|l07||c04|0|j2|s1|f6;b11|l02||d05|0|j6|s6|f2;b02|l06||d19|1|j3|s2|f1;b18|~d19|l11|d06|0|j4|s5|f8;b17|l24||d01|0|j3|s4|f5;b16|l17||d10|0|j4|s3|f7;b08|l11||d21|0|j3|s1|f3;b09|l08||c01|0|j4|s6|f6;b14|l16||d02|0|j3|s2|f4;b03|l27||d08|0|j6|s3|f2;b07|l19||d09|0|j2|s5|f1;b20|l29||d11|0|j6|s4|f8;b01|l09||d20|0|j2|s1|f5;b13|l01||d13|0|j6|s6|f7;b12|l03||c02|0|j2|s5|f3;b19|l26||d04|0|j6|s2|f6;b04|l12||d12|0|j5|s3|f4;b05|l13||d18|1|j4|s1|f2;b06|~d18|l21|d07|0|j5|s5|f1;b15|l04||d15|0|j4|s4|f8;b02|l23||d16|0|j5|s6|f5;b11|l21||c08|0|j4|s2|f7;b10|l18||d17|1|j5|s3|f3;b17|~d17|l10|d03|0|j6|s1|f6;b18|l25||d14|0|j2|s4|f4;b08|l10||d24|1|j6|s3|f2;b03|~d24|l14|d21|0|j2|s6|f1;b07|l14||d19|0|j6|s5|f8;b09|l15||c07|0|j2|s2|f5;b14|l22||d01|0|j6|s1|f7;b01|l06||d05|0|j3|s4|f3;b16|l07||d02|0|j4|s5|f6;b20|l30||d10|0|j3|s3|f4;b13|l17||d13|0|j4|s6|f2;b04|l11||d04|0|j3|s2|f1;b19|l08||c05|0|j4|s1|f8;b12|l27||d23|0|j3|s4|f5;b06|l20||d22|0|j6|s3|f7;b05|l19||d08|0|j2|s6|f3;b15|l01||d07|0|j6|s2|f6;b18|l02||d17|1|j2|s5|f4;b02|~d17|l16|d11|0|j6|s1|f2;b10|l16||c03|0|j2|s3|f1;b11|l12||d06|0|j6|s4|f8;b17|l05||d12|0|j3|s6|f5;b08|l28||d16|1|j4|s2|f7;b07|~d16|l29|d09|0|j3|s5|f6;b01|l29||d18|1|j4|s3|f3;b03|~d18|l25|d21|0|j3|s1|f4;b09|l23||c06|0|j4|s4|f2;b14|l18||d15|0|j3|s6|f1;b06|l25||d03|0|j6|s2|f5;b04|l26||d24|1|j5|s3|f7;b20|~d24|l03|d14|0|j6|s1|f6;b16|l24||d02|0|j5|s5|f8;b13|l13||d19|0|j6|s6|f3;b19|l03||c04|0|j5|s4|f4;b12|l04||d01|0|j6|s2|f2;b05|l21||d05|0|j3|s1|f1;b02|l09||d04|0|j2|s3|f5;b15|l14||d17|1|j3|s6|f7;b08|~d17|l10|d22|0|j2|s4|f6;b18|l10||d10|0|j3|s5|f8;b10|l15||c01|0|j2|s2|f3;b11|l07||d13|0|j3|s1|f4;b01|l20||d07|0|j6|s3|f2;b07|l06||d16|1|j5|s6|f1;b17|~d16|l19|d12|0|j6|s4|f6;b03|l17||d21|0|j5|s3|f5;b06|l27||d08|0|j6|s2|f7;b14|l19||c08|0|j5|s1|f3;b19|l01||d20|0|j6|s5|f8;b04|l25||d11|0|j2|s6|f4;b16|l30||d18|1|j4|s4|f2;b05|~d18|l11|d06|0|j2|s5|f1;b20|l08||d02|0|j4|s3|f6;b13|l11||d23|0|j2|s2|f5;b09|l16||c02|0|j4|s1|f7;b12|l23||d24|1|j2|s4|f3;b02|~d24|l02|d03|0|j6|s6|f4;b08|l29||d17|1|j3|s5|f8;b15|~d17|l12|d09|0|j6|s3|f2;b18|l12||d04|0|j3|s2|f1;b17|l22||d01|0|j6|s1|f5;b10|l02||c07|0|j3|s4|f6;b11|l18||d15|0|j6|s6|f7;b01|l26||d19|1|j4|s3|f3;b03|~d19|l03|d22|0|j2|s2|f4;b07|l21||d16|1|j4|s5|f8;b06|~d16|l13|d13|0|j2|s1|f2;b16|l13||d10|0|j4|s4|f1;b19|l04||c05|0|j2|s6|f5;b14|l03||d21|0|j4|s3|f6;b05|l20||d07|0|j6|s2|f7;b04|l05||d14|0|j5|s1|f3;b13|l28||d12|0|j6|s4|f4;b02|l14||d05|0|j5|s5|f8;b20|l25||d08|0|j6|s6|f2;b12|l10||c03|0|j5|s3|f1;b09|l15||d02|0|j6|s2|f5;b08|l27||d04|0|j2|s1|f6;b15|l06||d17|1|j3|s4|f7;b18|~d17|l17|d11|0|j2|s5|f3";
+</script>
+<script>
 // ---- Rotation engine -----------------------------------------------------
 // Deterministic: the same date always gets the same meals (before swaps).
 // Each pick scores candidates on: time since last use (with hard repeat gaps),
@@ -1407,7 +1434,28 @@ var Engine = (function () {
     return best;
   }
 
+  // ---- Precomputed plan (built by build.py) --------------------------------
+  // One row per day: b|l|lAlt|d|batch|juice|s1|s2, with "~id" for a leftover lunch.
+  var TABLE = (typeof module === "undefined" && typeof PLAN_TABLE !== "undefined") ? PLAN_TABLE.split(";") : null;
+  var exById = {}; S1.concat(S2, JX).forEach(function (s) { exById[s.id] = s; });
+  function fromRow(row) {
+    var f = row.split("|"), dRaw = byId[f[3]];
+    var l = f[1].charAt(0) === "~" ? leftoverOf(byId[f[1].slice(1)]) : byId[f[1]];
+    return { b: byId[f[0]], l: l, lAlt: f[2] ? byId[f[2]] : null, d: f[4] === "1" ? batchOf(dRaw) : dRaw, dRaw: dRaw,
+      juice: exById[f[5]], snacks: [exById[f[6]], exById[f[7]]] };
+  }
+  function exportTable(n) {
+    extendTo(n);
+    return plan.slice(0, n + 1).map(function (p) {
+      return [p.b.id, p.l.leftover ? "~" + p.dRawPrev : p.l.id, p.lAlt ? p.lAlt.id : "", p.dRaw.id, p.d.batch ? 1 : 0, p.juice.id, p.snacks[0].id, p.snacks[1].id].join("|");
+    }).join(";");
+  }
+
   function extendTo(idx) {
+    if (TABLE) {
+      while (plan.length <= idx && plan.length < TABLE.length) plan.push(fromRow(TABLE[plan.length]));
+      return;
+    }
     while (plan.length <= idx) {
       var i = plan.length, date = new Date(EPOCH + i * DAY), dow = date.getUTCDay(), month = date.getUTCMonth();
       if (dow === 1) open = {}; // new shopping week
@@ -1457,7 +1505,7 @@ var Engine = (function () {
       var s1 = pickExtra(S1, i, "s1:", 2); consume(s1.ing, 2);
       var s2 = pickExtra(S2, i, "s2:", 2); consume(s2.ing, 2);
 
-      plan.push({ b: b, l: l, lAlt: lAlt, d: d, dRaw: dRaw, juice: juice, snacks: [s1, s2] });
+      plan.push({ b: b, l: l, lAlt: lAlt, d: d, dRaw: dRaw, dRawPrev: l.leftover ? prev.dRaw.id : null, juice: juice, snacks: [s1, s2] });
     }
   }
 
@@ -1470,6 +1518,7 @@ var Engine = (function () {
     var i = idxOf(y, m, dd);
     if (i < 0 || i > MAX_DAYS) return null;
     extendTo(i + 1);
+    if (!plan[i]) return null;
     var base = plan[i], k = key(y, m, dd), ov = overrides || {};
     var prevK = i > 0 ? keyOfIdx(i - 1) : null, nextK = keyOfIdx(i + 1);
 
@@ -1509,7 +1558,7 @@ var Engine = (function () {
 
   function inRange(y, m, dd) { var i = idxOf(y, m, dd); return i >= 0 && i <= MAX_DAYS; }
 
-  return { inRange: inRange, MAX_DAYS: MAX_DAYS, day: day, byId: byId, grams: grams, nutrOf: nutrOf, alternatives: alternatives, idxOf: idxOf, key: key, RULES: RULES, EPOCH: EPOCH };
+  return { exportTable: exportTable, inRange: inRange, MAX_DAYS: MAX_DAYS, day: day, byId: byId, grams: grams, nutrOf: nutrOf, alternatives: alternatives, idxOf: idxOf, key: key, RULES: RULES, EPOCH: EPOCH };
 })();
 if (typeof module !== "undefined") module.exports = Engine;
 
@@ -1524,7 +1573,7 @@ if (typeof module !== "undefined") module.exports = Engine;
   var state = { offset: 0, sel: { y: TODAY.y, m: TODAY.m, d: TODAY.d }, view: "day", prevView: "day", recipe: null, week: null, level: "year", focus: { y: TODAY.y, m: TODAY.m } };
   var ov = {};
   try { ov = JSON.parse(localStorage.getItem("mpd-swaps") || "{}") || {}; } catch (e) { ov = {}; }
-  function saveOv() { try { localStorage.setItem("mpd-swaps", JSON.stringify(ov)); } catch (e) {} }
+  function saveOv() { planCache = {}; try { localStorage.setItem("mpd-swaps", JSON.stringify(ov)); } catch (e) {} }
 
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -1544,7 +1593,13 @@ if (typeof module !== "undefined") module.exports = Engine;
   function mondayOf(o) { var w = dow(o) || 7; return addDays(o, 1 - w); }
   function same(a, b) { return a && b && a.y === b.y && a.m === b.m && a.d === b.d; }
   function before(a, b) { return Date.UTC(a.y, a.m, a.d) < Date.UTC(b.y, b.m, b.d); }
-  function dayPlan(o) { return Engine.day(o.y, o.m, o.d, ov); }
+  // Day plans are cached; swaps clear the cache.
+  var planCache = {};
+  function dayPlan(o) {
+    var k = o.y * 10000 + o.m * 100 + o.d;
+    if (!(k in planCache)) planCache[k] = Engine.day(o.y, o.m, o.d, ov);
+    return planCache[k];
+  }
   function mealName(r) { return (r.leftover ? "Leftovers: " : "") + r.name; }
   function mealTags(r) {
     return (r.cheat ? '<span class="tag cheat">Cheat night</span>' : "") +
@@ -1612,8 +1667,7 @@ if (typeof module !== "undefined") module.exports = Engine;
       }
       html += "</div></section>";
     }
-    $("months").className = "months";
-    $("months").innerHTML = html;
+    return { cls: "months", html: html };
   }
 
   // ---- Zoom levels ---------------------------------------------------------
@@ -1622,10 +1676,22 @@ if (typeof module !== "undefined") module.exports = Engine;
     month: '<span><i class="dot"></i>Cheat night</span><span>Protein for Person 1 and Person 2. Pinch out on a day or press + to open it, swipe for the next month.</span>',
     day: '<span>Swipe for the next day. Pinch in or press − to go back to the month.</span>'
   };
+  // Render a level's HTML for a given view (used for the current view and for swipe neighbours).
+  function htmlFor(over) {
+    var saved = { level: state.level, focus: state.focus, sel: state.sel, offset: state.offset };
+    if (over) Object.keys(over).forEach(function (k) { if (!(k in saved)) saved[k] = state[k]; state[k] = over[k]; });
+    var r = state.level === "month" ? renderMonthBig() : state.level === "day" ? renderDayBig() : renderYear();
+    Object.keys(saved).forEach(function (k) { state[k] = saved[k]; });
+    return r;
+  }
   function renderMonths() {
-    if (state.level === "month") renderMonthBig();
-    else if (state.level === "day") renderDayBig();
-    else renderYear();
+    dropPrepared();
+    var r = htmlFor(null), mEl = $("months");
+    mEl.className = r.cls; mEl.innerHTML = r.html;
+    renderChrome();
+    prefetchNeighbours();
+  }
+  function renderChrome() {
     $("legend").innerHTML = LEGEND[state.level];
     var f = state.focus, s = state.sel, c = '<button data-level="year"' + (state.level === "year" ? ' aria-current="page"' : "") + ">Year</button>";
     if (state.level !== "year") c += '<span class="sep">›</span><button data-level="month"' + (state.level === "month" ? ' aria-current="page"' : "") + ">" + MONTHS[f.m] + " " + f.y + "</button>";
@@ -1636,15 +1702,18 @@ if (typeof module !== "undefined") module.exports = Engine;
     $("prev").setAttribute("aria-label", lbl[0]); $("next").setAttribute("aria-label", lbl[1]);
   }
 
+  var phoneMq = window.matchMedia("(max-width: 640px)");
   function renderMonthBig() {
-    var y = state.focus.y, m = state.focus.m, mp = monthPlans(y, m), cost = mp.reduce(function (s, x) { return s + x.pl.cost; }, 0);
+    var y = state.focus.y, m = state.focus.m, mp = monthPlans(y, m), cost = mp.reduce(function (s, x) { return s + x.pl.cost; }, 0), phone = phoneMq.matches;
     var html = '<section class="mbig" id="m-' + y + "-" + m + '"><div class="mbig-head"><h2>' + MONTHS[m] + " " + y + "</h2>" +
       (mp.length ? '<button class="mh" data-month="' + y + "," + m + '"><span>≈ ' + eur(cost, 0) + " · " + eur(cost / mp.length) + " a day ›</span></button>" : "") + "</div>";
-    html += '<div class="mgrid"><span class="wd">wk</span>' + ["Mo","Tu","We","Th","Fr","Sa","Su"].map(function (w) { return '<span class="wd">' + w + "</span>"; }).join("");
+    html += '<div class="mgrid">' + (phone ? "" : '<span class="wd">wk</span>' + ["Mo","Tu","We","Th","Fr","Sa","Su"].map(function (w) { return '<span class="wd">' + w + "</span>"; }).join(""));
     var first = (new Date(Date.UTC(y, m, 1)).getUTCDay() + 6) % 7, days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(), cells = [], k;
+    if (phone) cells = []; else {
     for (k = 0; k < first; k++) cells.push(null);
     for (k = 1; k <= days; k++) cells.push(k);
     while (cells.length % 7) cells.push(null);
+    }
     for (var r = 0; r < cells.length; r += 7) {
       var anyDay = cells.slice(r, r + 7).filter(Boolean)[0], mon = mondayOf({ y: y, m: m, d: anyDay });
       html += '<button class="wk" data-wk="' + mon.y + "," + mon.m + "," + mon.d + '" aria-label="Week ' + isoWeek(y, m, anyDay) + ' summary">' + isoWeek(y, m, anyDay) + "</button>";
@@ -1666,7 +1735,7 @@ if (typeof module !== "undefined") module.exports = Engine;
     }
     // Phones: an agenda list reads better than seven narrow columns.
     var list = '<div class="agenda">', lastWk = null;
-    mp.forEach(function (x) {
+    if (phone) mp.forEach(function (x) {
       var o = x.o, pl = x.pl, wk = isoWeek(o.y, o.m, o.d), cls = "ag";
       if (wk !== lastWk) { var mo = mondayOf(o); list += '<button class="ag-wk" data-wk="' + mo.y + "," + mo.m + "," + mo.d + '">Week ' + wk + " · shopping list ›</button>"; lastWk = wk; }
       if (same(o, TODAY)) cls += " today";
@@ -1676,13 +1745,12 @@ if (typeof module !== "undefined") module.exports = Engine;
         '<span class="ag-m"><span>' + esc(pl.meals.b.name) + "</span><span>" + esc(mealName(pl.meals.l)) + "</span><span>" + esc(pl.meals.d.name) + "</span></span>" +
         '<span class="ag-p">' + r0(pl.people.p1.p) + "<br>" + r0(pl.people.p2.p) + " g</span></button>";
     });
-    $("months").className = "";
-    $("months").innerHTML = html + "</div>" + list + "</div></section>";
+    return { cls: "", html: html + "</div>" + list + "</div></section>" };
   }
 
   function renderDayBig() {
     var o = state.sel, plan = dayPlan(o);
-    if (!plan) { $("months").innerHTML = '<p class="empty">No plan for this date. The plan runs from January 2025 to the end of 2032.</p>'; return; }
+    if (!plan) return { cls: "", html: '<p class="empty">No plan for this date. The plan runs from January 2025 to the end of 2032.</p>' };
     var h = '<section class="dbig"><div class="dbig-head"><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + "</div><h2>" + dateTitle(o) + "</h2></div>";
     h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
     h += '<div class="costline"><span>Food cost today</span><b>≈ ' + eur(plan.cost) + "</b></div>";
@@ -1698,18 +1766,16 @@ if (typeof module !== "undefined") module.exports = Engine;
       '<li><span class="amt">Juice</span><span>' + esc(plan.juice.name) + "</span></li>" +
       plan.snacks.map(function (sn, i) { return '<li><span class="amt">Snack ' + (i + 1) + "</span><span>" + esc(sn.name) + ' <span class="note">· ' + sn.p + " g protein each</span></span></li>"; }).join("") +
       '</ul><div class="row"><button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " shopping list</button></div></div>";
-    $("months").className = "";
-    $("months").innerHTML = h + "</section>";
+    return { cls: "", html: h + "</section>" };
   }
 
   function monthDiff(a, b) { return (a.y - b.y) * 12 + (a.m - b.m); }
-  function animate(cls) {
-    var c = $("cal"), m = $("months");
-    c.classList.remove("zin", "zout", "sl", "sr"); void c.offsetWidth; if (cls) c.classList.add(cls);
-    // Zooms grow out of (or shrink into) the point you pinched; buttons and keys use the centre.
-    if (!m.style.transformOrigin) m.style.transformOrigin = "50% 30%";
-    clearTimeout(animate.t); animate.t = setTimeout(function () { m.style.transformOrigin = ""; c.classList.remove("zin", "zout", "sl", "sr"); }, 300);
+  // Simple cross-fade, used when there is nothing to zoom from (Today button, date change).
+  function animate() {
+    var m = $("months");
+    if (m.animate && !reduceMotion()) m.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 180, easing: "ease-out" });
   }
+  function reduceMotion() { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
   function saveLevel() {
     var tok = state.level === "year" ? "year" : state.level === "month" ? "m" + state.focus.y + "-" + (state.focus.m + 1) : "d" + Engine.key(state.sel.y, state.sel.m, state.sel.d);
     try { history.replaceState(null, "", "#" + tok); } catch (e) {}
@@ -1730,43 +1796,242 @@ if (typeof module !== "undefined") module.exports = Engine;
     else if (mm) state.level = "month";
     else if (dm) state.level = "day";
   }
-  function setLevel(lv, dir) {
-    state.level = lv;
-    if (lv === "day") state.focus = { y: state.sel.y, m: state.sel.m };
-    if (lv === "year") state.offset = Math.max(-60, Math.min(60, monthDiff(state.focus, TODAY)));
-    if (lv === "day" && mq.matches) { state.view = "week"; state.week = mondayOf(state.sel); }
-    saveLevel(); renderMonths(); renderPanel(); animate(dir);
-    if (lv === "year") requestAnimationFrame(centerNow); else $("cal").scrollIntoView({ block: "start" });
+  // ---- Views as layers ------------------------------------------------------
+  // #months is the live view. Neighbouring pages and the level a pinch is heading to
+  // are built ahead of time as hidden layers in #cal, so a gesture only has to move
+  // layers that already exist. A finished swipe or zoom promotes the prepared layer to
+  // be the live view instead of rebuilding it.
+  var EASE = "cubic-bezier(.2,.9,.25,1)", DUR = 380, busy = false;
+  var STICKY = function () { var t = document.querySelector(".top"); return t ? t.getBoundingClientRect().bottom : 0; };
+  function viewKey(s) { s = s || state; return s.level + ":" + (s.level === "year" ? s.offset : s.level === "month" ? s.focus.y + "-" + s.focus.m : s.sel.y + "-" + s.sel.m + "-" + s.sel.d); }
+
+  function buildLayer(over, cls) {
+    var r = htmlFor(over), el = document.createElement("div");
+    el.className = cls + " " + r.cls; el.setAttribute("aria-hidden", "true"); el.innerHTML = r.html;
+    el.dataset.cls = r.cls;
+    $("cal").appendChild(el);
+    return el;
   }
-  function zoomIn(target) {
-    if (state.level === "year") {
-      if (target && target.month) state.focus = target.month;
-      else state.focus = { y: state.sel.y, m: state.sel.m };
-      setLevel("month", "zin");
-    } else if (state.level === "month") {
-      if (target && target.day) state.sel = target.day;
-      else if (state.sel.y !== state.focus.y || state.sel.m !== state.focus.m) state.sel = same({ y: TODAY.y, m: TODAY.m, d: 1 }, { y: state.focus.y, m: state.focus.m, d: 1 }) ? { y: TODAY.y, m: TODAY.m, d: TODAY.d } : { y: state.focus.y, m: state.focus.m, d: 1 };
-      setLevel("day", "zin");
+  function promote(el) {
+    // A prepared layer becomes the live view: no rebuild, so no layout or paint spike.
+    el.removeAttribute("style"); el.removeAttribute("aria-hidden");
+    el.className = el.dataset.cls || ""; el.id = "months";
+    var cal = $("cal"); if (cal.firstChild !== el) cal.insertBefore(el, cal.firstChild);
+    return el;
+  }
+  function anchorFor(level, t, root) {
+    if (!t) return null;
+    var m = root || $("months"), el = null;
+    if (level === "year" && t.month) el = m.querySelector("#m-" + t.month.y + "-" + t.month.m) || m.querySelector('[data-mid="' + t.month.y + "-" + t.month.m + '"]');
+    if (level === "month" && t.day) {
+      var all = m.querySelectorAll('[data-day="' + t.day.y + "," + t.day.m + "," + t.day.d + '"]');
+      for (var i = 0; i < all.length; i++) if (all[i].offsetParent !== null) { el = all[i]; break; }
     }
+    return el;
   }
-  function zoomOut() {
-    if (state.level === "day") setLevel("month", "zout");
-    else if (state.level === "month") setLevel("year", "zout");
+  function reduceMotion() { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+  function animate() {
+    var m = $("months");
+    if (m.animate && !reduceMotion()) m.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 180, easing: "ease-out" });
+  }
+  var panelTimer = 0;
+  function panelLater() {
+    if (!mq.matches) { panelDirty = true; return; }
+    clearTimeout(panelTimer);
+    panelTimer = setTimeout(function () { (window.requestIdleCallback || function (f) { f(); })(function () { renderPanel(); }, { timeout: 600 }); }, DUR + 60);
+  }
+
+  // State a level change leads to, without touching the live state.
+  function nextState(lv, target) {
+    var s = { level: lv, focus: state.focus, sel: state.sel, offset: state.offset, view: state.view, week: state.week };
+    if (lv === "month") {
+      if (state.level === "year") s.focus = target && target.month ? target.month : { y: state.sel.y, m: state.sel.m };
+    }
+    if (lv === "day") {
+      var sel = target && target.day ? target.day : null;
+      if (!sel) sel = (state.sel.y === state.focus.y && state.sel.m === state.focus.m) ? state.sel
+        : (TODAY.y === state.focus.y && TODAY.m === state.focus.m) ? { y: TODAY.y, m: TODAY.m, d: TODAY.d } : { y: state.focus.y, m: state.focus.m, d: 1 };
+      s.sel = sel; s.focus = { y: sel.y, m: sel.m };
+      if (mq.matches) { s.view = "week"; s.week = mondayOf(sel); }
+    }
+    if (lv === "year") s.offset = Math.max(-60, Math.min(60, monthDiff(state.focus, TODAY)));
+    return s;
+  }
+
+  // ---- Zoom targets prepared ahead of time ------------------------------------------
+  // The likely zoom targets (the level above, and the selected month or day below) are
+  // built in idle time; a pinch towards anything else builds it while the fingers move.
+  var preparedSet = {}; // key -> element
+  function prepareZoom(dir, target) {
+    var lv = dir === "in" ? (state.level === "year" ? "month" : state.level === "month" ? "day" : null)
+                          : (state.level === "day" ? "month" : state.level === "month" ? "year" : null);
+    if (!lv) return;
+    var s = nextState(lv, target), key = viewKey(s);
+    if (preparedSet[key]) return;
+    var keys = Object.keys(preparedSet);
+    if (keys.length >= 3) { preparedSet[keys[0]].remove(); delete preparedSet[keys[0]]; }
+    var el = buildLayer(s, "prep");
+    el.style.cssText = "position:absolute;left:0;right:0;top:0;opacity:0.001;pointer-events:none;";
+    preparedSet[key] = el;
+  }
+  function takePrepared(key) { var el = preparedSet[key] || null; if (el) delete preparedSet[key]; return el; }
+  function dropPrepared() { Object.keys(preparedSet).forEach(function (k) { preparedSet[k].remove(); }); preparedSet = {}; }
+
+  // ---- Level change as one continuous zoom -------------------------------------
+  // pin: the pinch transform at release ({ s, cx, cy }: scale and offset, origin 0 0).
+  function zoomTo(lv, dir, target, pin) {
+    if (busy || lv === state.level) return;
+    pin = pin || { s: 1, cx: 0, cy: 0 };
+    var old = $("months"), cal = $("cal"), L = cal.getBoundingClientRect();
+    var oldAnchor = dir === "in" ? anchorFor(state.level, target) : null, A0 = oldAnchor ? oldAnchor.getBoundingClientRect() : null;
+    var V = old.getBoundingClientRect();
+    var s = nextState(lv, target), key = viewKey(s);
+    var back = dir === "out" ? (lv === "year" ? { month: state.focus } : { day: state.sel }) : null;
+    var motion = !reduceMotion() && !!old.animate && (A0 || dir === "out");
+
+    dropPager();
+    var el = takePrepared(key); dropPrepared();
+    if (!el) el = buildLayer(s, "prep");
+    Object.keys(s).forEach(function (k) { state[k] = s[k]; });
+
+    if (!motion) { old.remove(); promote(el); afterChange(); return; }
+    busy = true;
+    // The old view leaves the page flow but stays exactly where it is on screen.
+    old.removeAttribute("id");
+    old.style.cssText = "position:fixed;left:" + L.left + "px;top:" + L.top + "px;width:" + L.width + "px;margin:0;z-index:15;pointer-events:none;" +
+      "transform-origin:0 0;transform:translate(" + pin.cx + "px," + pin.cy + "px) scale(" + pin.s + ");";
+    promote(el);
+    if (lv === "year") { var a = anchorFor("year", back); if (a) a.scrollIntoView({ block: "center" }); else centerNow(); }
+    else window.scrollTo(0, window.scrollY + cal.getBoundingClientRect().top - STICKY() - 8);
+    afterChange();
+
+    var N = el.getBoundingClientRect(), opts = { duration: DUR, easing: EASE }, k, S, tx, ty;
+    if (dir === "in") {
+      el.style.transformOrigin = "0 0";
+      el.animate([{ transform: "translate(" + (A0.left - N.left) + "px," + (A0.top - N.top) + "px) scale(" + (A0.width / N.width) + ")", opacity: 0 },
+                  { opacity: 1, offset: 0.45 }, { transform: "none", opacity: 1 }], opts);
+      // Old view: keep zooming so the pinched month or day lands where the new view is.
+      k = N.width / A0.width; S = k * pin.s;
+      tx = (N.left - L.left) + k * (pin.cx - (A0.left - L.left)); ty = (N.top - L.top) + k * (pin.cy - (A0.top - L.top));
+    } else {
+      var na = anchorFor(lv, back), A = na ? na.getBoundingClientRect() : { left: N.left + N.width * 0.25, top: N.top + 40, width: N.width * 0.5 };
+      el.style.transformOrigin = (A.left - N.left) + "px " + (A.top - N.top) + "px";
+      el.animate([{ transform: "translate(" + (V.left - A.left) + "px," + (V.top - A.top) + "px) scale(" + (V.width / A.width) + ")", opacity: 0 },
+                  { opacity: 1, offset: 0.4 }, { transform: "none", opacity: 1 }], opts);
+      // Old view: shrink into its place in the level above.
+      k = A.width / V.width; S = k * pin.s;
+      tx = (A.left - L.left) + k * (pin.cx - (V.left - L.left)); ty = (A.top - L.top) + k * (pin.cy - (V.top - L.top));
+    }
+    old.animate([{ transform: "translate(" + pin.cx + "px," + pin.cy + "px) scale(" + pin.s + ")", opacity: 1 },
+                 { transform: "translate(" + tx + "px," + ty + "px) scale(" + S + ")", opacity: 0 }], { duration: DUR, easing: EASE, fill: "forwards" });
+    setTimeout(function () { old.remove(); el.style.transformOrigin = ""; busy = false; prefetchNeighbours(); }, DUR + 30);
+  }
+  function afterChange() { saveLevel(); renderChrome(); panelLater(); }
+
+  function setLevel(lv, dir) { zoomTo(lv, dir === "zout" ? "out" : "in", lv === "month" ? { month: state.focus } : { day: state.sel }); }
+  function zoomIn(target, pin) {
+    if (state.level === "year") zoomTo("month", "in", target && target.month ? { month: target.month } : { month: { y: state.sel.y, m: state.sel.m } }, pin);
+    else if (state.level === "month") zoomTo("day", "in", target && target.day ? { day: target.day } : { day: nextState("day", null).sel }, pin);
+  }
+  function zoomOut(pin) {
+    if (state.level === "day") zoomTo("month", "out", null, pin);
+    else if (state.level === "month") zoomTo("year", "out", null, pin);
+  }
+
+  // ---- Paging between months or days ----------------------------------------------
+  function neighbour(n) {
+    if (state.level === "month") {
+      var t2 = new Date(Date.UTC(state.focus.y, state.focus.m + n, 1)), f = { y: t2.getUTCFullYear(), m: t2.getUTCMonth() };
+      if (!Engine.inRange(f.y, f.m, 1) && !Engine.inRange(f.y, f.m, 28)) return null;
+      return { focus: f };
+    }
+    if (state.level === "day") {
+      var nd = addDays(state.sel, n); if (!Engine.inRange(nd.y, nd.m, nd.d)) return null;
+      return { sel: nd, focus: { y: nd.y, m: nd.m } };
+    }
+    return null;
+  }
+  var pager = null, prefetchTimer = 0;
+  function gapW() { return $("cal").getBoundingClientRect().width + 16; }
+  function buildPager() {
+    var p = { key: viewKey(), W: gapW(), prev: null, next: null, nPrev: neighbour(-1), nNext: neighbour(1) };
+    [["prev", p.nPrev, -1], ["next", p.nNext, 1]].forEach(function (x) {
+      if (!x[1]) return;
+      var el = buildLayer(x[1], "pager");
+      el.style.transform = "translateX(" + (x[2] * p.W) + "px)";
+      p[x[0]] = el;
+    });
+    return p;
+  }
+  // Build the neighbours when the page is idle, so a swipe starts with them ready.
+  function prefetchNeighbours() {
+    clearTimeout(prefetchTimer);
+    if (state.level === "year") {
+      dropPager();
+      prefetchTimer = setTimeout(function () { (window.requestIdleCallback || function (f) { setTimeout(f, 0); })(function () { if (!busy && !g) prepareZoom("in", null); }, { timeout: 1500 }); }, 150);
+      return;
+    }
+    prefetchTimer = setTimeout(function () {
+      var idle = window.requestIdleCallback || function (f) { setTimeout(f, 0); };
+      // One piece per idle slot, so no single slot gets long.
+      idle(function () {
+        if (busy) return;
+        if (!(pager && pager.key === viewKey())) { dropPager(); pager = buildPager(); }
+        idle(function () { if (!busy && !g) prepareZoom("out", null); }, { timeout: 1500 });
+        idle(function () { if (!busy && !g) prepareZoom("in", null); }, { timeout: 2000 });
+      }, { timeout: 800 });
+    }, 120);
+  }
+  function dropPager() { if (pager) { if (pager.prev) pager.prev.remove(); if (pager.next) pager.next.remove(); pager = null; } }
+  function pagerOpen() {
+    if (!pager || pager.key !== viewKey()) { dropPager(); pager = buildPager(); }
+    var top = Math.max(0, STICKY() + 8 - $("cal").getBoundingClientRect().top);
+    if (pager.prev) pager.prev.style.top = top + "px";
+    if (pager.next) pager.next.style.top = top + "px";
+    pager.top = top;
+    return pager;
+  }
+  function pagerMove(dx) {
+    var p = pagerOpen();
+    if ((dx > 0 && !p.prev) || (dx < 0 && !p.next)) dx = dx * 0.3; // rubber band at the ends of the plan
+    $("months").style.transform = "translateX(" + dx + "px)";
+    if (p.prev) p.prev.style.transform = "translateX(" + (dx - p.W) + "px)";
+    if (p.next) p.next.style.transform = "translateX(" + (dx + p.W) + "px)";
+    p.dx = dx;
+  }
+  // Finish a page turn (n = 1 next, -1 previous, 0 snap back), keeping the flick's speed.
+  function pagerFinish(n, v) {
+    var p = pagerOpen(), dx = p.dx || 0;
+    if (n !== 0 && !(n > 0 ? p.next : p.prev)) n = 0;
+    var to = n === 0 ? 0 : -n * p.W, dist = Math.abs(to - dx);
+    var dur = reduceMotion() ? 1 : Math.max(140, Math.min(340, v ? dist / Math.abs(v) : 300));
+    var ease = "cubic-bezier(.25,.8,.25,1)", m = $("months");
+    busy = true;
+    var go = function (el, base) { if (el && el.animate) el.animate([{ transform: "translateX(" + (dx + base) + "px)" }, { transform: "translateX(" + (to + base) + "px)" }], { duration: dur, easing: ease, fill: "forwards" }); };
+    go(m, 0); go(p.prev, -p.W); go(p.next, p.W);
+    setTimeout(function () {
+      var nb = n > 0 ? p.nNext : n < 0 ? p.nPrev : null, incoming = n > 0 ? p.next : n < 0 ? p.prev : null;
+      [m, p.prev, p.next].forEach(function (el) { if (el && el.getAnimations) el.getAnimations().forEach(function (a) { a.cancel(); }); });
+      if (!nb) { m.style.transform = ""; if (p.prev) p.prev.style.transform = "translateX(" + (-p.W) + "px)"; if (p.next) p.next.style.transform = "translateX(" + p.W + "px)"; busy = false; return; }
+      if (nb.sel) state.sel = nb.sel;
+      state.focus = nb.focus;
+      if (mq.matches && state.view === "week" && nb.sel) state.week = mondayOf(nb.sel);
+      // The page that slid in becomes the live view as it is.
+      var other = n > 0 ? p.prev : p.next; if (other) other.remove();
+      m.remove(); pager = null;
+      promote(incoming);
+      window.scrollTo(0, window.scrollY + $("cal").getBoundingClientRect().top - STICKY() - 8);
+      afterChange(); busy = false; prefetchNeighbours();
+    }, dur + 10);
   }
   function step(n) {
-    if (state.level === "month") {
-      var t2 = new Date(Date.UTC(state.focus.y, state.focus.m + n, 1));
-      if (!Engine.inRange(t2.getUTCFullYear(), t2.getUTCMonth(), 1) && !Engine.inRange(t2.getUTCFullYear(), t2.getUTCMonth(), 28)) return;
-      state.focus = { y: t2.getUTCFullYear(), m: t2.getUTCMonth() };
-    } else if (state.level === "day") {
-      var nd = addDays(state.sel, n); if (!Engine.inRange(nd.y, nd.m, nd.d)) return;
-      state.sel = nd; state.focus = { y: nd.y, m: nd.m };
-      if (mq.matches && state.view === "week") state.week = mondayOf(nd);
-    } else {
+    if (busy) return;
+    if (state.level === "year") {
       var lim = monthDiff({ y: 2032, m: 11 }, TODAY), low = monthDiff({ y: 2025, m: 0 }, TODAY);
       state.offset = Math.max(low + 5, Math.min(lim - 6, state.offset + 3 * n)); renderMonths(); centerNow(); return;
     }
-    saveLevel(); renderMonths(); renderPanel(); animate(n > 0 ? "sl" : "sr");
+    if (!neighbour(n)) return;
+    pagerOpen(); pagerMove(0); pagerFinish(n, 0);
   }
   function targetAt(x, y) {
     var el = document.elementFromPoint(x, y); if (!el) return null;
@@ -1941,7 +2206,12 @@ if (typeof module !== "undefined") module.exports = Engine;
     return h + priceNote() + "</div>";
   }
 
-  function renderPanel() {
+  // On phones the panel is a sheet that is usually closed: render it when it opens.
+  var panelDirty = true;
+  function sheetOpen() { return mq.matches || $("panel").classList.contains("open"); }
+  function renderPanel(force) {
+    if (!force && !sheetOpen()) { panelDirty = true; return; }
+    panelDirty = false;
     var p = $("panel");
     p.innerHTML = state.view === "recipe" ? viewRecipe() : state.view === "week" ? viewWeek() : state.view === "month" ? viewMonth() : viewDay();
     p.scrollTop = 0;
@@ -1959,7 +2229,13 @@ if (typeof module !== "undefined") module.exports = Engine;
   }
 
   var mq = window.matchMedia("(min-width: 1100px)");
-  function openSheet(v) { if (mq.matches) return; $("panel").classList.toggle("open", v); $("backdrop").hidden = !v; }
+  function onBreakpoint() { if (state.level === "month") renderMonths(); }
+  if (window.matchMedia("(max-width: 640px)").addEventListener) window.matchMedia("(max-width: 640px)").addEventListener("change", onBreakpoint);
+  function openSheet(v) {
+    if (mq.matches) return;
+    if (v && panelDirty) renderPanel(true);
+    $("panel").classList.toggle("open", v); $("backdrop").hidden = !v;
+  }
 
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-day],[data-wk],[data-month],[data-recipe],[data-back],[data-close],[data-reset],[data-level],#backdrop");
@@ -1976,7 +2252,7 @@ if (typeof module !== "undefined") module.exports = Engine;
     else if (t.hasAttribute("data-recipe")) { if (state.view !== "recipe") state.prevView = state.view; state.recipe = t.getAttribute("data-recipe"); state.view = "recipe"; }
     else if (t.hasAttribute("data-back")) { state.view = state.prevView === "week" ? "week" : "day"; }
     else if (t.hasAttribute("data-reset")) { var o = state.sel; delete ov[Engine.key(o.y, o.m, o.d) + "|" + state.recipe]; saveOv(); }
-    renderMonths(); renderPanel(); openSheet(true);
+    renderMonths(); panelDirty = true; if (mq.matches) renderPanel(); openSheet(true);
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") openSheet(false); });
 
@@ -1991,62 +2267,53 @@ if (typeof module !== "undefined") module.exports = Engine;
   $("today").addEventListener("click", function () {
     state.offset = 0; state.sel = { y: TODAY.y, m: TODAY.m, d: TODAY.d }; state.focus = { y: TODAY.y, m: TODAY.m };
     if (state.level === "year") { state.view = "day"; renderMonths(); renderPanel(); centerNow(); openSheet(true); }
-    else { saveLevel(); renderMonths(); renderPanel(); animate(null); }
+    else { saveLevel(); renderMonths(); renderPanel(); animate(); }
   });
 
-  // ---- Gestures: pinch to change level, swipe to move, taps unchanged ------
-  // Touch events, not pointer events: once the browser starts scrolling it takes a
-  // pointer away, which made pinches unreliable. With touch events the second finger
-  // can claim the gesture before a scroll starts.
+  // ---- Gestures: pinch to change level, swipe to page, taps unchanged -------
+  // Touch events: the second finger can claim the gesture before the browser starts
+  // scrolling. During a pinch the view follows the fingers 1:1; the level change on
+  // release continues from where the fingers left it.
   var cal = $("cal"), g = null, raf = 0, suppressUntil = 0, wheelAcc = 0, wheelLock = 0, tgtEl = null;
   var PINCH_IN = 1.25, PINCH_OUT = 0.8;
   function tdist(a, b) { return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
-  // Follow the fingers at first, then resist, so the view never jumps past the trigger point.
-  function rubber(r) { return r >= 1 ? 1 + Math.min(r - 1, 1) * 0.5 : 1 - Math.min(1 - r, 0.6) * 0.5; }
-  function markTarget(t) {
-    if (tgtEl) tgtEl.classList.remove("pinch-target");
-    tgtEl = null;
-    if (!t) return;
-    var sel = state.level === "year" && t.month ? "#m-" + t.month.y + "-" + t.month.m
-      : state.level === "month" && t.day ? '[data-day="' + t.day.y + "," + t.day.m + "," + t.day.d + '"]' : null;
-    if (sel) { tgtEl = $("months").querySelector(sel); if (tgtEl && tgtEl.offsetParent === null) tgtEl = null; }
-  }
+  function soft(r) { return r > 2.2 ? 2.2 + (r - 2.2) * 0.25 : r < 0.5 ? 0.5 - (0.5 - r) * 0.25 : r; }
+  function markTarget(el) { if (tgtEl) tgtEl.classList.remove("pinch-target"); tgtEl = el; }
+  function sample(arr, v) { var t = performance.now(); arr.push([t, v]); while (arr.length > 4) arr.shift(); }
+  function velocity(arr) { if (arr.length < 2) return 0; var a = arr[0], b = arr[arr.length - 1]; return b[0] > a[0] ? (b[1] - a[1]) / (b[0] - a[0]) : 0; }
   function paint() {
     raf = 0; if (!g) return;
-    var c = $("months");
+    var m = $("months");
     if (g.mode === "pinch") {
-      var s = rubber(g.r);
-      c.style.transformOrigin = g.ox + "px " + g.oy + "px";
-      c.style.transform = "translate(" + g.tx + "px," + g.ty + "px) scale(" + s + ")";
-      cal.classList.toggle("will-in", g.r >= PINCH_IN && state.level !== "day");
-      cal.classList.toggle("will-out", g.r <= PINCH_OUT && state.level !== "year");
-      if (tgtEl) tgtEl.classList.toggle("pinch-target", g.r > 1.05 && state.level !== "day");
-    } else if (g.mode === "swipe" && g.lock === "x") {
-      c.style.transform = "translateX(" + g.dx * 0.6 + "px)";
-      c.style.opacity = String(1 - Math.min(Math.abs(g.dx) / 600, 0.35));
-    }
+      m.style.transformOrigin = g.ox + "px " + g.oy + "px";
+      m.style.transform = "translate(" + (g.mx - g.mx0) + "px," + (g.my - g.my0) + "px) scale(" + soft(g.r) + ")";
+      if (tgtEl) tgtEl.classList.toggle("pinch-target", g.r > 1.04);
+      // Build the level the pinch is heading to while the fingers are still moving.
+      if (g.r > 1.08 && state.level !== "day") prepareZoom("in", g.target);
+      else if (g.r < 0.93 && state.level !== "year") prepareZoom("out", null);
+    } else if (g.mode === "swipe" && g.lock === "x") pagerMove(g.dx);
   }
   function schedule() { if (!raf) raf = requestAnimationFrame(paint); }
-  function settle(c) {
-    // Ease back to rest when a gesture does not change the view.
-    c.classList.add("settle"); c.style.transform = ""; c.style.opacity = "";
-    setTimeout(function () { c.classList.remove("settle"); }, 200);
+  function settleBack() {
+    var m = $("months"), tf = m.style.transform;
+    m.style.transform = "";
+    if (tf && m.animate && !reduceMotion()) m.animate([{ transform: tf }, { transform: "none" }], { duration: 260, easing: EASE });
+    setTimeout(function () { m.style.transformOrigin = ""; }, 280);
   }
-  function clearGesture() {
-    cal.classList.remove("will-in", "will-out", "pinching");
-    markTarget(null); g = null;
-  }
-  function originFor(c, x, y) { var b = c.getBoundingClientRect(); return { x: x - b.left, y: y - b.top }; }
 
   cal.addEventListener("touchstart", function (e) {
+    if (busy) { e.preventDefault(); return; }
     if (e.touches.length === 2) {
-      var a = e.touches[0], b = e.touches[1], mx = (a.clientX + b.clientX) / 2, my = (a.clientY + b.clientY) / 2, o = originFor($("months"), mx, my);
-      g = { mode: "pinch", d0: Math.max(tdist(a, b), 1), mx0: mx, my0: my, mx: mx, my: my, ox: o.x, oy: o.y, r: 1, tx: 0, ty: 0 };
-      g.target = targetAt(mx, my); markTarget(g.target);
-      cal.classList.add("pinching");
+      if (g && g.mode === "swipe" && g.lock === "x") return;
+      var a = e.touches[0], b = e.touches[1], mx = (a.clientX + b.clientX) / 2, my = (a.clientY + b.clientY) / 2;
+      var m = $("months"), L = m.getBoundingClientRect();
+      g = { mode: "pinch", d0: Math.max(tdist(a, b), 1), mx0: mx, my0: my, mx: mx, my: my, ox: mx - L.left, oy: my - L.top, r: 1, s: [] };
+      g.target = targetAt(mx, my);
+      markTarget(state.level === "day" ? null : anchorFor(state.level, g.target));
+      m.style.willChange = "transform";
       e.preventDefault();
     } else if (e.touches.length === 1 && !g) {
-      g = { mode: "swipe", x0: e.touches[0].clientX, y0: e.touches[0].clientY, dx: 0, dy: 0, lock: null };
+      g = { mode: "swipe", x0: e.touches[0].clientX, y0: e.touches[0].clientY, dx: 0, dy: 0, lock: null, s: [] };
     }
   }, { passive: false });
   cal.addEventListener("touchmove", function (e) {
@@ -2054,51 +2321,60 @@ if (typeof module !== "undefined") module.exports = Engine;
     if (g.mode === "pinch" && e.touches.length >= 2) {
       var a = e.touches[0], b = e.touches[1];
       g.r = tdist(a, b) / g.d0; g.mx = (a.clientX + b.clientX) / 2; g.my = (a.clientY + b.clientY) / 2;
-      g.tx = (g.mx - g.mx0) * 0.5; g.ty = (g.my - g.my0) * 0.5;
-      e.preventDefault(); schedule();
+      sample(g.s, g.r); e.preventDefault(); schedule();
     } else if (g.mode === "swipe" && e.touches.length === 1) {
       g.dx = e.touches[0].clientX - g.x0; g.dy = e.touches[0].clientY - g.y0;
-      if (!g.lock && (Math.abs(g.dx) > 10 || Math.abs(g.dy) > 10)) g.lock = Math.abs(g.dx) > Math.abs(g.dy) * 1.2 && state.level !== "year" ? "x" : "y";
-      if (g.lock === "x") { e.preventDefault(); schedule(); }
+      if (!g.lock && (Math.abs(g.dx) > 8 || Math.abs(g.dy) > 8)) g.lock = Math.abs(g.dx) > Math.abs(g.dy) * 1.2 && state.level !== "year" ? "x" : "y";
+      if (g.lock === "x") { sample(g.s, g.dx); e.preventDefault(); schedule(); }
     }
   }, { passive: false });
   function endTouch(e) {
     if (!g) return;
-    var c = $("months");
     if (g.mode === "pinch") {
-      if (e.touches.length >= 2) return; // still pinching with two fingers
-      var r = g.r, tgt = targetAt(g.mx0, g.my0) || g.target, ox = g.ox, oy = g.oy;
-      clearGesture(); suppressUntil = Date.now() + 350;
-      var lv = state.level;
-      if (r >= PINCH_IN && lv !== "day") { c.style.transform = ""; c.style.transformOrigin = ox + "px " + oy + "px"; zoomIn(tgt); }
-      else if (r <= PINCH_OUT && lv !== "year") { c.style.transform = ""; c.style.transformOrigin = ox + "px " + oy + "px"; zoomOut(); }
-      else settle(c);
+      if (e.touches.length >= 2) return;
+      cancelAnimationFrame(raf); raf = 0;
+      var r = g.r, v = velocity(g.s) * 1000, tgt = g.target, lv = state.level;
+      // The pinch transform as scale + offset with origin 0 0, so the zoom continues from it.
+      var sc = soft(r), pin = { s: sc, cx: g.ox * (1 - sc) + (g.mx - g.mx0), cy: g.oy * (1 - sc) + (g.my - g.my0) };
+      markTarget(null); $("months").style.willChange = ""; g = null; suppressUntil = Date.now() + 350;
+      var goIn = lv !== "day" && (r >= PINCH_IN || (r > 1.06 && v > 1.2));
+      var goOut = lv !== "year" && (r <= PINCH_OUT || (r < 0.95 && v < -1.2));
+      if (goIn) zoomIn(tgt, pin); else if (goOut) zoomOut(pin); else { dropPrepared(); settleBack(); }
       return;
     }
     if (g.mode === "swipe") {
-      var dx = g.dx, lock = g.lock; clearGesture();
-      if (lock === "x" && Math.abs(dx) > 60) { suppressUntil = Date.now() + 350; c.style.transform = ""; c.style.opacity = ""; step(dx < 0 ? 1 : -1); }
-      else if (lock === "x") settle(c);
+      var dx = g.dx, lock = g.lock, vx = velocity(g.s); g = null;
+      if (lock !== "x") return;
+      cancelAnimationFrame(raf); raf = 0; pagerMove(dx);
+      suppressUntil = Date.now() + 350;
+      var W = pager ? pager.W : 400, n = 0;
+      if (Math.abs(dx) > W * 0.3 || (Math.abs(dx) > 24 && Math.abs(vx) > 0.35)) n = dx < 0 ? 1 : -1;
+      if (n !== 0 && (dx < 0) !== (vx <= 0.05) && Math.abs(vx) > 0.35) n = 0; // flicked back the other way
+      pagerFinish(n, n ? vx : 0);
     }
   }
   cal.addEventListener("touchend", endTouch);
-  cal.addEventListener("touchcancel", function () { if (g) { clearGesture(); settle($("months")); } });
+  cal.addEventListener("touchcancel", function () {
+    if (!g) return;
+    var mode = g.mode; g = null; markTarget(null);
+    if (mode === "pinch") { dropPrepared(); settleBack(); } else if (pager) pagerFinish(0, 0);
+  });
   // Keep Safari's own page zoom out of the calendar, so the pinch reaches the app.
   ["gesturestart", "gesturechange"].forEach(function (n) { cal.addEventListener(n, function (e) { e.preventDefault(); }); });
-  // A pinch or swipe never turns into a tap.
-  document.addEventListener("click", function (e) { if (Date.now() < suppressUntil && cal.contains(e.target)) { e.stopPropagation(); e.preventDefault(); } }, true);
+  // A pinch or swipe never turns into a tap, and nothing is tappable mid-animation.
+  document.addEventListener("click", function (e) { if ((busy || Date.now() < suppressUntil) && cal.contains(e.target)) { e.stopPropagation(); e.preventDefault(); } }, true);
   // Trackpad pinch and Ctrl + scroll.
   cal.addEventListener("wheel", function (e) {
     if (!e.ctrlKey) return;
     e.preventDefault();
-    if (Date.now() < wheelLock) return;
+    if (busy || Date.now() < wheelLock) return;
     wheelAcc += e.deltaY;
     if (wheelAcc < -40) { wheelAcc = 0; wheelLock = Date.now() + 450; zoomIn(targetAt(e.clientX, e.clientY)); }
     else if (wheelAcc > 40) { wheelAcc = 0; wheelLock = Date.now() + 450; zoomOut(); }
   }, { passive: false });
   document.addEventListener("keydown", function (e) {
     var tag = (e.target.tagName || "").toLowerCase();
-    if (tag === "select" || tag === "input" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (busy || tag === "select" || tag === "input" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === "+" || e.key === "=") { e.preventDefault(); zoomIn(null); }
     else if (e.key === "-" || e.key === "_") { e.preventDefault(); zoomOut(); }
     else if (e.key === "ArrowLeft" && state.level !== "year") { e.preventDefault(); step(-1); }
@@ -2120,5 +2396,9 @@ if (typeof module !== "undefined") module.exports = Engine;
   if (state.level === "day" && mq.matches) { state.view = "week"; state.week = mondayOf(state.sel); }
   renderMonths(); renderPanel();
   if (state.level === "year") requestAnimationFrame(centerNow);
+  if (performance.mark) performance.mark("app-ready");
 })();
 </script>
+
+</body>
+</html>
