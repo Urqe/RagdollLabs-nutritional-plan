@@ -12,7 +12,7 @@ Open `index.html` in a browser, or use the GitHub Pages site. It is a single sel
 - The current level is kept in the page address (for example `#m2026-10` or `#d2026-10-18`), so a bookmark opens straight to a month or a day. Opening the app without a link returns to the level you last used, on today's date. The plan covers January 2025 to the end of 2032.
 - Tap a day for breakfast, lunch, dinner and optional snacks, with protein and calories per person. On phones and tablets the day opens as a sheet: swipe it down (or tap outside it) to close it.
 - Tap a meal for ingredients for two, directions and how to split the portions.
-- Tap a week number for daily totals, weekly cost and a shopping list that says which pack sizes to buy, what will be left over, and what is likely to go to waste.
+- Tap a week number for daily totals, weekly cost and a shopping list split into three trips (Monday–Tuesday, Wednesday–Thursday, Friday–Sunday). Each trip says which pack sizes to buy and can be copied on its own; the week ends with what will be left over and what is likely to go to waste.
 - Tap a month name for the month's food cost and daily average.
 - Food cost is shown for the household per recipe, day, week and month.
 - Any single meal can be swapped. Swaps are saved in the browser on that device only.
@@ -57,7 +57,7 @@ index.html            built page for GitHub Pages, a full HTML document (generat
 artifact.html         the same page as a fragment, for the Claude-hosted copy (generated)
 src/data.js           targets, ingredient catalogue with nutrition values, recipes, optional snacks
 src/prices.js         prices, pack sizes, shelf life and freezing per ingredient
-src/pricing.js        recipe costs, cheapest pack mix and leftover advice
+src/pricing.js        recipe costs, cheapest pack mix, shopping trips and leftover advice
 src/engine.js         rotation engine and daily protein/calorie calculation
 src/app.html          page layout, styles and UI code
 build.py              computes the plan to 2032, inlines src/*.js into src/app.html, writes both pages
@@ -77,7 +77,7 @@ tools/test-ui.py      browser test of zoom, touch gestures, taps, keyboard and l
 
 Prices are for a K-chain market, with a second K-chain store as the second store. They are estimates until checked in the store; each entry in `src/prices.js` has a `status` (`estimate` or `checked`) and the date it was checked. To update a price, change the pack prices, set `status: "checked"` and the `checked` date.
 
-The shopping list picks the cheapest mix of pack sizes that covers the week, preferring fewer packs when the price is within 3 %. Long-life items (dry goods, frozen food, protein powder) are listed separately with how long a pack lasts, and are not counted in the weekly checkout total.
+The shopping list is split into three trips a week. Short-lived items are bought per trip; items that keep for 10 days or more are bought once, on the first trip that needs them. Leftovers from an earlier trip are used first. Each purchase is the cheapest mix of pack sizes, preferring fewer packs when the price is within 3 %. Long-life items (dry goods, frozen food, protein powder) are listed separately with how long a pack lasts, and are not counted in the weekly checkout total.
 
 ## Planned
 

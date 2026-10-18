@@ -71,6 +71,48 @@ var Pricing = (function () {
   // Long-life items (dry goods, frozen, powders) are bought when they run out, not every week.
   function isStock(id) { var p = PX[id]; return !!p && p.keeps >= 60; }
 
-  return { isStock: isStock, need: need, unitPrice: unitPrice, costOf: costOf, bestPacks: bestPacks, leftoverAdvice: leftoverAdvice, packUnit: packUnit };
+  // ---- Shopping in trips ------------------------------------------------------
+  // dayNeeds: 7 objects (Mon..Sun) of ingredient id -> amount in its sold unit, fresh
+  // items only. trips: arrays of day indexes, e.g. [[0,1],[2,3],[4,5,6]].
+  // Short-lived items are bought per trip. Items that keep 10 days or more are bought
+  // once, on the first trip that needs them, for the rest of the week. Leftovers from
+  // an earlier trip are used first while still good.
+  var LONG_KEEP = 10;
+  function planTrips(dayNeeds, trips) {
+    var carry = {}, out = [];
+    trips.forEach(function (days, ti) {
+      var first = days[0], need = {}, later = {};
+      days.forEach(function (d) { Object.keys(dayNeeds[d] || {}).forEach(function (id) { need[id] = (need[id] || 0) + dayNeeds[d][id]; }); });
+      for (var tj = ti + 1; tj < trips.length; tj++) trips[tj].forEach(function (d) {
+        Object.keys(dayNeeds[d] || {}).forEach(function (id) { later[id] = (later[id] || 0) + dayNeeds[d][id]; });
+      });
+      var lines = [], cost = 0;
+      Object.keys(need).forEach(function (id) {
+        var n = need[id]; if (n <= 0) return;
+        var p = PX[id], c = carry[id], use = 0;
+        if (c && c.amt > 1e-6 && first - c.day < p.keeps) use = Math.min(n, c.amt);
+        var rest = n - use;
+        if (rest <= 1e-6) { c.amt -= use; lines.push({ id: id, need: n, fromEarlier: use, buy: null, forLater: 0 }); return; }
+        var extra = p.keeps >= LONG_KEEP ? (later[id] || 0) : 0;
+        var res = bestPacks(id, rest + extra);
+        cost += res.cost;
+        carry[id] = { amt: res.buy - rest, day: first };
+        lines.push({ id: id, need: n, fromEarlier: use, buy: res, forLater: extra });
+      });
+      out.push({ days: days, lines: lines, cost: cost });
+    });
+    // What is left at the end of the week, and what happens to it.
+    var left = [];
+    Object.keys(carry).forEach(function (id) {
+      var c = carry[id], p = PX[id]; if (c.amt <= 1e-6) return;
+      var value = c.amt * unitPrice(id); if (value < 0.3) return;
+      var life = p.keeps - (7 - c.day), kind = p.freezes ? "freeze" : life >= 3 ? "keeps" : "waste";
+      left.push({ id: id, amt: c.amt, value: value, kind: kind,
+        text: kind === "freeze" ? "freeze the rest" : kind === "keeps" ? "keeps into next week" : "likely wasted unless used early next week" });
+    });
+    return { trips: out, leftovers: left };
+  }
+
+  return { planTrips: planTrips, LONG_KEEP: LONG_KEEP, isStock: isStock, need: need, unitPrice: unitPrice, costOf: costOf, bestPacks: bestPacks, leftoverAdvice: leftoverAdvice, packUnit: packUnit };
 })();
 if (typeof module !== "undefined") module.exports = Pricing;

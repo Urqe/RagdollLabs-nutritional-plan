@@ -300,6 +300,16 @@ button, .d, .dc, .ag, .meal { -webkit-tap-highlight-color: transparent; touch-ac
 .shop .it { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .shop .det { font-size: .76rem; color: var(--muted); }
 .shop .buy { text-align: right; }
+.trip { border: 1px solid var(--line); border-radius: 14px; margin: 10px 0; background: var(--surface); }
+.trip > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 10px; row-gap: 2px; padding: 12px 14px; font-size: .9rem; -webkit-tap-highlight-color: transparent; }
+.trip > summary::-webkit-details-marker { display: none; }
+.trip > summary::after { content: "›"; grid-column: 2; grid-row: 1 / 3; color: var(--muted); font-size: 1.2rem; transition: transform .2s; }
+.trip[open] > summary::after { transform: rotate(90deg); }
+.trip .t-name { grid-column: 1; min-width: 0; }
+.trip .t-sum { grid-column: 1; font-family: var(--f-mono); font-size: .78rem; color: var(--muted); }
+.trip-body { padding: 0 14px 12px; }
+.trip-tools { display: flex; justify-content: flex-end; }
+.shop .have { font-size: .8rem; color: var(--muted); margin: 8px 0 0; }
 .adv.waste { color: var(--chile); font-weight: 600; }
 .adv.freeze, .adv.keeps { color: var(--good); }
 .price-note { margin: 0; }
@@ -1392,7 +1402,49 @@ var Pricing = (function () {
   // Long-life items (dry goods, frozen, powders) are bought when they run out, not every week.
   function isStock(id) { var p = PX[id]; return !!p && p.keeps >= 60; }
 
-  return { isStock: isStock, need: need, unitPrice: unitPrice, costOf: costOf, bestPacks: bestPacks, leftoverAdvice: leftoverAdvice, packUnit: packUnit };
+  // ---- Shopping in trips ------------------------------------------------------
+  // dayNeeds: 7 objects (Mon..Sun) of ingredient id -> amount in its sold unit, fresh
+  // items only. trips: arrays of day indexes, e.g. [[0,1],[2,3],[4,5,6]].
+  // Short-lived items are bought per trip. Items that keep 10 days or more are bought
+  // once, on the first trip that needs them, for the rest of the week. Leftovers from
+  // an earlier trip are used first while still good.
+  var LONG_KEEP = 10;
+  function planTrips(dayNeeds, trips) {
+    var carry = {}, out = [];
+    trips.forEach(function (days, ti) {
+      var first = days[0], need = {}, later = {};
+      days.forEach(function (d) { Object.keys(dayNeeds[d] || {}).forEach(function (id) { need[id] = (need[id] || 0) + dayNeeds[d][id]; }); });
+      for (var tj = ti + 1; tj < trips.length; tj++) trips[tj].forEach(function (d) {
+        Object.keys(dayNeeds[d] || {}).forEach(function (id) { later[id] = (later[id] || 0) + dayNeeds[d][id]; });
+      });
+      var lines = [], cost = 0;
+      Object.keys(need).forEach(function (id) {
+        var n = need[id]; if (n <= 0) return;
+        var p = PX[id], c = carry[id], use = 0;
+        if (c && c.amt > 1e-6 && first - c.day < p.keeps) use = Math.min(n, c.amt);
+        var rest = n - use;
+        if (rest <= 1e-6) { c.amt -= use; lines.push({ id: id, need: n, fromEarlier: use, buy: null, forLater: 0 }); return; }
+        var extra = p.keeps >= LONG_KEEP ? (later[id] || 0) : 0;
+        var res = bestPacks(id, rest + extra);
+        cost += res.cost;
+        carry[id] = { amt: res.buy - rest, day: first };
+        lines.push({ id: id, need: n, fromEarlier: use, buy: res, forLater: extra });
+      });
+      out.push({ days: days, lines: lines, cost: cost });
+    });
+    // What is left at the end of the week, and what happens to it.
+    var left = [];
+    Object.keys(carry).forEach(function (id) {
+      var c = carry[id], p = PX[id]; if (c.amt <= 1e-6) return;
+      var value = c.amt * unitPrice(id); if (value < 0.3) return;
+      var life = p.keeps - (7 - c.day), kind = p.freezes ? "freeze" : life >= 3 ? "keeps" : "waste";
+      left.push({ id: id, amt: c.amt, value: value, kind: kind,
+        text: kind === "freeze" ? "freeze the rest" : kind === "keeps" ? "keeps into next week" : "likely wasted unless used early next week" });
+    });
+    return { trips: out, leftovers: left };
+  }
+
+  return { planTrips: planTrips, LONG_KEEP: LONG_KEEP, isStock: isStock, need: need, unitPrice: unitPrice, costOf: costOf, bestPacks: bestPacks, leftoverAdvice: leftoverAdvice, packUnit: packUnit };
 })();
 if (typeof module !== "undefined") module.exports = Pricing;
 
@@ -2236,64 +2288,85 @@ if (typeof module !== "undefined") module.exports = Engine;
     h += '<div class="costline"><span>Food cost this week</span><b>≈ ' + eur(sum.c) + "</b></div>";
     h += '<p class="kcal">Targets: ' + PEOPLE.p1.label + " " + PEOPLE.p1.protein + " g, " + PEOPLE.p2.label + " " + PEOPLE.p2.protein + " g protein a day. Calories are estimates from the recipe weights.</p>";
 
-    // shopping list with pack guidance
-    var need = {}, pantry = {};
-    function add(it, mult) {
-      var c = CAT[it[0]]; if (!c) return;
-      if (c.pantry || !PRICES[it[0]]) { pantry[c.n] = 1; return; }
-      need[it[0]] = (need[it[0]] || 0) + Pricing.need(it) * mult;
-    }
-    plans.forEach(function (pl) {
+    // shopping list, split into three trips: Mon–Tue, Wed–Thu, Fri–Sun
+    var TRIPS = [[0, 1], [2, 3], [4, 5, 6]];
+    var dayNeeds = [], stockNeed = {}, pantry = {};
+    days.forEach(function (o, di) {
+      var need = dayNeeds[di] = {}, pl = dayPlan(o); if (!pl) return;
+      function add(it, mult) {
+        var id = it[0], c = CAT[id]; if (!c) return;
+        if (c.pantry || !PRICES[id]) { pantry[c.n] = 1; return; }
+        var amt = Pricing.need(it) * mult;
+        if (Pricing.isStock(id)) stockNeed[id] = (stockNeed[id] || 0) + amt; else need[id] = (need[id] || 0) + amt;
+      }
       ["b", "l", "d"].forEach(function (s) { var r = pl.meals[s], mult = r.leftover ? 0 : (r.batch || 1); if (mult) r.ing.forEach(function (it) { add(it, mult); }); });
       pl.snacks.forEach(function (sn) { sn.ing.forEach(function (it) { add(it, 2); }); }); // both snacks, for two
       pl.juice.ing.forEach(function (it) { add(it, 2); });
     });
-    var bySec = {}, text = [], total = 0, risk = [], riskSum = 0, stock = [], stockUsed = 0;
-    Object.keys(need).forEach(function (id) {
-      if (need[id] <= 0) return;
-      if (Pricing.isStock(id)) {
-        var used = need[id] * Pricing.unitPrice(id), pk = PRICES[id].packs[PRICES[id].packs.length - 1];
-        stockUsed += used; stock.push({ c: CAT[id], u: Pricing.packUnit(id), need: need[id], pk: pk, used: used });
-        return;
-      }
-      var res = Pricing.bestPacks(id, need[id]), adv = Pricing.leftoverAdvice(id, res), u = Pricing.packUnit(id);
-      total += res.cost;
-      if (adv && adv.kind === "waste") { risk.push(CAT[id].n); riskSum += adv.value; }
-      (bySec[CAT[id].s] = bySec[CAT[id].s] || []).push({ id: id, c: CAT[id], p: PRICES[id], res: res, adv: adv, u: u, need: need[id] });
-    });
+    var plan = Pricing.planTrips(dayNeeds, TRIPS);
     var order = ["Meat", "Dairy & eggs", "Vegetables & fruit", "Bread & grains", "Tins & jars", "Frozen", "Other"];
-    h += '<div class="sec shop"><div class="p-head"><h3>Shopping list</h3><button class="btn" id="copy">Copy list</button></div>';
-    h += '<div class="costline"><span>Expected checkout, fresh items</span><b>≈ ' + eur(total) + "</b></div>";
-    order.forEach(function (sec) {
-      var list = bySec[sec]; if (!list) return;
-      list.sort(function (a, b) { return a.c.n.localeCompare(b.c.n); });
-      h += "<h4>" + sec + "</h4><ul>"; text.push(sec.toUpperCase());
-      list.forEach(function (x) {
-        var buy = x.res.loose ? fmtQty(x.res.buy, x.u) : x.res.packs.map(function (pk) { return pk[0] + " × " + fmtPack(pk[1][0], pk[1][1]); }).join(" + ");
-        var detail = "uses " + fmtQty(x.need, x.u);
-        if (!x.res.loose && x.res.left > 0.001) detail += " · " + fmtQty(x.res.left, x.u) + " left";
-        if (x.adv) detail += ', <span class="adv ' + x.adv.kind + '">' + esc(x.adv.text) + "</span>";
-        h += '<li><span class="it"><span>' + esc(x.c.n) + '</span><span class="det">' + detail + '</span></span><span class="buy">' + buy + "<br>" + eur(x.res.cost) + "</span></li>";
-        text.push("- " + x.c.n + ": " + buy + " (" + eur(x.res.cost) + ")" + (x.adv ? ", " + x.adv.text : ""));
+    var total = plan.trips.reduce(function (a, tr) { return a + tr.cost; }, 0);
+    var today = new Date(), tk = Engine.key(today.getFullYear(), today.getMonth(), today.getDate()), openTrip = 0;
+    plan.trips.forEach(function (tr, ti) { var last = days[tr.days[tr.days.length - 1]]; if (Engine.key(last.y, last.m, last.d) < tk) openTrip = Math.min(ti + 1, TRIPS.length - 1); });
+    function dlabel(o) { return DOWS[dow(o)].slice(0, 3) + " " + o.d; }
+    function packText(res, u) { return res.loose ? fmtQty(res.buy, u) : res.packs.map(function (pk) { return pk[0] + " × " + fmtPack(pk[1][0], pk[1][1]); }).join(" + "); }
+    var wk = "Week " + isoWeek(mon.y, mon.m, mon.d);
+    state.shopTexts = [];
+    h += '<div class="sec shop"><div class="p-head"><h3>Shopping list</h3></div>';
+    h += '<div class="costline"><span>Expected checkout, three trips</span><b>≈ ' + eur(total) + "</b></div>";
+    h += '<p class="kcal">Each trip buys what its days need. Items that keep for ' + Pricing.LONG_KEEP + "+ days are bought once, on the first trip that needs them. Leftovers from an earlier trip are used first.</p>";
+    plan.trips.forEach(function (tr, ti) {
+      var d0 = days[tr.days[0]], d1 = days[tr.days[tr.days.length - 1]];
+      var range = dlabel(d0) + " – " + dlabel(d1), buys = tr.lines.filter(function (l) { return l.buy; }), have = tr.lines.filter(function (l) { return !l.buy; });
+      var text = [wk + " · Trip " + (ti + 1) + " · " + range];
+      h += '<details class="trip"' + (ti === openTrip ? " open" : "") + ' data-trip="' + ti + '"><summary><span class="t-name"><b>Trip ' + (ti + 1) + "</b> · " + range + '</span><span class="t-sum">' + buys.length + " items · ≈ " + eur(tr.cost) + "</span></summary>";
+      h += '<div class="trip-body"><div class="trip-tools"><button class="btn" data-copy="' + ti + '">Copy trip ' + (ti + 1) + "</button></div>";
+      if (!buys.length) h += '<p class="kcal">Nothing new to buy.</p>';
+      var bySec = {};
+      buys.forEach(function (l) { (bySec[CAT[l.id].s] = bySec[CAT[l.id].s] || []).push(l); });
+      order.forEach(function (sec) {
+        var list = bySec[sec]; if (!list) return;
+        list.sort(function (a, b) { return CAT[a.id].n.localeCompare(CAT[b.id].n); });
+        h += "<h4>" + sec + "</h4><ul>"; text.push(sec.toUpperCase());
+        list.forEach(function (l) {
+          var u = Pricing.packUnit(l.id), buy = packText(l.buy, u), detail = "uses " + fmtQty(l.need, u);
+          if (l.fromEarlier > 0.001) detail += " (" + fmtQty(l.fromEarlier, u) + " from earlier)";
+          if (l.forLater > 0.001) detail += ' · <span class="adv keeps">covers later trips too</span>';
+          h += '<li><span class="it"><span>' + esc(CAT[l.id].n) + '</span><span class="det">' + detail + '</span></span><span class="buy">' + buy + "<br>" + eur(l.buy.cost) + "</span></li>";
+          text.push("- " + CAT[l.id].n + ": " + buy + " (" + eur(l.buy.cost) + ")");
+        });
+        h += "</ul>";
       });
-      h += "</ul>";
+      if (have.length) {
+        have.sort(function (a, b) { return CAT[a.id].n.localeCompare(CAT[b.id].n); });
+        h += '<p class="have"><b>Already bought:</b> ' + have.map(function (l) { return esc(CAT[l.id].n); }).join(", ") + "</p>";
+      }
+      text.push("Trip " + (ti + 1) + " ≈ " + eur(tr.cost));
+      state.shopTexts[ti] = text.join("\n");
+      h += "</div></details>";
     });
+    var stock = Object.keys(stockNeed).filter(function (id) { return stockNeed[id] > 0; }), stockUsed = 0;
     if (stock.length) {
-      stock.sort(function (a, b) { return a.c.n.localeCompare(b.c.n); });
-      h += '<h4>Long-life items · buy when you run out</h4><ul>'; text.push("LONG-LIFE (BUY WHEN YOU RUN OUT)");
-      stock.forEach(function (x) {
-        var weeks = Math.round(x.pk[0] / x.need), lasts = "a " + fmtPack(x.pk[0], x.pk[1]) + " pack lasts " + (weeks <= 1 ? "about a week" : "about " + weeks + " weeks");
-        h += '<li><span class="it"><span>' + esc(x.c.n) + '</span><span class="det">uses ' + fmtQty(x.need, x.u) + " this week · " + lasts + '</span></span><span class="buy">' + eur(x.pk[2]) + "<br>per pack</span></li>";
-        text.push("- " + x.c.n + ": " + lasts + " (" + eur(x.pk[2]) + ")");
+      stock.sort(function (a, b) { return CAT[a].n.localeCompare(CAT[b].n); });
+      h += '<h4>Long-life items · buy when you run out</h4><ul>';
+      stock.forEach(function (id) {
+        var pk = PRICES[id].packs[PRICES[id].packs.length - 1], u = Pricing.packUnit(id), used = stockNeed[id] * Pricing.unitPrice(id);
+        var weeks = Math.round(pk[0] / stockNeed[id]), lasts = "a " + fmtPack(pk[0], pk[1]) + " pack lasts " + (weeks <= 1 ? "about a week" : "about " + weeks + " weeks");
+        stockUsed += used;
+        h += '<li><span class="it"><span>' + esc(CAT[id].n) + '</span><span class="det">uses ' + fmtQty(stockNeed[id], u) + " this week · " + lasts + '</span></span><span class="buy">' + eur(pk[2]) + "<br>per pack</span></li>";
       });
       h += '</ul><p class="kcal">Long-life stock used this week ≈ ' + eur(stockUsed) + ". It counts toward the food cost but not the checkout total.</p>";
     }
-    if (risk.length) h += '<p class="note-box">Likely to go to waste this week (≈ ' + eur(riskSum) + "): " + risk.map(esc).join(", ") + ". Plan these into the start of next week or swap a meal to use them up.</p>";
+    var left = plan.leftovers.filter(function (l) { return l.value >= 0.5; }).sort(function (a, b) { return b.value - a.value; });
+    if (left.length) {
+      h += '<h4>Left at the end of the week</h4><ul>';
+      left.forEach(function (l) { h += '<li><span class="it"><span>' + esc(CAT[l.id].n) + '</span><span class="det"><span class="adv ' + l.kind + '">' + esc(l.text) + '</span></span></span><span class="buy">' + fmtQty(l.amt, Pricing.packUnit(l.id)) + "<br>" + eur(l.value) + "</span></li>"; });
+      h += "</ul>";
+    }
+    var risk = plan.leftovers.filter(function (l) { return l.kind === "waste"; }), riskSum = risk.reduce(function (a, l) { return a + l.value; }, 0);
+    if (riskSum >= 0.5) h += '<p class="note-box">Likely to go to waste this week (≈ ' + eur(riskSum) + "): " + risk.map(function (l) { return esc(CAT[l.id].n); }).join(", ") + ". Plan these into the start of next week or swap a meal to use them up.</p>";
     var pk = Object.keys(pantry).sort();
-    h += '<p class="kcal">Pack sizes are the cheapest mix that covers the week. Includes the morning juice and both optional snacks for two people each day.</p><h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
-    text.push("PANTRY: " + pk.join(", "));
-    text.push("Expected checkout ≈ " + eur(total));
-    state.shopText = "Week " + isoWeek(mon.y, mon.m, mon.d) + "\n" + text.join("\n");
+    h += '<p class="kcal">Pack sizes are the cheapest mix for each trip. Includes the morning juice and both optional snacks for two people each day.</p><h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
     return h + priceNote() + "</div>";
   }
 
@@ -2334,10 +2407,12 @@ if (typeof module !== "undefined") module.exports = Engine;
       if (sel.value === base) delete ov[k]; else ov[k] = sel.value;
       saveOv(); renderMonths(); renderPanel();
     });
-    var cp = $("copy");
-    if (cp) cp.addEventListener("click", function () {
-      var done = function () { cp.textContent = "Copied"; setTimeout(function () { cp.textContent = "Copy list"; }, 1500); };
-      try { navigator.clipboard.writeText(state.shopText).then(done, function () { cp.textContent = "Copy not available"; }); } catch (e) { cp.textContent = "Copy not available"; }
+    Array.prototype.forEach.call(p.querySelectorAll("[data-copy]"), function (cp) {
+      var label = cp.textContent;
+      cp.addEventListener("click", function () {
+        var done = function () { cp.textContent = "Copied"; setTimeout(function () { cp.textContent = label; }, 1500); };
+        try { navigator.clipboard.writeText(state.shopTexts[+cp.getAttribute("data-copy")]).then(done, function () { cp.textContent = "Copy not available"; }); } catch (e) { cp.textContent = "Copy not available"; }
+      });
     });
   }
 

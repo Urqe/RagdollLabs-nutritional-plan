@@ -234,6 +234,16 @@ Notes
 
 ---
 
+## v0.7: Shopping list in trips (shipped)
+
+- [x] The week's shopping list is split into three trips: Monday–Tuesday, Wednesday–Thursday and Friday–Sunday. Each trip is a collapsible card with its days, item count and cost; the current trip opens by default.
+- [x] Short-lived items are bought per trip. Items that keep for 10 days or more are bought once, on the first trip that needs them, and cover later trips.
+- [x] Leftovers from an earlier trip's packs are used first while still good, shown as "from earlier", and fully covered items are listed under "Already bought".
+- [x] Each trip has its own copy button. Long-life stock, end-of-week leftovers with freeze/keeps/waste advice, and the pantry list stay once per week.
+- [x] Trip planning lives in `Pricing.planTrips`; the browser test checks three trips whose totals add up to the checkout total.
+
+---
+
 ## Later
 
 ### Check prices in the store (was v0.2.1)
@@ -257,7 +267,7 @@ Checks
 
 ### Better shopping
 - [ ] Tick items off while shopping, saved per week.
-- [ ] Store order within sections, custom date ranges, "already have" pantry list.
+- [ ] Store order within sections, custom trip days, "already have" pantry list.
 - [ ] Copy format that pastes cleanly into a phone note or the K-Ruoka shopping list.
 - [ ] Option to leave juices or snack 2 out of the list.
 
@@ -302,3 +312,4 @@ Checks
 | v0.5.1 | 2026-10-18 | Swipe down to close the day sheet; the page behind no longer scrolls. |
 | v0.6 | 2026-10-18 | Light/dark/automatic theme switch, RagdollLabs cat logo and footer, visual refresh, fix for page stretch from hidden layers. |
 | v0.6.1 | 2026-10-18 | No beetroot or bananas: 8 recipes adjusted, banned-ingredient check added. |
+| v0.7 | 2026-10-18 | Shopping list grouped into three trips per week (Mon–Tue, Wed–Thu, Fri–Sun), with per-trip copy. |
