@@ -42,7 +42,12 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 
 ## Current focus
 
-Nothing scheduled. Pick the next release from Later.
+Order agreed after the 2026-10-19 review (see "Review 2026-10-19" below):
+
+1. v0.8: Private store data
+2. v0.9: Correct numbers
+3. v0.10: Cook and shop from the app
+4. v0.11: Today first, phone and iPad
 
 ---
 
@@ -244,46 +249,149 @@ Notes
 
 ---
 
-## Later
+## v0.8: Private store data
 
-### Check prices in the store (was v0.2.1)
+Goal: prices and pack sizes come from the two stores we actually use, without the public repo or the public page saying which stores they are.
 
-Goal: replace the estimates with real prices from a K-chain market.
+Why: the GitHub account links the public page to us. Store names narrow that down to a neighbourhood. Exact store prices can do the same, so they stay private too.
 
-Scope
-- [ ] Check all 86 ingredients on K-Ruoka with a K-chain market selected, in a browser session, and record product, pack sizes, prices and date. Use a second K-chain store for anything the first store doesn't stock.
-- [ ] Set `status: "checked"` and the `checked` date for each.
-- [ ] Price one sample week's shopping list as a real K-Ruoka basket and compare with the app's checkout total.
+Public side (this repo, GitHub Pages)
+- [ ] Remove store names from `src/prices.js`, the page, README, this file and the build output. Public text says "typical K-store prices, estimates".
+- [ ] Public prices stay as rounded typical prices, not copied from one store.
+- [ ] `tools/check-privacy.js`: fails the build if body data or any blocked term appears in tracked files or the built pages. The blocked terms (store names, area names) are read from the private file, so the list itself is never public.
+- [ ] Rotation keeps using the public pack data, so every device shows the same meals whether or not private data is loaded.
+
+Private side
+- [ ] Private store file (`stores.private.json`): two stores with display name, preferred order, and per product: product name, pack sizes, price, in stock yes/no, date checked. Kept in a separate private GitHub repo, never in this one; `.gitignore` blocks it here.
+- [ ] Prices collected from K-Ruoka with the right store selected, in a browser (needs the desktop app linked, or a manual check). Store 1 first; Store 2 for anything Store 1 doesn't stock.
+- [ ] Items neither store stocks are listed, and the recipe gets a substitute or a fallback note.
+- [ ] Two ways to use the private data:
+  - The Claude-hosted copy of the app is built with it. That page is private to the account by default.
+  - The public page gets a "Load store data" option in settings: pick the file once per device, saved in that browser only. No store data in URLs.
+- [ ] With store data loaded, the shopping list shows which store to buy each item from, and costs use that store's prices.
+
+Decision needed before shipping
+- [ ] Git history: store names are in about 25 earlier commits. Either rewrite history and force-push (as done for body data in v0.1), or leave it and accept that old commits show them. Rewriting doesn't reach copies someone already cloned.
+
+What stays visible on purpose: the account name, Person 1/Person 2 portion splits and protein targets, the food rules, and that this is a Mexican-style plan for Finland. The splits and targets can move to device-only settings later if wanted (see Settings).
 
 Checks
-- `node tools/check-prices.js` reports 0 estimates.
-- Sample basket within about 10 % of the app's total.
+- `tools/check-privacy.js` passes on the repo and both built pages.
+- A fresh visit to the public page shows no store names; the private page shows both.
+- Same meals on both pages for the same date.
 
-### Settings and privacy
-- [ ] Settings panel: protein targets per person, display names, which day is the cheat night. Saved on the device only; the repo keeps neutral defaults.
+---
+
+## v0.9: Correct numbers
+
+Goal: what the app says matches what you buy, cook and eat.
+
+- [ ] Shelf life by the day food is eaten, not the trip day. Today a Friday trip can reuse food that is too old by Sunday. Track each pack bought (date, amount left), and keep expired leftovers in the waste figure instead of dropping them when a new pack is bought.
+- [ ] Freezing advice only when the food is still within its shelf life on the day it would be frozen, shown on the trip where it applies.
+- [ ] Totals and shopping cover the same food. Today protein and calories include meals and snack 1, while cost and shopping also include snack 2 and the juice. Add "include juice" and "include snack 2" settings (device-only), and make protein, calories, cost and shopping all follow them.
+- [ ] Swapping a meal refreshes the prepared next and previous pages too. Today, after swapping a double-batch dinner, the next day can still show the old leftover lunch until reload.
+- [ ] Leftover lunch swap list starts on the actual leftover, so any replacement, including the first in the list, can be picked. Say that replacing it also makes the previous dinner a single batch.
+- [ ] Passata's Finnish label is "tomaattipyre" (tomato paste). Change it to "paseerattu tomaatti / passata".
+- [ ] `tools/check-waste.js` uses the trip planner the app uses.
+- [ ] `tools/check-year.js` exits with an error on repeat violations, protein below target, or unknown ingredient ids, instead of only printing them.
+- [ ] Remove the duplicate `animate()` and `reduceMotion()` in `src/app.html`.
+- [ ] Plan range: say exactly what is covered (the last full week of 2032 runs into January 2033).
+- [ ] If saving a swap fails (storage blocked), say so instead of "saved on this device".
+- [ ] Browser tests for each fix above.
+
+---
+
+## v0.10: Cook and shop from the app
+
+Goal: everything on the day's plan can be made and bought using only the app.
+
+- [ ] Juices and snacks open like meals: ingredients with amounts, for two, and short directions.
+- [ ] Double-batch dinners show the doubled amounts, and "eat tonight" vs "keep for tomorrow". Leftover lunches lead with reheating and serving, with the original recipe below.
+- [ ] Weekday cooking time: Monday to Thursday dinners stay under a time limit (default 60 minutes, changeable in settings). Longer dishes move to weekends or become batch dinners.
+- [ ] Full shopping export: the trip's items, plus "check you have" for long-life items and pantry items, with Finnish product names.
+- [ ] Tick items off while shopping, saved per trip on the device.
+- [ ] "Already have" toggle per item, and starting mid-week, so the list doesn't assume earlier trips happened.
+- [ ] Checkout total says plainly that long-life restocking is not included.
+
+---
+
+## v0.11: Today first, phone and iPad
+
+Goal: the everyday questions (what do we cook today, what do we buy next) are one tap away, and the app behaves on iPad rotation and with a keyboard.
+
+- [ ] Open on today by default, with a "This week" shortcut to the shopping trips. Year view stays one level up.
+- [ ] Wider shopping and week view on desktop and iPad landscape, instead of the 420 px side panel with sideways scrolling.
+- [ ] Bigger touch targets for week numbers, close buttons and header buttons.
+- [ ] Person 1 before Person 2 everywhere (recipe splits currently list Person 2 first).
+- [ ] Move a plan between devices: export and import swaps and settings as a file. No server.
+- [ ] Rotation and resize: the panel content and paging stay correct when the layout changes between phone, iPad and desktop widths.
+- [ ] Day sheet as a proper dialog: focus moves into it and back on close, the background is hidden from screen readers, Escape closes, and arrow keys don't move the calendar while it is open.
+- [ ] Test on a real iPhone and iPad in Safari, including VoiceOver and larger text. The current browser tests run in Chromium only.
+
+---
+
+## Review 2026-10-19
+
+An outside code review was done on v0.7. Taken into the releases above:
+
+| Review point | Where |
+|---|---|
+| Store names and household details in the public repo | v0.8 |
+| Shelf life checked on trip day, lost waste | v0.9 |
+| Totals and shopping cover different food | v0.9 |
+| Swap doesn't refresh prepared pages | v0.9 |
+| Leftover lunch swap list | v0.9 |
+| Passata label wrong | v0.9 |
+| Checks that print problems but don't fail | v0.9 |
+| Duplicate functions, plan end date, storage failure message | v0.9 |
+| No ingredients for juices and snacks | v0.10 |
+| Batch amounts not shown | v0.10 |
+| Long weekday dinners (150 min on a Tuesday) | v0.10 |
+| Copy omits stock and pantry; no tick-off | v0.10 |
+| Today/Week first, desktop width, touch targets, P1/P2 order | v0.11 |
+| iPad and iPhone using different plans | v0.11 |
+| Focus, screen reader, rotation, Safari testing | v0.11 |
+| Calorie ranges per person | Later: Nutrition accuracy |
+| Separate data for corn vs wheat tortillas, yoghurt vs skyr | Later: Nutrition accuracy |
+| Offline use | Later: Offline and home screen |
+| Self-hosted fonts (no Google Fonts request) | Later: Offline and home screen |
+| Automatic checks on GitHub (CI) | Later: Checks on GitHub |
+
+Not taken:
+- Splitting `src/app.html` into modules or replacing the engine's leftover objects. Only if a release runs into it.
+- Browser pinch zoom inside the calendar. Pinch is the calendar's main gesture; the − / + buttons remain, and v0.11's larger-text testing covers readability.
+- The review's suggestion to describe the app as "a high-protein recipe rotation" instead of adding goals: kept as is until calorie ranges are added.
+
+---
+
+## Later
+
+### Settings
+- [ ] Settings panel: protein targets per person, display names, which day is the cheat night. Saved on the device only; the repo keeps neutral defaults. This can also take the protein targets out of the public page.
 - [ ] Spice level per person.
-- [ ] `tools/check-privacy.js`: fails if the repo contains body measurements or other blocked patterns.
 - [ ] Optional: training days, with snack 1 suggested as a post-workout shake.
 
 ### Better shopping
-- [ ] Tick items off while shopping, saved per week.
-- [ ] Store order within sections, custom trip days, "already have" pantry list.
-- [ ] Copy format that pastes cleanly into a phone note or the K-Ruoka shopping list.
-- [ ] Option to leave juices or snack 2 out of the list.
+- [ ] Store order within sections, custom trip days.
+- [ ] Copy format that pastes cleanly into the K-Ruoka shopping list.
 
 ### Shared state across devices
-- [ ] Sync swaps, settings and shopping ticks between phone, tablet and computer.
-- [ ] Decide where shared state lives first; GitHub Pages has no storage of its own.
+- [ ] Live sync of swaps, settings and shopping ticks (v0.11 covers moving a plan by file). Decide where shared state lives first; GitHub Pages has no storage of its own.
 
 ### Nutrition accuracy
 - [ ] Check catalogue values against Fineli (THL's Finnish food composition database) and record the Fineli food id.
 - [ ] Fat and carbohydrate per ingredient, shown on recipe and day views.
-- [ ] Optional device-only calorie targets.
+- [ ] Optional device-only calorie ranges per person, used by the rotation as well as shown.
+- [ ] Separate data for products that differ (corn vs wheat tortillas, Greek yoghurt vs skyr).
 
 ### Offline and home screen
 - [x] Published on GitHub Pages.
 - [ ] Web app manifest and icon for the home screen.
 - [ ] Offline support with a service worker.
+- [ ] Self-host the fonts so the page makes no Google Fonts request.
+
+### Checks on GitHub
+- [ ] GitHub Actions workflow running the checks and comparing the built pages with the sources on every push.
 
 ### v1.0
 - [ ] Finnish UI language option.
