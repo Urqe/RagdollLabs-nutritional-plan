@@ -74,45 +74,142 @@ var Pricing = (function () {
   // ---- Shopping in trips ------------------------------------------------------
   // dayNeeds: 7 objects (Mon..Sun) of ingredient id -> amount in its sold unit, fresh
   // items only. trips: arrays of day indexes, e.g. [[0,1],[2,3],[4,5,6]].
+  //
+  // Every pack is tracked on its own. A pack's shelf life ("keeps") counts from the day
+  // it is opened; loose produce counts from the day it is bought. Food is only used on a
+  // day when it is still within its shelf life on that day, oldest first.
   // Short-lived items are bought per trip. Items that keep 10 days or more are bought
-  // once, on the first trip that needs them, for the rest of the week. Leftovers from
-  // an earlier trip are used first while still good.
-  var LONG_KEEP = 10;
-  function planTrips(dayNeeds, trips) {
-    var carry = {}, out = [];
-    trips.forEach(function (days, ti) {
-      var first = days[0], need = {}, later = {};
-      days.forEach(function (d) { Object.keys(dayNeeds[d] || {}).forEach(function (id) { need[id] = (need[id] || 0) + dayNeeds[d][id]; }); });
-      for (var tj = ti + 1; tj < trips.length; tj++) trips[tj].forEach(function (d) {
-        Object.keys(dayNeeds[d] || {}).forEach(function (id) { later[id] = (later[id] || 0) + dayNeeds[d][id]; });
-      });
-      var lines = [], cost = 0;
-      Object.keys(need).forEach(function (id) {
-        var n = need[id]; if (n <= 0) return;
-        var p = PX[id], c = carry[id], use = 0;
-        if (c && c.amt > 1e-6 && first - c.day < p.keeps) use = Math.min(n, c.amt);
-        var rest = n - use;
-        if (rest <= 1e-6) { c.amt -= use; lines.push({ id: id, need: n, fromEarlier: use, buy: null, forLater: 0 }); return; }
-        var extra = p.keeps >= LONG_KEEP ? (later[id] || 0) : 0;
-        var res = bestPacks(id, rest + extra);
-        cost += res.cost;
-        carry[id] = { amt: res.buy - rest, day: first };
-        lines.push({ id: id, need: n, fromEarlier: use, buy: res, forLater: extra });
-      });
-      out.push({ days: days, lines: lines, cost: cost });
+  // once, on the first trip that needs them, for the rest of the week.
+  // Whatever is left is reported once: frozen (with the day to freeze it), keeps into
+  // next week, or wasted. Expired food is never dropped from the count.
+  var LONG_KEEP = 10, DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  function cloneLots(ls) { return ls.map(function (l) { return { trip: l.trip, bought: l.bought, opened: l.opened, size: l.size, left: l.left, last: l.last, frozen: l.frozen, usedFrozen: l.usedFrozen }; }); }
+  // Use amount on day d from lots. Returns { used, fromEarlier, short }.
+  // Food that freezes can be frozen on its last good day and used later in the week;
+  // the lot remembers the day it has to go into the freezer.
+  function draw(ls, d, amt, keeps, ti, freezes) {
+    var res = { used: 0, fromEarlier: 0, short: 0 }, rest = amt;
+    var open = ls.filter(function (l) { return l.opened !== null && l.left > 1e-9 && (freezes || d - l.opened < keeps); }).sort(function (a, b) { return a.opened - b.opened; });
+    var closed = ls.filter(function (l) { return l.opened === null && l.left > 1e-9 && l.bought <= d; }).sort(function (a, b) { return a.size - b.size; });
+    open.concat(closed).forEach(function (l) {
+      if (rest <= 1e-9) return;
+      if (l.opened === null) l.opened = d;
+      if (d - l.opened >= keeps && l.frozen == null) l.frozen = l.last === null ? l.opened : l.last;
+      if (l.frozen != null && l.usedFrozen == null) l.usedFrozen = d;
+      var u = Math.min(rest, l.left);
+      l.left -= u; rest -= u; l.last = d; res.used += u;
+      if (l.trip < ti) res.fromEarlier += u;
     });
-    // What is left at the end of the week, and what happens to it.
-    var left = [];
-    Object.keys(carry).forEach(function (id) {
-      var c = carry[id], p = PX[id]; if (c.amt <= 1e-6) return;
-      var value = c.amt * unitPrice(id); if (value < 0.3) return;
-      var life = p.keeps - (7 - c.day), kind = p.freezes ? "freeze" : life >= 3 ? "keeps" : "waste";
-      left.push({ id: id, amt: c.amt, value: value, kind: kind,
-        text: kind === "freeze" ? "freeze the rest" : kind === "keeps" ? "keeps into next week" : "likely wasted unless used early next week" });
-    });
-    return { trips: out, leftovers: left };
+    res.short = rest > 1e-6 ? rest : 0;
+    return res;
+  }
+  function addLots(ls, res, ti, day) {
+    if (res.loose) { ls.push({ trip: ti, bought: day, opened: day, size: res.buy, left: res.buy, last: null, frozen: null, usedFrozen: null }); return; }
+    res.packs.forEach(function (pk) { for (var i = 0; i < pk[0]; i++) ls.push({ trip: ti, bought: day, opened: null, size: pk[1][0], left: pk[1][0], last: null, frozen: null, usedFrozen: null }); });
+  }
+  function mergeRes(a, b) {
+    if (!a) return b;
+    var packs = a.packs.map(function (pk) { return [pk[0], pk[1]]; });
+    b.packs.forEach(function (pk) { var hit = packs.filter(function (x) { return x[1] === pk[1]; })[0]; if (hit) hit[0] += pk[0]; else packs.push([pk[0], pk[1]]); });
+    return { buy: a.buy + b.buy, cost: a.cost + b.cost, left: 0, packs: packs, loose: a.loose, count: (a.count || 0) + (b.count || 0) };
   }
 
-  return { planTrips: planTrips, LONG_KEEP: LONG_KEEP, isStock: isStock, need: need, unitPrice: unitPrice, costOf: costOf, bestPacks: bestPacks, leftoverAdvice: leftoverAdvice, packUnit: packUnit };
+  function planTrips(dayNeeds, trips) {
+    var lots = {}, out = [];
+    function needOn(d, id) { return (dayNeeds[d] || {})[id] || 0; }
+    trips.forEach(function (days, ti) {
+      var first = days[0], ids = {};
+      days.forEach(function (d) { Object.keys(dayNeeds[d] || {}).forEach(function (id) { if (needOn(d, id) > 0) ids[id] = 1; }); });
+      var lines = [], cost = 0;
+      Object.keys(ids).forEach(function (id) {
+        var p = PX[id], ls = lots[id] = lots[id] || [];
+        var windowDays = days.slice();
+        if (p.keeps >= LONG_KEEP) for (var d = days[days.length - 1] + 1; d < 7; d++) windowDays.push(d);
+        // Buy until the simulated window has no shortfall (a second pack may be needed
+        // when the first would be past its shelf life by a later day).
+        var bought = null;
+        for (var round = 0; round < 6; round++) {
+          var sim = cloneLots(ls), short = 0;
+          windowDays.forEach(function (d) { var n = needOn(d, id); if (n > 0) short += draw(sim, d, n, p.keeps, ti, p.freezes).short; });
+          if (short <= 1e-6) break;
+          var res = bestPacks(id, short);
+          addLots(ls, res, ti, first); bought = mergeRes(bought, res);
+        }
+        // What the bought amount covers beyond this trip's own days.
+        var forLater = 0;
+        if (bought) {
+          windowDays.forEach(function (d) { if (days.indexOf(d) < 0) forLater += needOn(d, id); });
+        }
+        var need = 0, fromEarlier = 0, short = 0;
+        days.forEach(function (d) { var n = needOn(d, id); if (n > 0) { var r = draw(ls, d, n, p.keeps, ti, p.freezes); need += n; fromEarlier += r.fromEarlier; short += r.short; } });
+        if (need <= 0) return;
+        if (bought) cost += bought.cost;
+        lines.push({ id: id, need: need, fromEarlier: fromEarlier, buy: bought, forLater: forLater, short: short });
+      });
+      out.push({ days: days, lines: lines, cost: cost, freeze: [] });
+    });
+    // What is left of each pack at the end of the week.
+    var left = [], byKey = {};
+    Object.keys(lots).forEach(function (id) {
+      var p = PX[id];
+      lots[id].forEach(function (l) {
+        if (l.left <= 1e-6) return;
+        var value = l.left * unitPrice(id), kind, day, text;
+        var opened = l.opened === null ? null : l.opened, end = opened === null ? null : opened + p.keeps; // first day it is no longer good
+        if (l.frozen != null) { kind = "freeze"; day = l.frozen; text = "already in the freezer"; }
+        else if (opened === null && p.freezes) { kind = "freeze"; day = l.bought; text = "unopened: freeze it"; }
+        else if (opened === null) { kind = "keeps"; day = 6; text = "unopened, keeps into next week"; }
+        else if (end - 7 >= 3) { kind = "keeps"; day = 6; text = "keeps into next week"; }
+        else if (p.freezes) { day = l.last === null ? opened : l.last; kind = "freeze"; text = "freeze the rest after " + DAYS[day]; }
+        else if (end <= 7) { kind = "waste"; day = end - 1; text = "past its shelf life after " + DAYS[day]; }
+        else { kind = "waste"; day = 6; text = "use by " + DAYS[(end - 1) % 7] + " next week or it goes to waste"; }
+        var k = id + "|" + kind + "|" + day;
+        if (!byKey[k]) { byKey[k] = { id: id, amt: 0, value: 0, kind: kind, day: day, text: text }; left.push(byKey[k]); }
+        byKey[k].amt += l.left; byKey[k].value += value;
+      });
+    });
+    left = left.filter(function (l) { return l.value >= 0.3; });
+    // Mid-week freezing so a later day can use the rest.
+    var actions = [];
+    Object.keys(lots).forEach(function (id) {
+      lots[id].forEach(function (l) {
+        if (l.frozen == null) return;
+        actions.push({ id: id, day: l.frozen, kind: "freeze", text: "freeze the rest after " + DAYS[l.frozen] + ", for " + DAYS[l.usedFrozen] });
+      });
+    });
+    // Freezing has to happen on a given day, so show it on the trip that covers that day.
+    actions.concat(left).forEach(function (l) {
+      if (l.kind !== "freeze" || l.text === "already in the freezer") return;
+      out.forEach(function (tr) { if (tr.days.indexOf(l.day) >= 0) tr.freeze.push(l); });
+    });
+    var waste = left.reduce(function (s, l) { return s + (l.kind === "waste" ? l.value : 0); }, 0);
+    return { trips: out, leftovers: left, waste: waste };
+  }
+
+  // The week's shopping from 7 day plans (Mon..Sun, null for days outside the plan).
+  // Uses exactly the food the day plan counts: meals (batch dinners doubled, leftover
+  // lunches free) and the extras in plan.extras, each for two people.
+  var TRIPS = [[0, 1], [2, 3], [4, 5, 6]];
+  function shoppingWeek(plans) {
+    var dayNeeds = [], stockNeed = {}, pantry = {};
+    plans.forEach(function (pl, di) {
+      var nd = dayNeeds[di] = {}; if (!pl) return;
+      function add(it, mult) {
+        var id = it[0], c = CATX[id]; if (!c) return;
+        if (c.pantry || !PX[id]) { pantry[c.n] = 1; return; }
+        var amt = need(it) * mult;
+        if (isStock(id)) stockNeed[id] = (stockNeed[id] || 0) + amt; else nd[id] = (nd[id] || 0) + amt;
+      }
+      ["b", "l", "d"].forEach(function (s) { var r = pl.meals[s], mult = r.leftover ? 0 : (r.batch || 1); if (mult) r.ing.forEach(function (it) { add(it, mult); }); });
+      (pl.extras || []).forEach(function (x) { x.ing.forEach(function (it) { add(it, 2); }); });
+    });
+    var plan = planTrips(dayNeeds, TRIPS);
+    plan.dayNeeds = dayNeeds; plan.stockNeed = stockNeed; plan.pantry = Object.keys(pantry).sort();
+    plan.total = plan.trips.reduce(function (s, tr) { return s + tr.cost; }, 0);
+    return plan;
+  }
+
+  return { shoppingWeek: shoppingWeek, TRIPS: TRIPS, planTrips: planTrips, LONG_KEEP: LONG_KEEP, DAYS: DAYS, isStock: isStock, need: need, unitPrice: unitPrice, costOf: costOf, bestPacks: bestPacks, leftoverAdvice: leftoverAdvice, packUnit: packUnit };
 })();
 if (typeof module !== "undefined") module.exports = Pricing;

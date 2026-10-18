@@ -249,6 +249,61 @@ async def perf_suite(browser, rate, limit):
     await ctx.close()
 
 
+async def plan_suite(browser):
+    """v0.9: swaps refresh prepared pages, leftover lunch in the swap list, extras toggles."""
+    page = await browser.new_page(viewport={"width": 1400, "height": 900})
+    errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    await open_page(page, "#d2026-10-19")  # dinner is a double batch; the 20th has the leftovers
+    await page.evaluate("localStorage.removeItem('mpd-swaps'); localStorage.removeItem('mpd-extras')")
+    await open_page(page, "#d2026-10-19")
+    await page.wait_for_timeout(1500)  # let the neighbour pages prepare in idle time
+    lunch20 = "() => document.querySelectorAll('.dbig .dmeal h3')[1].textContent"
+    num = "s => parseFloat(s.replace(/[^0-9,.]/g, '').replace(',', '.'))"
+
+    # Extras: unticking the juice lowers the day's cost and the week's shopping, and is saved.
+    # At day level on desktop the day is in the main view and the side panel shows its week.
+    cost = lambda: page.evaluate("(" + num + ")(document.querySelector('.dbig .costline b').textContent)")
+    week = lambda: page.evaluate("(" + num + ")(document.querySelector('#panel .shop .costline b').textContent)")
+    c_on, wk_on = await cost(), await week()
+    await page.click('.dbig [data-extra="juice"]'); await page.wait_for_timeout(400)
+    c_off, wk_off = await cost(), await week()
+    unticked = await page.evaluate("[...document.querySelectorAll('[data-extra=juice]')].every(x => !x.checked)")
+    saved = await page.evaluate("JSON.parse(localStorage.getItem('mpd-extras') || '{}').juice")
+    check("plan: unticking the juice lowers day cost and week shopping", c_off < c_on and wk_off < wk_on, f"day {c_on} -> {c_off}, week {wk_on} -> {wk_off}")
+    check("plan: extras setting is saved on the device", unticked and saved is False, f"{unticked}, saved {saved}")
+    await page.click('.dbig [data-extra="juice"]'); await page.wait_for_timeout(400)
+
+    # Swap the double-batch dinner, then move to the next day: no stale leftovers.
+    await page.click('.dbig [data-recipe="d"]'); await page.wait_for_timeout(300)
+    other = await page.evaluate("[...document.querySelectorAll('#swap-sel option')].find(o => !o.selected).value")
+    await page.select_option("#swap-sel", other); await page.wait_for_timeout(300)
+    await page.evaluate("document.activeElement && document.activeElement.blur()")
+    await page.wait_for_timeout(1200)
+    await page.keyboard.press("ArrowRight"); await page.wait_for_timeout(600)
+    after = await page.evaluate(lunch20)
+    check("plan: after swapping the batch dinner, the next day has a normal lunch", (await level(page)) == "#d2026-10-20" and not after.startswith("Leftovers"), after)
+    await page.keyboard.press("ArrowLeft"); await page.wait_for_timeout(600)
+    await page.click('.dbig [data-recipe="d"]'); await page.wait_for_timeout(300)
+    await page.click('#panel [data-reset]'); await page.wait_for_timeout(300)
+    await page.wait_for_timeout(1200)
+    await page.keyboard.press("ArrowRight"); await page.wait_for_timeout(600)
+    back = await page.evaluate(lunch20)
+    check("plan: back to plan brings the leftover lunch back on the next day", back.startswith("Leftovers"), back)
+
+    # Leftover lunch: the swap list starts on the leftovers, and the first lunch can be picked.
+    await page.click('.dbig [data-recipe="l"]'); await page.wait_for_timeout(300)
+    sel = await page.evaluate("(() => { const s = document.querySelector('#swap-sel'); return [s.options[s.selectedIndex].text, s.selectedIndex, s.options[1].value]; })()")
+    check("plan: leftover lunch is the selected entry in the swap list", sel[0].startswith("Leftovers") and sel[1] == 0, str(sel))
+    await page.select_option("#swap-sel", sel[2]); await page.wait_for_timeout(300)
+    picked = await page.evaluate("document.querySelector('#panel .p-title').textContent")
+    swaps = await page.evaluate("localStorage.getItem('mpd-swaps')")
+    check("plan: the first lunch in the list can be picked directly", not picked.startswith("Leftovers") and sel[2] in swaps, f"{picked} {swaps}")
+    await page.evaluate("localStorage.removeItem('mpd-swaps'); localStorage.removeItem('mpd-extras')")
+    check("plan: no script errors", not errors, "; ".join(errors[:2]))
+    await page.close()
+
+
 async def main():
     build_suite()
     async with async_playwright() as p:
@@ -256,6 +311,7 @@ async def main():
         for name, w, h in [("phone", 390, 844), ("tablet", 820, 1180)]:
             await touch_suite(browser, name, w, h)
         await desktop_suite(browser)
+        await plan_suite(browser)
         await link_suite(browser)
         await perf_suite(browser, 1, 17)
         await perf_suite(browser, 2, 34)

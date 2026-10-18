@@ -153,6 +153,8 @@ button { font: inherit; color: inherit; }
 .snacks .kcal { display: block; }
 .snacks h3, .sec h3 { font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 4px; font-weight: 600; }
 .snacks ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.xtra { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; padding: 4px 0; }
+.xtra input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--cobalt); }
 
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .split .person b { display: block; font-size: .95rem; }
@@ -294,6 +296,9 @@ button, .d, .dc, .ag, .meal { -webkit-tap-highlight-color: transparent; touch-ac
 .trip-body { padding: 0 14px 12px; }
 .trip-tools { display: flex; justify-content: flex-end; }
 .shop .have { font-size: .8rem; color: var(--muted); margin: 8px 0 0; }
+.shop .have.freeze ul { margin: 4px 0 0; }
+.shop .have.freeze li { display: block; border: 0; padding: 2px 0; font-size: .8rem; }
+.shop .have.freeze li > span { font-family: inherit; font-size: inherit; white-space: normal; }
 .adv.waste { color: var(--chile); font-weight: 600; }
 .adv.freeze, .adv.keeps { color: var(--good); }
 .price-note { margin: 0; }
@@ -399,12 +404,26 @@ performance.mark && performance.mark("app-start");
   var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   var DOWS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   var SLOT = { b: "Breakfast", l: "Lunch", d: "Dinner" };
+  // Exact plan range, from the engine: first and last day with meals.
+  var RANGE_TEXT = (function () {
+    var f = new Date(Engine.EPOCH), l = new Date(Engine.EPOCH + Engine.MAX_DAYS * 864e5);
+    function fmt(x) { return x.getUTCDate() + " " + MONTHS[x.getUTCMonth()] + " " + x.getUTCFullYear(); }
+    return "The plan covers " + fmt(f) + " to " + fmt(l) + ".";
+  })();
   function todayObj() { var n = new Date(); return { y: n.getFullYear(), m: n.getMonth(), d: n.getDate() }; }
   var TODAY = todayObj();
   var state = { offset: 0, sel: { y: TODAY.y, m: TODAY.m, d: TODAY.d }, view: "day", prevView: "day", recipe: null, week: null, level: "year", focus: { y: TODAY.y, m: TODAY.m } };
-  var ov = {};
+  var ov = {}, inc = { juice: true, s1: true, s2: true }, saveFailed = false;
   try { ov = JSON.parse(localStorage.getItem("mpd-swaps") || "{}") || {}; } catch (e) { ov = {}; }
-  function saveOv() { planCache = {}; try { localStorage.setItem("mpd-swaps", JSON.stringify(ov)); } catch (e) {} }
+  // Swaps: only "YYYY-MM-DD|b|l|d" keys with a known recipe id are kept.
+  Object.keys(ov).forEach(function (k) { if (!/^\d{4}-\d{2}-\d{2}\|[bld]$/.test(k) || typeof ov[k] !== "string" || !Engine.byId[ov[k]]) delete ov[k]; });
+  try { var ix = JSON.parse(localStorage.getItem("mpd-extras") || "null"); if (ix && typeof ix === "object") ["juice", "s1", "s2"].forEach(function (k) { if (typeof ix[k] === "boolean") inc[k] = ix[k]; }); } catch (e) {}
+  function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); saveFailed = false; } catch (e) { saveFailed = true; } }
+  function saveOv() { store("mpd-swaps", ov); planChanged(); }
+  function saveInc() { store("mpd-extras", inc); planChanged(); }
+  // Anything that changes the plan: drop cached days, prepared neighbour pages and zoom
+  // layers, then redraw what is on screen.
+  function planChanged() { planCache = {}; dropPager(); renderMonths(); renderPanel(); }
 
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -428,7 +447,7 @@ performance.mark && performance.mark("app-start");
   var planCache = {};
   function dayPlan(o) {
     var k = o.y * 10000 + o.m * 100 + o.d;
-    if (!(k in planCache)) planCache[k] = Engine.day(o.y, o.m, o.d, ov);
+    if (!(k in planCache)) planCache[k] = Engine.day(o.y, o.m, o.d, ov, inc);
     return planCache[k];
   }
   function mealName(r) { return (r.leftover ? "Leftovers: " : "") + r.name; }
@@ -581,7 +600,7 @@ performance.mark && performance.mark("app-start");
 
   function renderDayBig() {
     var o = state.sel, plan = dayPlan(o);
-    if (!plan) return { cls: "", html: '<p class="empty">No plan for this date. The plan runs from January 2025 to the end of 2032.</p>' };
+    if (!plan) return { cls: "", html: '<p class="empty">No plan for this date. ' + RANGE_TEXT + "</p>" };
     var h = '<section class="dbig"><div class="dbig-head"><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + "</div><h2>" + dateTitle(o) + "</h2></div>";
     h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
     h += '<div class="costline"><span>Food cost today</span><b>≈ ' + eur(plan.cost) + "</b></div>";
@@ -593,10 +612,8 @@ performance.mark && performance.mark("app-start");
         "<details><summary>Ingredients and directions</summary><ul class=\"ing\">" + r.ing.map(fmtIng).join("") + '</ul><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>" +
         '<div class="row"><button class="btn" data-recipe="' + s + '">Open recipe and swap</button></div></article>';
     });
-    h += '<div class="dmeal"><h3>Optional extras</h3><ul class="ing">' +
-      '<li><span class="amt">Juice</span><span>' + esc(plan.juice.name) + "</span></li>" +
-      plan.snacks.map(function (sn, i) { return '<li><span class="amt">Snack ' + (i + 1) + "</span><span>" + esc(sn.name) + ' <span class="note">· ' + sn.p + " g protein each</span></span></li>"; }).join("") +
-      '</ul><div class="row"><button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " shopping list</button></div></div>";
+    h += extrasBlock(plan, "dmeal snacks") +
+      '<div class="row"><button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " shopping list</button></div>";
     return { cls: "", html: h + "</section>" };
   }
 
@@ -664,11 +681,6 @@ performance.mark && performance.mark("app-start");
       for (var i = 0; i < all.length; i++) if (all[i].offsetParent !== null) { el = all[i]; break; }
     }
     return el;
-  }
-  function reduceMotion() { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
-  function animate() {
-    var m = $("months");
-    if (m.animate && !reduceMotion()) m.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 180, easing: "ease-out" });
   }
   var panelTimer = 0;
   function panelLater() {
@@ -887,10 +899,18 @@ performance.mark && performance.mark("app-start");
       '<div class="bar"><i class="' + (have < target - 5 ? "low" : "") + '" style="width:' + pct + '%"></i></div><div class="kcal">≈ ' + r0(kcal) + " kcal</div></div>";
   }
   function dateTitle(o) { return DOWS[dow(o)] + " " + o.d + " " + MONTHS[o.m]; }
+  function extrasBlock(plan, cls) {
+    var items = [["juice", "Morning juice", plan.juice, "Blend with ½ cup water and ice"], ["s1", "Optional snack 1", plan.snacks[0]], ["s2", "Optional snack 2", plan.snacks[1]]];
+    return '<div class="' + cls + '"><h3>Optional extras</h3><ul class="xtras">' + items.map(function (x) {
+      var it = x[2], desc = x[3] || it.desc;
+      return '<li><label class="xtra"><input type="checkbox" data-extra="' + x[0] + '"' + (inc[x[0]] ? " checked" : "") + '><span><b>' + x[1] + "</b> · " + esc(it.name) +
+        ' <span class="kcal">' + (desc ? esc(desc) + " · " : "") + it.p + " g protein, ≈ " + it.k + " kcal each · ≈ " + eur(it.C) + " for two</span></span></label></li>";
+    }).join("") + '</ul><p class="kcal">Ticked extras count in protein, calories, cost and the shopping list on every day. Saved on this device.</p></div>';
+  }
 
   function viewDay() {
     var o = state.sel, plan = dayPlan(o);
-    if (!plan) return '<div class="p-in"><p class="empty">No plan for this date. The plan runs from January 2025 to the end of 2032.</p></div>';
+    if (!plan) return '<div class="p-in"><p class="empty">No plan for this date. ' + RANGE_TEXT + "</p></div>";
     var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + '</div><h2 class="p-title">' + dateTitle(o) + "</h2></div>" +
       '<button class="sheet-close" data-close aria-label="Close">×</button></div>';
     h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
@@ -903,11 +923,7 @@ performance.mark && performance.mark("app-start");
         '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P2 " + r0(r.P * r.share) + " g · P1 " + r0(r.P * (1 - r.share)) + " g · ≈ " + eur(r.C) + "</span></button>";
     });
     h += "</div>";
-    h += '<div class="snacks"><h3>Optional extras</h3><ul>' +
-      "<li><b>Morning juice</b> · " + esc(plan.juice.name) + ' <span class="kcal">Blend with ½ cup water and ice</span></li>' +
-      plan.snacks.map(function (s, i) {
-        return "<li><b>Optional snack " + (i + 1) + "</b> · " + esc(s.name) + ' <span class="kcal">' + esc(s.desc) + " · " + s.p + " g protein each</span></li>";
-      }).join("") + '</ul><p class="kcal">Daily totals above include optional snack 1. The food cost includes the juice and both snacks.</p></div>';
+    h += extrasBlock(plan, "snacks");
     h += '<button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " summary and shopping list</button>";
     return h + priceNote() + "</div>";
   }
@@ -934,12 +950,22 @@ performance.mark && performance.mark("app-start");
     h += '<div class="note-box">Heat ' + heat(r.heat) + " · " + (r.side ? "Serve the salsa or chilli on the side." : "Heat is cooked in; adjust the chilli to taste.") + (r.prep ? " Good for cooking ahead." : "") + "</div>";
     h += '<div class="sec"><h3>Ingredients for two' + (r.batch === 2 ? ", one batch" : "") + '</h3><ul class="ing">' + r.ing.map(fmtIng).join("") + "</ul></div>";
     h += '<div class="sec"><h3>Directions</h3><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></div>";
-    var alts = Engine.alternatives(s, o.y, o.m, o.d);
-    h += '<div class="sec"><h3>Swap this meal</h3><div class="swap-row"><select id="swap-sel" aria-label="Choose another recipe">' +
-      alts.map(function (a) {
-        var dlt = a.C - r.C, ds = a.id === r.id ? "" : " (" + (dlt >= 0 ? "+" : "−") + eur(Math.abs(dlt)) + ")";
-        return '<option value="' + a.id + '"' + (a.id === r.id ? " selected" : "") + ">" + esc(a.name) + (a.cheat ? " (cheat)" : "") + ds + "</option>"; }).join("") + "</select>" +
-      (ov[k] ? '<button class="btn" data-reset>Back to plan</button>' : "") + '</div><p class="kcal">Swaps are saved on this device only and don\'t change the rest of the rotation.</p></div>';
+    var alts = Engine.alternatives(s, o.y, o.m, o.d), base = plan.base[s], opts = [];
+    // A leftover lunch is not in the lunch list, so it gets its own entry at the top.
+    if (base.leftover) opts.push('<option value="' + base.id + '"' + (r === base ? " selected" : "") + ">" + esc(mealName(base)) + " (plan)</option>");
+    var refC = r.leftover ? 0 : r.C;
+    alts.forEach(function (a) {
+      var dlt = a.C - refC, ds = a.id === r.id && !r.leftover ? "" : " (" + (dlt >= 0 ? "+" : "−") + eur(Math.abs(dlt)) + ")";
+      opts.push('<option value="' + a.id + '"' + (a.id === r.id && !r.leftover ? " selected" : "") + ">" + esc(a.name) + (a.cheat ? " (cheat)" : "") + ds + "</option>");
+    });
+    var swapNote = "";
+    if (r.leftover) {
+      var prev = dayPlan(addDays(o, -1)), saved = prev && prev.meals.d.batch === 2 ? prev.meals.d.C / 2 : 0;
+      swapNote = "Replacing the leftovers also makes yesterday's dinner a single batch" + (saved ? ", about " + eur(saved) + " less to buy" : "") + ". ";
+    } else if (r.batch === 2) swapNote = "This dinner is cooked as a double batch for tomorrow's lunch. Swapping it gives tomorrow a normal lunch. ";
+    var saveText = saveFailed ? "This browser is not saving swaps (storage is blocked), so they last until the page is reloaded." : "Swaps are saved on this device only and don't change the rest of the rotation.";
+    h += '<div class="sec"><h3>Swap this meal</h3><div class="swap-row"><select id="swap-sel" aria-label="Choose another recipe">' + opts.join("") + "</select>" +
+      (ov[k] ? '<button class="btn" data-reset>Back to plan</button>' : "") + '</div><p class="kcal">' + esc(swapNote + saveText) + "</p></div>";
     return h + "</div>";
   }
 
@@ -962,24 +988,10 @@ performance.mark && performance.mark("app-start");
     h += '<p class="kcal">Targets: ' + PEOPLE.p1.label + " " + PEOPLE.p1.protein + " g, " + PEOPLE.p2.label + " " + PEOPLE.p2.protein + " g protein a day. Calories are estimates from the recipe weights.</p>";
 
     // shopping list, split into three trips: Mon–Tue, Wed–Thu, Fri–Sun
-    var TRIPS = [[0, 1], [2, 3], [4, 5, 6]];
-    var dayNeeds = [], stockNeed = {}, pantry = {};
-    days.forEach(function (o, di) {
-      var need = dayNeeds[di] = {}, pl = dayPlan(o); if (!pl) return;
-      function add(it, mult) {
-        var id = it[0], c = CAT[id]; if (!c) return;
-        if (c.pantry || !PRICES[id]) { pantry[c.n] = 1; return; }
-        var amt = Pricing.need(it) * mult;
-        if (Pricing.isStock(id)) stockNeed[id] = (stockNeed[id] || 0) + amt; else need[id] = (need[id] || 0) + amt;
-      }
-      ["b", "l", "d"].forEach(function (s) { var r = pl.meals[s], mult = r.leftover ? 0 : (r.batch || 1); if (mult) r.ing.forEach(function (it) { add(it, mult); }); });
-      pl.snacks.forEach(function (sn) { sn.ing.forEach(function (it) { add(it, 2); }); }); // both snacks, for two
-      pl.juice.ing.forEach(function (it) { add(it, 2); });
-    });
-    var plan = Pricing.planTrips(dayNeeds, TRIPS);
+    var plan = Pricing.shoppingWeek(days.map(dayPlan)), stockNeed = plan.stockNeed;
     var order = ["Meat", "Dairy & eggs", "Vegetables & fruit", "Bread & grains", "Tins & jars", "Frozen", "Other"];
-    var total = plan.trips.reduce(function (a, tr) { return a + tr.cost; }, 0);
-    var today = new Date(), tk = Engine.key(today.getFullYear(), today.getMonth(), today.getDate()), openTrip = 0;
+    var total = plan.total;
+    var today = new Date(), tk = Engine.key(today.getFullYear(), today.getMonth(), today.getDate()), openTrip = 0, TRIPS = Pricing.TRIPS;
     plan.trips.forEach(function (tr, ti) { var last = days[tr.days[tr.days.length - 1]]; if (Engine.key(last.y, last.m, last.d) < tk) openTrip = Math.min(ti + 1, TRIPS.length - 1); });
     function dlabel(o) { return DOWS[dow(o)].slice(0, 3) + " " + o.d; }
     function packText(res, u) { return res.loose ? fmtQty(res.buy, u) : res.packs.map(function (pk) { return pk[0] + " × " + fmtPack(pk[1][0], pk[1][1]); }).join(" + "); }
@@ -1010,6 +1022,10 @@ performance.mark && performance.mark("app-start");
         });
         h += "</ul>";
       });
+      if (tr.freeze.length) {
+        h += '<div class="have freeze"><b>Freezer</b><ul>' + tr.freeze.map(function (f) { return "<li>" + esc(CAT[f.id].n) + ': <span class="adv freeze">' + esc(f.text) + "</span></li>"; }).join("") + "</ul></div>";
+        tr.freeze.forEach(function (f) { text.push("Freeze: " + CAT[f.id].n + ", " + f.text); });
+      }
       if (have.length) {
         have.sort(function (a, b) { return CAT[a.id].n.localeCompare(CAT[b.id].n); });
         h += '<p class="have"><b>Already bought:</b> ' + have.map(function (l) { return esc(CAT[l.id].n); }).join(", ") + "</p>";
@@ -1036,10 +1052,10 @@ performance.mark && performance.mark("app-start");
       left.forEach(function (l) { h += '<li><span class="it"><span>' + esc(CAT[l.id].n) + '</span><span class="det"><span class="adv ' + l.kind + '">' + esc(l.text) + '</span></span></span><span class="buy">' + fmtQty(l.amt, Pricing.packUnit(l.id)) + "<br>" + eur(l.value) + "</span></li>"; });
       h += "</ul>";
     }
-    var risk = plan.leftovers.filter(function (l) { return l.kind === "waste"; }), riskSum = risk.reduce(function (a, l) { return a + l.value; }, 0);
+    var risk = plan.leftovers.filter(function (l) { return l.kind === "waste"; }), riskSum = plan.waste;
     if (riskSum >= 0.5) h += '<p class="note-box">Likely to go to waste this week (≈ ' + eur(riskSum) + "): " + risk.map(function (l) { return esc(CAT[l.id].n); }).join(", ") + ". Plan these into the start of next week or swap a meal to use them up.</p>";
-    var pk = Object.keys(pantry).sort();
-    h += '<p class="kcal">Pack sizes are the cheapest mix for each trip. Includes the morning juice and both optional snacks for two people each day.</p><h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
+    var pk = plan.pantry;
+    h += '<p class="kcal">Pack sizes are the cheapest mix for each trip. Shelf life counts from opening a pack (from buying, for loose produce); check the dates on the packs. Includes the extras ticked in the day view, for two people each day.</p><h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
     return h + priceNote() + "</div>";
   }
 
@@ -1078,7 +1094,7 @@ performance.mark && performance.mark("app-start");
     if (sel) sel.addEventListener("change", function () {
       var o = state.sel, k = Engine.key(o.y, o.m, o.d) + "|" + state.recipe, base = dayPlan(o).base[state.recipe].id;
       if (sel.value === base) delete ov[k]; else ov[k] = sel.value;
-      saveOv(); renderMonths(); renderPanel();
+      saveOv();
     });
     Array.prototype.forEach.call(p.querySelectorAll("[data-copy]"), function (cp) {
       var label = cp.textContent;
@@ -1175,6 +1191,11 @@ performance.mark && performance.mark("app-start");
     else if (t.hasAttribute("data-back")) { state.view = state.prevView === "week" ? "week" : "day"; }
     else if (t.hasAttribute("data-reset")) { var o = state.sel; delete ov[Engine.key(o.y, o.m, o.d) + "|" + state.recipe]; saveOv(); }
     renderMonths(); panelDirty = true; if (mq.matches) renderPanel(); openSheet(true);
+  });
+  // Extras toggles (day view, day sheet): one setting for every day.
+  document.addEventListener("change", function (e) {
+    var x = e.target.closest && e.target.closest("[data-extra]"); if (!x) return;
+    inc[x.getAttribute("data-extra")] = x.checked; saveInc();
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") openSheet(false); });
 
