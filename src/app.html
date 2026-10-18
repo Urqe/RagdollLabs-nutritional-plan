@@ -1,0 +1,403 @@
+<title>RagdollLabs Nutritional Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: year of month cards on the left, a sticky day/recipe panel on the right (bottom sheet on phones). Talavera cobalt on tile white, dried-chile red for heat and cheat nights. */
+:root {
+  --bg: #f4f6fb; --surface: #ffffff; --sunk: #eaeef7; --ink: #18203d; --muted: #5a6382; --line: #dce1ee;
+  --cobalt: #2446a6; --cobalt-soft: #dfe6fb; --chile: #b9341d; --chile-soft: #fbe3dc; --good: #2c7a4b;
+  --f-display: "Young Serif", Georgia, "Times New Roman", serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1329; --surface: #161b35; --sunk: #1d2343; --ink: #e7eaf6; --muted: #9aa2c3; --line: #2a3158;
+  --cobalt: #93abff; --cobalt-soft: #253063; --chile: #ff8566; --chile-soft: #44241f; --good: #72d29a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1329; --surface: #161b35; --sunk: #1d2343; --ink: #e7eaf6; --muted: #9aa2c3; --line: #2a3158;
+  --cobalt: #93abff; --cobalt-soft: #253063; --chile: #ff8566; --chile-soft: #44241f; --good: #72d29a; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--surface); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 2px; border-radius: 6px; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; }
+.top-in { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; max-width: 1600px; margin: 0 auto; }
+.brand { font-family: var(--f-display); font-size: 1.3rem; line-height: 1.1; margin: 0; text-wrap: balance; }
+.brand small { display: block; font-family: var(--f-body); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.targets { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { font-size: .8rem; padding: 3px 9px; border-radius: 99px; background: var(--sunk); color: var(--muted); white-space: nowrap; }
+.chip b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.nav { display: flex; gap: 6px; margin-left: auto; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: .9rem; }
+.btn:hover { border-color: var(--cobalt); color: var(--cobalt); }
+.btn.primary { background: var(--cobalt); border-color: var(--cobalt); color: var(--surface); }
+.btn.primary:hover { color: var(--surface); filter: brightness(1.08); }
+
+.wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; max-width: 1600px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+@media (min-width: 1100px) { .wrap { grid-template-columns: minmax(0, 1fr) 420px; } }
+
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .8rem; color: var(--muted); margin-bottom: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--chile); display: inline-block; }
+.ring { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--cobalt); display: inline-block; }
+
+.months { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.month { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 12px 10px; scroll-margin: 90px; }
+.month.now { border-color: var(--cobalt); box-shadow: 0 0 0 1px var(--cobalt); }
+.month h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.15rem; margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; }
+.month h2 span { font-family: var(--f-mono); font-size: .75rem; color: var(--muted); }
+.grid { display: grid; grid-template-columns: 26px repeat(7, minmax(0, 1fr)); gap: 3px; }
+.wd { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding-bottom: 2px; }
+.wk { font-family: var(--f-mono); font-size: .68rem; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 0; border-radius: 6px; }
+.wk:hover, .wk.sel { color: var(--cobalt); background: var(--cobalt-soft); }
+.d { position: relative; aspect-ratio: 1 / 1; max-width: 100%; border: 0; background: var(--sunk); border-radius: 7px; cursor: pointer;
+  font-variant-numeric: tabular-nums; font-size: .88rem; display: flex; align-items: center; justify-content: center; min-height: 34px; }
+.d:hover { background: var(--cobalt-soft); }
+.d.blank { background: none; cursor: default; }
+.d.past { color: var(--muted); }
+.d.cheat::after { content: ""; position: absolute; bottom: 4px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--chile); }
+.d.today { box-shadow: inset 0 0 0 2px var(--cobalt); font-weight: 700; }
+.d.sel { background: var(--cobalt); color: var(--surface); }
+.d.sel.cheat::after { background: var(--surface); }
+.d:disabled { opacity: .35; cursor: default; }
+
+/* Panel */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+@media (min-width: 1100px) { .panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 76px); max-height: calc(100vh - 96px); overflow: auto; } .sheet-close, .backdrop { display: none !important; } }
+@media (max-width: 1099px) {
+  .panel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 88vh; overflow: auto; border-radius: 16px 16px 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+    transform: translateY(105%); transition: transform .22s ease; box-shadow: 0 -8px 30px rgba(0,0,0,.18); }
+  .panel.open { transform: none; }
+  .backdrop { position: fixed; inset: 0; z-index: 35; background: rgba(10, 14, 35, .45); }
+}
+@media (prefers-reduced-motion: reduce) { .panel { transition: none; } }
+.p-in { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+.p-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.eyebrow { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.p-title { font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; line-height: 1.15; margin: 2px 0 0; text-wrap: balance; }
+.sheet-close { border: 0; background: var(--sunk); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; flex: none; font-size: 1.1rem; }
+.back { align-self: flex-start; border: 0; background: none; color: var(--cobalt); cursor: pointer; padding: 0; font-weight: 600; }
+
+.people { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.person { background: var(--sunk); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.person .lbl { font-size: .75rem; color: var(--muted); }
+.person .num { font-family: var(--f-mono); font-size: 1.15rem; font-weight: 500; }
+.person .num small { font-size: .75rem; color: var(--muted); }
+.bar { height: 5px; border-radius: 3px; background: var(--line); margin-top: 6px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--good); }
+.bar i.low { background: var(--chile); }
+.kcal { font-family: var(--f-mono); font-size: .75rem; color: var(--muted); margin-top: 4px; }
+
+.meals { display: flex; flex-direction: column; gap: 8px; }
+.meal { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; text-align: left; width: 100%; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 9px; padding: 11px 12px; cursor: pointer; }
+.meal:hover { border-color: var(--cobalt); }
+.meal .slot { font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
+.meal .name { font-weight: 600; min-width: 0; }
+.meal .go { color: var(--cobalt); align-self: center; }
+.meal .meta { grid-column: 1 / -1; font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tag { font-size: .68rem; padding: 1px 7px; border-radius: 99px; text-transform: uppercase; letter-spacing: .05em; }
+.tag.cheat { background: var(--chile-soft); color: var(--chile); }
+.tag.swap { background: var(--cobalt-soft); color: var(--cobalt); }
+.heat { color: var(--chile); letter-spacing: 1px; }
+.heat .off { color: var(--line); }
+
+.snacks { border-top: 1px dashed var(--line); padding-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: .85rem; }
+.snacks h3, .sec h3 { font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 4px; font-weight: 600; }
+.snacks ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.split .person b { display: block; font-size: .95rem; }
+.ing { list-style: none; margin: 0; padding: 0; }
+.ing li { display: grid; grid-template-columns: 92px 1fr; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: .9rem; }
+.ing .amt { font-family: var(--f-mono); font-size: .82rem; text-align: right; color: var(--ink); }
+.ing .fi { color: var(--muted); font-size: .78rem; }
+.ing .note { color: var(--muted); }
+.steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; max-width: 65ch; }
+.steps li::marker { font-family: var(--f-mono); color: var(--cobalt); }
+.note-box { font-size: .85rem; background: var(--sunk); border-radius: 8px; padding: 9px 12px; }
+.swap-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); max-width: 100%; min-width: 0; flex: 1; }
+
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .85rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 6px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+tr.avg td { font-weight: 700; border-bottom: 0; }
+td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; padding: 0; font-weight: 600; }
+.shop h4 { margin: 10px 0 2px; font-size: .85rem; }
+.shop ul { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
+.shop li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-bottom: 1px solid var(--line); }
+.shop li span:last-child { font-family: var(--f-mono); font-size: .8rem; white-space: nowrap; }
+.pantry { font-size: .85rem; color: var(--muted); }
+.empty { color: var(--muted); font-size: .9rem; }
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <h1 class="brand"><small>RagdollLabs</small>Mesa para dos</h1>
+    <div class="targets" id="targets"></div>
+    <div class="nav">
+      <button class="btn" id="prev" aria-label="Show earlier months">‹ Earlier</button>
+      <button class="btn primary" id="today">Today</button>
+      <button class="btn" id="next" aria-label="Show later months">Later ›</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <main>
+    <div class="legend">
+      <span><i class="ring"></i>Today</span>
+      <span><i class="dot"></i>Cheat night</span>
+      <span>Tap a week number for the weekly summary and shopping list</span>
+    </div>
+    <div class="months" id="months"></div>
+  </main>
+  <div class="backdrop" id="backdrop" hidden></div>
+  <aside class="panel" id="panel" aria-live="polite"></aside>
+</div>
+
+<script>
+/*DATA*/
+</script>
+<script>
+/*ENGINE*/
+</script>
+<script>
+(function () {
+  var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var DOWS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var SLOT = { b: "Breakfast", l: "Lunch", d: "Dinner" };
+  var now = new Date(), TODAY = { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
+  var state = { offset: 0, sel: { y: TODAY.y, m: TODAY.m, d: TODAY.d }, view: "day", recipe: null, week: null };
+  var ov = {};
+  try { ov = JSON.parse(localStorage.getItem("mpd-swaps") || "{}") || {}; } catch (e) { ov = {}; }
+  function saveOv() { try { localStorage.setItem("mpd-swaps", JSON.stringify(ov)); } catch (e) {} }
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function r0(x) { return Math.round(x); }
+  function frac(a) {
+    var w = Math.floor(a), f = a - w, s = f === 0.5 ? "½" : f === 0.25 ? "¼" : f === 0.75 ? "¾" : f ? String(+f.toFixed(2)).slice(1) : "";
+    return (w ? w : "") + s || "0";
+  }
+  function isoWeek(y, m, d) {
+    var t = new Date(Date.UTC(y, m, d)), dn = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - dn);
+    var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+  }
+  function addDays(o, n) { var t = new Date(Date.UTC(o.y, o.m, o.d + n)); return { y: t.getUTCFullYear(), m: t.getUTCMonth(), d: t.getUTCDate() }; }
+  function dow(o) { return new Date(Date.UTC(o.y, o.m, o.d)).getUTCDay(); }
+  function mondayOf(o) { var w = dow(o) || 7; return addDays(o, 1 - w); }
+  function same(a, b) { return a && b && a.y === b.y && a.m === b.m && a.d === b.d; }
+  function before(a, b) { return Date.UTC(a.y, a.m, a.d) < Date.UTC(b.y, b.m, b.d); }
+  function dayPlan(o) { return Engine.day(o.y, o.m, o.d, ov); }
+  function heat(n) { var s = ""; for (var i = 1; i <= 3; i++) s += i <= n ? "●" : '<span class="off">●</span>'; return '<span class="heat" aria-label="Heat ' + n + ' of 3">' + s + "</span>"; }
+
+  $("targets").innerHTML = ["p1", "p2"].map(function (p) {
+    return '<span class="chip">' + PEOPLE[p].label + " · <b>" + PEOPLE[p].protein + " g</b> protein a day</span>";
+  }).join("");
+
+  // ---- Calendar ----------------------------------------------------------
+  function renderMonths() {
+    var html = "";
+    for (var i = -5; i <= 6; i++) {
+      var t = new Date(TODAY.y, TODAY.m + state.offset + i, 1), y = t.getFullYear(), m = t.getMonth();
+      var isNow = y === TODAY.y && m === TODAY.m;
+      html += '<section class="month' + (isNow ? " now" : "") + '" id="m-' + y + "-" + m + '"><h2>' + MONTHS[m] + "<span>" + y + "</span></h2>";
+      html += '<div class="grid"><span class="wd">wk</span>' + ["Mo","Tu","We","Th","Fr","Sa","Su"].map(function (w) { return '<span class="wd">' + w + "</span>"; }).join("");
+      var first = (new Date(Date.UTC(y, m, 1)).getUTCDay() + 6) % 7, days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      var cells = [], k;
+      for (k = 0; k < first; k++) cells.push(null);
+      for (k = 1; k <= days; k++) cells.push(k);
+      while (cells.length % 7) cells.push(null);
+      for (var r = 0; r < cells.length; r += 7) {
+        var anyDay = cells.slice(r, r + 7).filter(Boolean)[0];
+        var wk = isoWeek(y, m, anyDay), mon = mondayOf({ y: y, m: m, d: anyDay });
+        var wsel = state.view === "week" && state.week && same(state.week, mon);
+        html += '<button class="wk' + (wsel ? " sel" : "") + '" data-wk="' + mon.y + "," + mon.m + "," + mon.d + '" aria-label="Week ' + wk + ' summary">' + wk + "</button>";
+        for (var c = 0; c < 7; c++) {
+          var dd = cells[r + c];
+          if (!dd) { html += '<span class="d blank"></span>'; continue; }
+          var o = { y: y, m: m, d: dd }, ok = Engine.idxOf(y, m, dd) >= 0, cls = "d";
+          if (ok && dayPlan(o).cheat) cls += " cheat";
+          if (same(o, TODAY)) cls += " today";
+          if (before(o, TODAY)) cls += " past";
+          if (state.view !== "week" && same(o, state.sel)) cls += " sel";
+          html += '<button class="' + cls + '" data-day="' + y + "," + m + "," + dd + '"' + (ok ? "" : " disabled") + ' aria-label="' + dd + " " + MONTHS[m] + '">' + dd + "</button>";
+        }
+      }
+      html += "</div></section>";
+    }
+    $("months").innerHTML = html;
+  }
+
+  // ---- Panel views ---------------------------------------------------------
+  function personCard(label, have, target, kcal) {
+    var pct = Math.min(100, have / target * 100);
+    return '<div class="person"><div class="lbl">' + label + '</div><div class="num">' + r0(have) + ' <small>/ ' + target + " g protein</small></div>" +
+      '<div class="bar"><i class="' + (have < target - 5 ? "low" : "") + '" style="width:' + pct + '%"></i></div><div class="kcal">≈ ' + r0(kcal) + " kcal</div></div>";
+  }
+  function dateTitle(o) { return DOWS[dow(o)] + " " + o.d + " " + MONTHS[o.m]; }
+
+  function viewDay() {
+    var o = state.sel, plan = dayPlan(o);
+    if (!plan) return '<div class="p-in"><p class="empty">No plan before January 2025.</p></div>';
+    var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + '</div><h2 class="p-title">' + dateTitle(o) + "</h2></div>" +
+      '<button class="sheet-close" data-close aria-label="Close">×</button></div>';
+    h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
+    h += '<div class="meals">';
+    ["b", "l", "d"].forEach(function (s) {
+      var r = plan.meals[s], swapped = !!ov[plan.key + "|" + s];
+      h += '<button class="meal" data-recipe="' + s + '"><span class="slot">' + SLOT[s] + (r.cheat ? '<span class="tag cheat">Cheat night</span>' : "") + (swapped ? '<span class="tag swap">Swapped</span>' : "") + "</span>" +
+        '<span class="name">' + esc(r.name) + '</span><span class="go" aria-hidden="true">›</span>' +
+        '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P2 " + r0(r.P * r.share) + " g · P1 " + r0(r.P * (1 - r.share)) + " g</span></button>";
+    });
+    h += "</div>";
+    h += '<div class="snacks">' + ["p1", "p2"].map(function (p) {
+      var sn = plan.people[p].snacks;
+      return "<div><h3>" + PEOPLE[p].label + "</h3>" + (sn.length ? "<ul>" + sn.map(function (s, i) { return "<li><b>Optional snack " + (i + 1) + "</b><br>" + esc(s.name) + " <span class=\"kcal\">" + s.p + " g</span></li>"; }).join("") + "</ul>" : '<span class="empty">No snack needed today</span>') + "</div>";
+    }).join("") + "</div>";
+    h += '<button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " summary and shopping list</button>";
+    return h + "</div>";
+  }
+
+  function fmtIng(it) {
+    var c = CAT[it[0]], a = it[1], u = it[2], amt;
+    if (u === "g" || u === "ml") amt = a >= 1000 ? (a / 1000).toString().replace(".", ",") + (u === "g" ? " kg" : " l") : a + " " + u;
+    else if (u === "pc") amt = frac(a);
+    else if (u === "clove") amt = frac(a) + (a > 1 ? " cloves" : " clove");
+    else if (u === "bunch") amt = frac(a) + " bunch";
+    else amt = frac(a) + " " + u;
+    return '<li><span class="amt">' + amt + "</span><span>" + esc(c.n) + (it[3] ? ' <span class="note">· ' + esc(it[3]) + "</span>" : "") + '<br><span class="fi">' + esc(c.fi) + "</span></span></li>";
+  }
+
+  function viewRecipe() {
+    var o = state.sel, plan = dayPlan(o), s = state.recipe, r = plan.meals[s], k = plan.key + "|" + s;
+    var sp = r.split || { p2: "Larger portion, about " + Math.round(r.share * 100) + " % of the pan", p1: "About " + Math.round((1 - r.share) * 100) + " % of the pan" };
+    var h = '<div class="p-in"><div class="p-head"><button class="back" data-back>‹ ' + dateTitle(o) + '</button><button class="sheet-close" data-close aria-label="Close">×</button></div>';
+    h += '<div><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + " · " + r.time + " min · serves 2</div><h2 class=\"p-title\">" + esc(r.name) + "</h2></div>";
+    h += '<div class="split">' +
+      '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>" + esc(sp.p2) + '</b><div class="kcal">' + r0(r.P * r.share) + " g protein · ≈ " + r0(r.K * r.share) + " kcal</div></div>" +
+      '<div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>" + esc(sp.p1) + '</b><div class="kcal">' + r0(r.P * (1 - r.share)) + " g protein · ≈ " + r0(r.K * (1 - r.share)) + " kcal</div></div></div>";
+    h += '<div class="note-box">Heat ' + heat(r.heat) + " · " + (r.side ? "Serve the salsa or chilli on the side." : "Heat is cooked in; adjust the chilli to taste.") + (r.prep ? " Good for cooking ahead." : "") + "</div>";
+    h += '<div class="sec"><h3>Ingredients for two</h3><ul class="ing">' + r.ing.map(fmtIng).join("") + "</ul></div>";
+    h += '<div class="sec"><h3>Directions</h3><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></div>";
+    var alts = Engine.alternatives(s, o.y, o.m, o.d);
+    h += '<div class="sec"><h3>Swap this meal</h3><div class="swap-row"><select id="swap-sel" aria-label="Choose another recipe">' +
+      alts.map(function (a) { return '<option value="' + a.id + '"' + (a.id === r.id ? " selected" : "") + ">" + esc(a.name) + (a.cheat ? " (cheat)" : "") + "</option>"; }).join("") + "</select>" +
+      (ov[k] ? '<button class="btn" data-reset>Back to plan</button>' : "") + '</div><p class="kcal">Swaps are saved on this device only and don\'t change the rest of the rotation.</p></div>';
+    return h + "</div>";
+  }
+
+  function viewWeek() {
+    var mon = state.week, days = [], i;
+    for (i = 0; i < 7; i++) days.push(addDays(mon, i));
+    var plans = days.map(dayPlan).filter(Boolean);
+    var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">' + mon.d + " " + MONTHS[mon.m].slice(0, 3) + " – " + days[6].d + " " + MONTHS[days[6].m].slice(0, 3) + " " + days[6].y + '</div><h2 class="p-title">Week ' + isoWeek(mon.y, mon.m, mon.d) + '</h2></div><button class="sheet-close" data-close aria-label="Close">×</button></div>';
+    if (!plans.length) return h + '<p class="empty">No plan for this week.</p></div>';
+    var sum = { p1p: 0, p1k: 0, p2p: 0, p2k: 0 };
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Day</th><th>P1 g</th><th>P1 kcal</th><th>P2 g</th><th>P2 kcal</th></tr></thead><tbody>';
+    days.forEach(function (o) {
+      var pl = dayPlan(o); if (!pl) return;
+      sum.p1p += pl.people.p1.p; sum.p1k += pl.people.p1.k; sum.p2p += pl.people.p2.p; sum.p2k += pl.people.p2.k;
+      h += '<tr><td><button data-day="' + o.y + "," + o.m + "," + o.d + '">' + DOWS[dow(o)].slice(0, 3) + " " + o.d + "</button>" + (pl.cheat ? ' <span class="tag cheat">Cheat</span>' : "") + "</td><td>" + r0(pl.people.p1.p) + "</td><td>" + r0(pl.people.p1.k) + "</td><td>" + r0(pl.people.p2.p) + "</td><td>" + r0(pl.people.p2.k) + "</td></tr>";
+    });
+    var n = plans.length;
+    h += '<tr class="avg"><td>Daily average</td><td>' + r0(sum.p1p / n) + "</td><td>" + r0(sum.p1k / n) + "</td><td>" + r0(sum.p2p / n) + "</td><td>" + r0(sum.p2k / n) + "</td></tr></tbody></table></div>";
+    h += '<p class="kcal">Targets: ' + PEOPLE.p1.label + " " + PEOPLE.p1.protein + " g, " + PEOPLE.p2.label + " " + PEOPLE.p2.protein + " g protein a day. Calories are estimates from the recipe weights.</p>";
+
+    // shopping list
+    var agg = {}, pantry = {};
+    function add(it, mult) {
+      var c = CAT[it[0]]; if (!c) return;
+      if (c.pantry) { pantry[c.n] = 1; return; }
+      var u = it[2] === "clove" || it[2] === "bunch" || it[2] === "pc" || it[2] === "g" || it[2] === "ml" ? it[2] : null;
+      if (!u) { pantry[c.n] = 1; return; }
+      var key = it[0] + "|" + u; agg[key] = agg[key] || { c: c, u: u, a: 0 }; agg[key].a += it[1] * mult;
+    }
+    plans.forEach(function (pl) {
+      ["b", "l", "d"].forEach(function (s) { pl.meals[s].ing.forEach(function (it) { add(it, 1); }); });
+      ["p1", "p2"].forEach(function (p) { pl.people[p].snacks.forEach(function (sn) { sn.ing.forEach(function (it) { add(it, 1); }); }); });
+    });
+    var bySec = {}, text = [];
+    Object.keys(agg).forEach(function (k) { var x = agg[k]; (bySec[x.c.s] = bySec[x.c.s] || []).push(x); });
+    var order = ["Meat", "Dairy & eggs", "Vegetables & fruit", "Bread & grains", "Tins & jars", "Frozen", "Other"];
+    h += '<div class="sec shop"><div class="p-head"><h3>Shopping list</h3><button class="btn" id="copy">Copy list</button></div>';
+    order.forEach(function (sec) {
+      var list = bySec[sec]; if (!list) return;
+      list.sort(function (a, b) { return a.c.n.localeCompare(b.c.n); });
+      h += "<h4>" + sec + "</h4><ul>"; text.push(sec.toUpperCase());
+      list.forEach(function (x) {
+        var a = x.a, amt;
+        if (x.u === "g" || x.u === "ml") { a = Math.ceil(a / 10) * 10; amt = a >= 1000 ? (a / 1000).toFixed(1).replace(".", ",") + (x.u === "g" ? " kg" : " l") : a + " " + x.u; }
+        else if (x.u === "pc") amt = Math.ceil(a) + " pcs";
+        else if (x.u === "clove") amt = Math.ceil(a) + " cloves";
+        else amt = Math.ceil(a) + " bunch";
+        h += "<li><span>" + esc(x.c.n) + "</span><span>" + amt + "</span></li>"; text.push("- " + x.c.n + ": " + amt);
+      });
+      h += "</ul>";
+    });
+    var pk = Object.keys(pantry).sort();
+    h += '<h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
+    text.push("PANTRY: " + pk.join(", "));
+    state.shopText = "Week " + isoWeek(mon.y, mon.m, mon.d) + "\n" + text.join("\n");
+    return h + "</div>";
+  }
+
+  function renderPanel() {
+    var p = $("panel");
+    p.innerHTML = state.view === "recipe" ? viewRecipe() : state.view === "week" ? viewWeek() : viewDay();
+    p.scrollTop = 0;
+    var sel = $("swap-sel");
+    if (sel) sel.addEventListener("change", function () {
+      var o = state.sel, k = Engine.key(o.y, o.m, o.d) + "|" + state.recipe, base = dayPlan(o).base[state.recipe].id;
+      if (sel.value === base) delete ov[k]; else ov[k] = sel.value;
+      saveOv(); renderMonths(); renderPanel();
+    });
+    var cp = $("copy");
+    if (cp) cp.addEventListener("click", function () {
+      var done = function () { cp.textContent = "Copied"; setTimeout(function () { cp.textContent = "Copy list"; }, 1500); };
+      try { navigator.clipboard.writeText(state.shopText).then(done, function () { cp.textContent = "Copy not available"; }); } catch (e) { cp.textContent = "Copy not available"; }
+    });
+  }
+
+  var mq = window.matchMedia("(min-width: 1100px)");
+  function openSheet(v) { if (mq.matches) return; $("panel").classList.toggle("open", v); $("backdrop").hidden = !v; }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-day],[data-wk],[data-recipe],[data-back],[data-close],[data-reset],#backdrop");
+    if (!t) return;
+    if (t.id === "backdrop" || t.hasAttribute("data-close")) { openSheet(false); return; }
+    if (t.hasAttribute("data-day")) { var a = t.getAttribute("data-day").split(",").map(Number); state.sel = { y: a[0], m: a[1], d: a[2] }; state.view = "day"; }
+    else if (t.hasAttribute("data-wk")) { var w = t.getAttribute("data-wk").split(",").map(Number); state.week = { y: w[0], m: w[1], d: w[2] }; state.view = "week"; }
+    else if (t.hasAttribute("data-recipe")) { state.recipe = t.getAttribute("data-recipe"); state.view = "recipe"; }
+    else if (t.hasAttribute("data-back")) { state.view = "day"; }
+    else if (t.hasAttribute("data-reset")) { var o = state.sel; delete ov[Engine.key(o.y, o.m, o.d) + "|" + state.recipe]; saveOv(); }
+    renderMonths(); renderPanel(); openSheet(true);
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") openSheet(false); });
+
+  function centerNow() {
+    var t = new Date(TODAY.y, TODAY.m + state.offset, 1), el = $("m-" + t.getFullYear() + "-" + t.getMonth());
+    if (el) el.scrollIntoView({ block: "center" });
+  }
+  $("prev").addEventListener("click", function () { state.offset -= 3; renderMonths(); centerNow(); });
+  $("next").addEventListener("click", function () { state.offset += 3; renderMonths(); centerNow(); });
+  $("today").addEventListener("click", function () { state.offset = 0; state.sel = { y: TODAY.y, m: TODAY.m, d: TODAY.d }; state.view = "day"; renderMonths(); renderPanel(); centerNow(); openSheet(true); });
+
+  renderMonths(); renderPanel();
+  requestAnimationFrame(centerNow);
+})();
+</script>

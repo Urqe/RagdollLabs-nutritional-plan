@@ -1,0 +1,1044 @@
+<title>RagdollLabs Nutritional Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: year of month cards on the left, a sticky day/recipe panel on the right (bottom sheet on phones). Talavera cobalt on tile white, dried-chile red for heat and cheat nights. */
+:root {
+  --bg: #f4f6fb; --surface: #ffffff; --sunk: #eaeef7; --ink: #18203d; --muted: #5a6382; --line: #dce1ee;
+  --cobalt: #2446a6; --cobalt-soft: #dfe6fb; --chile: #b9341d; --chile-soft: #fbe3dc; --good: #2c7a4b;
+  --f-display: "Young Serif", Georgia, "Times New Roman", serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1329; --surface: #161b35; --sunk: #1d2343; --ink: #e7eaf6; --muted: #9aa2c3; --line: #2a3158;
+  --cobalt: #93abff; --cobalt-soft: #253063; --chile: #ff8566; --chile-soft: #44241f; --good: #72d29a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1329; --surface: #161b35; --sunk: #1d2343; --ink: #e7eaf6; --muted: #9aa2c3; --line: #2a3158;
+  --cobalt: #93abff; --cobalt-soft: #253063; --chile: #ff8566; --chile-soft: #44241f; --good: #72d29a; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--surface); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 2px; border-radius: 6px; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; }
+.top-in { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; max-width: 1600px; margin: 0 auto; }
+.brand { font-family: var(--f-display); font-size: 1.3rem; line-height: 1.1; margin: 0; text-wrap: balance; }
+.brand small { display: block; font-family: var(--f-body); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.targets { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { font-size: .8rem; padding: 3px 9px; border-radius: 99px; background: var(--sunk); color: var(--muted); white-space: nowrap; }
+.chip b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.nav { display: flex; gap: 6px; margin-left: auto; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: .9rem; }
+.btn:hover { border-color: var(--cobalt); color: var(--cobalt); }
+.btn.primary { background: var(--cobalt); border-color: var(--cobalt); color: var(--surface); }
+.btn.primary:hover { color: var(--surface); filter: brightness(1.08); }
+
+.wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; max-width: 1600px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+@media (min-width: 1100px) { .wrap { grid-template-columns: minmax(0, 1fr) 420px; } }
+
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .8rem; color: var(--muted); margin-bottom: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--chile); display: inline-block; }
+.ring { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--cobalt); display: inline-block; }
+
+.months { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.month { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 12px 10px; scroll-margin: 90px; }
+.month.now { border-color: var(--cobalt); box-shadow: 0 0 0 1px var(--cobalt); }
+.month h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.15rem; margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; }
+.month h2 span { font-family: var(--f-mono); font-size: .75rem; color: var(--muted); }
+.grid { display: grid; grid-template-columns: 26px repeat(7, minmax(0, 1fr)); gap: 3px; }
+.wd { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding-bottom: 2px; }
+.wk { font-family: var(--f-mono); font-size: .68rem; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 0; border-radius: 6px; }
+.wk:hover, .wk.sel { color: var(--cobalt); background: var(--cobalt-soft); }
+.d { position: relative; aspect-ratio: 1 / 1; max-width: 100%; border: 0; background: var(--sunk); border-radius: 7px; cursor: pointer;
+  font-variant-numeric: tabular-nums; font-size: .88rem; display: flex; align-items: center; justify-content: center; min-height: 34px; }
+.d:hover { background: var(--cobalt-soft); }
+.d.blank { background: none; cursor: default; }
+.d.past { color: var(--muted); }
+.d.cheat::after { content: ""; position: absolute; bottom: 4px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--chile); }
+.d.today { box-shadow: inset 0 0 0 2px var(--cobalt); font-weight: 700; }
+.d.sel { background: var(--cobalt); color: var(--surface); }
+.d.sel.cheat::after { background: var(--surface); }
+.d:disabled { opacity: .35; cursor: default; }
+
+/* Panel */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+@media (min-width: 1100px) { .panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 76px); max-height: calc(100vh - 96px); overflow: auto; } .sheet-close, .backdrop { display: none !important; } }
+@media (max-width: 1099px) {
+  .panel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 88vh; overflow: auto; border-radius: 16px 16px 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+    transform: translateY(105%); transition: transform .22s ease; box-shadow: 0 -8px 30px rgba(0,0,0,.18); }
+  .panel.open { transform: none; }
+  .backdrop { position: fixed; inset: 0; z-index: 35; background: rgba(10, 14, 35, .45); }
+}
+@media (prefers-reduced-motion: reduce) { .panel { transition: none; } }
+.p-in { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+.p-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.eyebrow { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.p-title { font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; line-height: 1.15; margin: 2px 0 0; text-wrap: balance; }
+.sheet-close { border: 0; background: var(--sunk); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; flex: none; font-size: 1.1rem; }
+.back { align-self: flex-start; border: 0; background: none; color: var(--cobalt); cursor: pointer; padding: 0; font-weight: 600; }
+
+.people { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.person { background: var(--sunk); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.person .lbl { font-size: .75rem; color: var(--muted); }
+.person .num { font-family: var(--f-mono); font-size: 1.15rem; font-weight: 500; }
+.person .num small { font-size: .75rem; color: var(--muted); }
+.bar { height: 5px; border-radius: 3px; background: var(--line); margin-top: 6px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--good); }
+.bar i.low { background: var(--chile); }
+.kcal { font-family: var(--f-mono); font-size: .75rem; color: var(--muted); margin-top: 4px; }
+
+.meals { display: flex; flex-direction: column; gap: 8px; }
+.meal { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; text-align: left; width: 100%; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 9px; padding: 11px 12px; cursor: pointer; }
+.meal:hover { border-color: var(--cobalt); }
+.meal .slot { font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
+.meal .name { font-weight: 600; min-width: 0; }
+.meal .go { color: var(--cobalt); align-self: center; }
+.meal .meta { grid-column: 1 / -1; font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tag { font-size: .68rem; padding: 1px 7px; border-radius: 99px; text-transform: uppercase; letter-spacing: .05em; }
+.tag.cheat { background: var(--chile-soft); color: var(--chile); }
+.tag.swap { background: var(--cobalt-soft); color: var(--cobalt); }
+.heat { color: var(--chile); letter-spacing: 1px; }
+.heat .off { color: var(--line); }
+
+.snacks { border-top: 1px dashed var(--line); padding-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: .85rem; }
+.snacks h3, .sec h3 { font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 4px; font-weight: 600; }
+.snacks ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.split .person b { display: block; font-size: .95rem; }
+.ing { list-style: none; margin: 0; padding: 0; }
+.ing li { display: grid; grid-template-columns: 92px 1fr; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: .9rem; }
+.ing .amt { font-family: var(--f-mono); font-size: .82rem; text-align: right; color: var(--ink); }
+.ing .fi { color: var(--muted); font-size: .78rem; }
+.ing .note { color: var(--muted); }
+.steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; max-width: 65ch; }
+.steps li::marker { font-family: var(--f-mono); color: var(--cobalt); }
+.note-box { font-size: .85rem; background: var(--sunk); border-radius: 8px; padding: 9px 12px; }
+.swap-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); max-width: 100%; min-width: 0; flex: 1; }
+
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .85rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 6px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+tr.avg td { font-weight: 700; border-bottom: 0; }
+td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; padding: 0; font-weight: 600; }
+.shop h4 { margin: 10px 0 2px; font-size: .85rem; }
+.shop ul { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
+.shop li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-bottom: 1px solid var(--line); }
+.shop li span:last-child { font-family: var(--f-mono); font-size: .8rem; white-space: nowrap; }
+.pantry { font-size: .85rem; color: var(--muted); }
+.empty { color: var(--muted); font-size: .9rem; }
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <h1 class="brand"><small>RagdollLabs</small>Mesa para dos</h1>
+    <div class="targets" id="targets"></div>
+    <div class="nav">
+      <button class="btn" id="prev" aria-label="Show earlier months">‹ Earlier</button>
+      <button class="btn primary" id="today">Today</button>
+      <button class="btn" id="next" aria-label="Show later months">Later ›</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <main>
+    <div class="legend">
+      <span><i class="ring"></i>Today</span>
+      <span><i class="dot"></i>Cheat night</span>
+      <span>Tap a week number for the weekly summary and shopping list</span>
+    </div>
+    <div class="months" id="months"></div>
+  </main>
+  <div class="backdrop" id="backdrop" hidden></div>
+  <aside class="panel" id="panel" aria-live="polite"></aside>
+</div>
+
+<script>
+// ---- Targets -------------------------------------------------------------
+var PEOPLE = {
+  p1: { label: "Person 1", protein: 105 },
+  p2: { label: "Person 2", protein: 140 }
+};
+var DEFAULT_SHARE = 0.57; // Person 2's share of a shared meal (140 / 245)
+
+// ---- Ingredient catalogue ------------------------------------------------
+// p / k = protein g and kcal per 100 g. w = grams per piece. t = grams per tbsp.
+// pantry = spices and staples, listed without amounts on the shopping list.
+var CAT = {
+  chk:      { n: "Chicken breast fillets", fi: "kanan rintafilee", p: 23, k: 110, s: "Meat" },
+  thigh:    { n: "Chicken thigh fillets", fi: "broilerin reisifilee", p: 19, k: 160, s: "Meat" },
+  turkeymince: { n: "Turkey mince", fi: "kalkkunan jauheliha", p: 20, k: 125, s: "Meat" },
+  turkeyham:{ n: "Sliced turkey breast", fi: "kalkkunaleike", p: 18, k: 100, s: "Meat" },
+  beef5:    { n: "Beef mince 5 %, 100 % beef", fi: "naudan jauheliha 5 %", p: 21, k: 125, s: "Meat" },
+  beef10:   { n: "Beef mince 10 %, 100 % beef", fi: "naudan jauheliha 10 %", p: 19, k: 170, s: "Meat" },
+  sirloin:  { n: "Beef sirloin", fi: "naudan ulkofilee", p: 22, k: 135, s: "Meat" },
+  strips:   { n: "Beef strips", fi: "naudan paistisuikale", p: 21, k: 130, s: "Meat" },
+  chuck:    { n: "Beef chuck or stewing beef", fi: "naudan lapa / haudutusliha", p: 19, k: 190, s: "Meat" },
+  bacon:    { n: "Bacon", fi: "pekoni", p: 12, k: 320, s: "Meat" },
+  chorizo:  { n: "Chorizo", fi: "chorizo", p: 24, k: 450, s: "Meat" },
+  egg:      { n: "Eggs", fi: "kananmunat", p: 12.5, k: 140, w: 60, s: "Dairy & eggs" },
+
+  quark:    { n: "Quark 0.2 %", fi: "maitorahka", p: 12, k: 66, s: "Dairy & eggs" },
+  skyr:     { n: "Skyr, natural", fi: "skyr", p: 11, k: 60, s: "Dairy & eggs" },
+  greek:    { n: "Greek-style yoghurt 0–2 % (or skyr)", fi: "kreikkalaistyylinen jogurtti", p: 9, k: 60, s: "Dairy & eggs" },
+  cottage:  { n: "Cottage cheese", fi: "raejuusto", p: 12, k: 95, s: "Dairy & eggs" },
+  cheese:   { n: "Grated cheese 15–17 %", fi: "raastejuusto 17 %", p: 28, k: 270, s: "Dairy & eggs" },
+  cheddar:  { n: "Cheddar slices", fi: "cheddar", p: 25, k: 400, s: "Dairy & eggs" },
+  mozz:     { n: "Grated mozzarella", fi: "pizzajuusto", p: 22, k: 280, s: "Dairy & eggs" },
+  leipa:    { n: "Leipäjuusto (for queso fresco)", fi: "leipäjuusto", p: 18, k: 270, s: "Dairy & eggs" },
+  feta:     { n: "Feta", fi: "feta", p: 14, k: 260, s: "Dairy & eggs" },
+  creamch:  { n: "Light cream cheese", fi: "kevyt tuorejuusto", p: 7, k: 150, s: "Dairy & eggs" },
+  milk:     { n: "Milk 1.5 %", fi: "kevytmaito", p: 3.5, k: 47, s: "Dairy & eggs" },
+  whey:     { n: "Whey protein powder", fi: "heraproteiini", p: 80, k: 380, s: "Other" },
+
+  tortS:    { n: "Small wheat tortillas (20 cm)", fi: "tortilla", p: 8, k: 300, w: 40, s: "Bread & grains" },
+  tortL:    { n: "Large wheat tortillas (25 cm)", fi: "tortilla", p: 8, k: 300, w: 60, s: "Bread & grains" },
+  tortC:    { n: "Corn tortillas (or small wheat)", fi: "maissitortilla", p: 5.5, k: 220, w: 25, s: "Bread & grains" },
+  bun:      { n: "Burger buns", fi: "hampurilaissämpylä", p: 9, k: 280, w: 70, s: "Bread & grains" },
+  roll:     { n: "Bread rolls", fi: "sämpylä", p: 9, k: 260, w: 75, s: "Bread & grains" },
+  rye:      { n: "Rye bread slices", fi: "ruisleipä", p: 9, k: 230, w: 35, s: "Bread & grains" },
+  oats:     { n: "Oat flakes", fi: "kaurahiutaleet", p: 13, k: 370, s: "Bread & grains" },
+  flour:    { n: "Wheat flour", fi: "vehnäjauho", p: 10, k: 350, s: "Bread & grains" },
+  pdough:   { n: "Ready pizza dough", fi: "pizzataikina", p: 7, k: 260, s: "Bread & grains" },
+  rice:     { n: "Long-grain rice", fi: "riisi", p: 7, k: 350, s: "Bread & grains" },
+  pasta:    { n: "Wholewheat pasta", fi: "täysjyväpasta", p: 13, k: 350, s: "Bread & grains" },
+  chips:    { n: "Tortilla chips", fi: "tortillasipsit", p: 7, k: 490, s: "Bread & grains" },
+  granola:  { n: "Granola", fi: "granola", p: 9, k: 450, s: "Bread & grains" },
+
+  potato:   { n: "Potatoes", fi: "peruna", p: 2, k: 80, s: "Vegetables & fruit" },
+  sweetpot: { n: "Sweet potatoes", fi: "bataatti", p: 1.6, k: 86, s: "Vegetables & fruit" },
+  fries:    { n: "Oven fries", fi: "uuniranskalaiset", p: 3, k: 150, s: "Frozen" },
+  blackbean:{ n: "Black beans, canned (drained)", fi: "mustapavut", p: 7.5, k: 125, s: "Tins & jars" },
+  kidney:   { n: "Kidney beans, canned (drained)", fi: "kidneypavut", p: 8, k: 115, s: "Tins & jars" },
+  refried:  { n: "Refried beans, canned (no lard)", fi: "papumuhennos", p: 5.5, k: 90, s: "Tins & jars" },
+  lentil:   { n: "Red lentils, dry", fi: "punaiset linssit", p: 24, k: 340, s: "Tins & jars" },
+  crushed:  { n: "Crushed tomatoes", fi: "tomaattimurska", p: 1.2, k: 30, s: "Tins & jars" },
+  passata:  { n: "Passata", fi: "tomaattipyre", p: 1.3, k: 35, s: "Tins & jars" },
+  corn:     { n: "Sweetcorn, canned (drained)", fi: "maissi", p: 3, k: 80, s: "Tins & jars" },
+  salsaverde:{ n: "Salsa verde, jar", fi: "salsa verde", p: 1.5, k: 30, s: "Tins & jars" },
+  salsa:    { n: "Salsa roja / taco sauce, jar", fi: "salsa", p: 1.5, k: 35, s: "Tins & jars" },
+  pickjal:  { n: "Pickled jalapeños", fi: "jalapeño", p: 1, k: 25, s: "Tins & jars" },
+  chipotle: { n: "Chipotle in adobo or chipotle paste", fi: "chipotle", s: "Tins & jars", pantry: true },
+  pineapple:{ n: "Pineapple, fresh or in juice", fi: "ananas", p: 0.5, k: 55, s: "Vegetables & fruit" },
+
+  onion:    { n: "Onions", fi: "sipuli", p: 1.2, k: 40, w: 100, s: "Vegetables & fruit" },
+  redonion: { n: "Red onions", fi: "punasipuli", p: 1.2, k: 40, w: 100, s: "Vegetables & fruit" },
+  pepper:   { n: "Bell peppers", fi: "paprika", p: 1, k: 30, w: 150, s: "Vegetables & fruit" },
+  tomato:   { n: "Tomatoes", fi: "tomaatti", p: 0.9, k: 20, w: 100, s: "Vegetables & fruit" },
+  jalap:    { n: "Fresh jalapeños or green chillies", fi: "chili", w: 15, s: "Vegetables & fruit" },
+  habanero: { n: "Habanero", fi: "habanero", w: 10, s: "Vegetables & fruit" },
+  avocado:  { n: "Avocados", fi: "avokado", p: 2, k: 160, w: 150, s: "Vegetables & fruit" },
+  lime:     { n: "Limes", fi: "limetti", w: 60, s: "Vegetables & fruit" },
+  cilantro: { n: "Coriander", fi: "korianteri", s: "Vegetables & fruit" },
+  lettuce:  { n: "Romaine lettuce", fi: "romainesalaatti", p: 1.2, k: 17, s: "Vegetables & fruit" },
+  cabbage:  { n: "White cabbage", fi: "valkokaali", p: 1.3, k: 30, s: "Vegetables & fruit" },
+  carrot:   { n: "Carrots", fi: "porkkana", p: 0.9, k: 40, s: "Vegetables & fruit" },
+  corncob:  { n: "Corn on the cob", fi: "maissintähkä", p: 3.2, k: 90, w: 200, s: "Vegetables & fruit" },
+  peas:     { n: "Frozen peas", fi: "herne", p: 5, k: 75, s: "Frozen" },
+  spinach:  { n: "Baby spinach", fi: "pinaatti", p: 2.9, k: 25, s: "Vegetables & fruit" },
+  cucumber: { n: "Cucumber", fi: "kurkku", p: 0.7, k: 13, s: "Vegetables & fruit" },
+  mango:    { n: "Frozen mango", fi: "pakastemango", p: 0.7, k: 60, s: "Frozen" },
+  berries:  { n: "Frozen berries", fi: "pakastemarjat", p: 0.8, k: 45, s: "Frozen" },
+  banana:   { n: "Bananas", fi: "banaani", p: 1.1, k: 90, w: 120, s: "Vegetables & fruit" },
+  garlic:   { n: "Garlic", fi: "valkosipuli", s: "Vegetables & fruit" },
+
+  oil:      { n: "Rapeseed oil", fi: "rypsiöljy", p: 0, k: 900, t: 10, s: "Pantry", pantry: true },
+  cocoa:    { n: "Cocoa powder", fi: "kaakaojauhe", p: 20, k: 350, s: "Pantry", pantry: true },
+  pb:       { n: "Peanut butter", fi: "maapähkinävoi", p: 25, k: 600, t: 16, s: "Pantry", pantry: true },
+  honey:    { n: "Honey", fi: "hunaja", p: 0, k: 300, t: 20, s: "Pantry", pantry: true },
+  mayo:     { n: "Mayonnaise", fi: "majoneesi", p: 1, k: 700, t: 13, s: "Pantry", pantry: true },
+  stock:    { n: "Chicken or beef stock cube", fi: "liemikuutio", s: "Pantry", pantry: true },
+  ancho:    { n: "Dried ancho chillies (or 1 tbsp ancho powder each)", fi: "ancho", s: "Pantry", pantry: true },
+  guajillo: { n: "Dried guajillo chillies", fi: "guajillo", s: "Pantry", pantry: true },
+  cumin:    { n: "Ground cumin", fi: "juustokumina", s: "Pantry", pantry: true },
+  oregano:  { n: "Dried oregano", fi: "oregano", s: "Pantry", pantry: true },
+  paprika:  { n: "Smoked paprika", fi: "savupaprika", s: "Pantry", pantry: true },
+  chilipw:  { n: "Chilli powder", fi: "chilijauhe", s: "Pantry", pantry: true },
+  cayenne:  { n: "Cayenne pepper", fi: "cayennepippuri", s: "Pantry", pantry: true },
+  cinnamon: { n: "Cinnamon", fi: "kaneli", s: "Pantry", pantry: true },
+  bay:      { n: "Bay leaves", fi: "laakerinlehti", s: "Pantry", pantry: true },
+  bpowder:  { n: "Baking powder", fi: "leivinjauhe", s: "Pantry", pantry: true },
+  vinegar:  { n: "Vinegar", fi: "etikka", s: "Pantry", pantry: true },
+  sugar:    { n: "Sugar", fi: "sokeri", p: 0, k: 400, s: "Pantry", pantry: true }
+};
+
+// ---- Recipes -------------------------------------------------------------
+// ing: [catalogue id, amount, unit, note]. Units g, ml, pc, tbsp, tsp, clove, pinch, bunch.
+// split: how the meal is divided. share = Person 2's share of protein and kcal.
+// heat 1-3. side: salsa or heat served on the side. weekend: breakfast only on Sat/Sun.
+var RECIPES = [
+// BREAKFAST ----------------------------------------------------------------
+{ id: "b01", meal: "breakfast", name: "Chorizo and egg breakfast burritos", time: 15, heat: 2, main: "egg",
+  split: { p2: "3 burritos", p1: "2 burritos", share: 0.6 },
+  ing: [["egg",4,"pc"],["chorizo",40,"g","diced"],["tortS",5,"pc"],["cheese",30,"g"],["pepper",1,"pc","diced"],["onion",0.5,"pc","diced"],["salsaverde",60,"g"],["oil",1,"tsp"]],
+  steps: ["Fry the chorizo in a dry pan over medium heat for 2 minutes until it releases its fat.",
+    "Add the pepper and onion and cook for 3 minutes.",
+    "Beat the eggs, pour into the pan and stir gently until just set.",
+    "Warm the tortillas, fill with egg, cheese and a spoon of salsa verde, then roll tightly.",
+    "Toast seam-side down in the dry pan for 1 minute per side."] },
+
+{ id: "b02", meal: "breakfast", name: "Huevos rancheros with black beans", time: 15, heat: 2, main: "egg",
+  split: { p2: "3 eggs, 2 tortillas, bigger scoop of beans", p1: "2 eggs, 2 tortillas", share: 0.58 },
+  ing: [["egg",5,"pc"],["blackbean",150,"g"],["tortC",4,"pc"],["crushed",300,"g"],["onion",0.5,"pc"],["jalap",1,"pc"],["garlic",1,"clove"],["cumin",0.5,"tsp"],["leipa",40,"g","crumbled"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
+  steps: ["Fry the onion, garlic and jalapeño in half the oil for 2 minutes. Add crushed tomatoes and cumin and simmer 5 minutes into a ranchero sauce.",
+    "Warm the black beans in a small pan and lightly mash with a fork.",
+    "Fry the eggs in the remaining oil.",
+    "Toast the tortillas in a dry pan, top with beans, eggs and sauce.",
+    "Finish with crumbled leipäjuusto and coriander."] },
+
+{ id: "b03", meal: "breakfast", name: "Champurrado overnight oats", time: 5, heat: 1, main: "dairy",
+  ing: [["oats",100,"g"],["quark",300,"g"],["milk",250,"ml"],["cocoa",15,"g"],["banana",1,"pc","sliced"],["cinnamon",1,"tsp"],["cayenne",1,"pinch"],["honey",1,"tbsp"]],
+  steps: ["Mix oats, quark, milk, cocoa, cinnamon, cayenne and honey in a bowl.",
+    "Divide into two jars by the split and refrigerate overnight.",
+    "Top with sliced banana in the morning."] },
+
+{ id: "b04", meal: "breakfast", name: "Turkey and egg breakfast quesadillas", time: 12, heat: 1, main: "egg", side: true,
+  split: { p2: "7 wedges", p1: "5 wedges", share: 0.58 },
+  ing: [["tortL",3,"pc"],["egg",3,"pc"],["turkeyham",80,"g"],["cheese",40,"g"],["pickjal",20,"g"],["salsa",60,"g","for dipping"]],
+  steps: ["Scramble the eggs softly and set aside.",
+    "Lay out the tortillas, cover half of each with egg, turkey, cheese and jalapeños, then fold.",
+    "Toast in a dry pan for 2 minutes per side until the cheese melts.",
+    "Cut each into 4 wedges and serve with salsa on the side."] },
+
+{ id: "b05", meal: "breakfast", name: "Machaca-style beef scramble on rye", time: 15, heat: 2, main: "beef",
+  split: { p2: "3 slices of rye, larger half of the scramble", p1: "2 slices", share: 0.6 },
+  ing: [["beef5",120,"g"],["egg",3,"pc"],["tomato",1,"pc","diced"],["onion",0.5,"pc"],["jalap",1,"pc"],["rye",5,"pc"],["cumin",0.5,"tsp"],["oil",1,"tsp"]],
+  steps: ["Brown the beef mince hard in a hot pan with the oil until crisp at the edges.",
+    "Add onion, jalapeño, tomato and cumin and cook for 3 minutes.",
+    "Pour in the beaten eggs and stir until just set.",
+    "Serve on toasted rye bread."] },
+
+{ id: "b06", meal: "breakfast", name: "Bacon, egg and bean breakfast tacos", time: 20, heat: 2, main: "egg", weekend: true, side: true,
+  split: { p2: "4 tacos", p1: "3 tacos", share: 0.57 },
+  ing: [["tortS",7,"pc"],["egg",4,"pc"],["bacon",60,"g"],["refried",150,"g"],["cheese",30,"g"],["salsa",80,"g"],["cilantro",0.25,"bunch"]],
+  steps: ["Fry the bacon until crisp, then chop.",
+    "Scramble the eggs in the bacon pan.",
+    "Warm the refried beans and the tortillas.",
+    "Spread beans on each tortilla, add egg, bacon, cheese and coriander.",
+    "Serve with salsa on the side."] },
+
+{ id: "b07", meal: "breakfast", name: "Mexican chocolate protein pancakes", time: 25, heat: 1, main: "dairy", weekend: true,
+  split: { p2: "6 pancakes", p1: "4 pancakes", share: 0.6 },
+  ing: [["oats",100,"g"],["egg",3,"pc"],["cottage",200,"g"],["banana",1,"pc"],["cocoa",10,"g"],["cinnamon",1,"tsp"],["chilipw",1,"pinch"],["bpowder",1,"tsp"],["greek",150,"g","to serve"],["berries",150,"g","to serve"],["oil",1,"tsp"]],
+  steps: ["Blend oats, eggs, cottage cheese, banana, cocoa, cinnamon, chilli and baking powder until smooth. Rest 5 minutes.",
+    "Cook 10 small pancakes in a lightly oiled pan over medium heat, about 2 minutes per side.",
+    "Warm the berries in a small pan until saucy.",
+    "Serve with Greek yoghurt and the berries."] },
+
+{ id: "b08", meal: "breakfast", name: "Chilli-lime mango skyr bowl", time: 5, heat: 1, main: "dairy",
+  ing: [["skyr",500,"g"],["mango",200,"g","thawed"],["granola",50,"g"],["lime",1,"pc"],["chilipw",0.5,"tsp"]],
+  steps: ["Toss the mango with lime juice, a pinch of salt and the chilli powder.",
+    "Divide the skyr by the split, top with mango and granola."] },
+
+{ id: "b09", meal: "breakfast", name: "Chilaquiles verdes with fried eggs", time: 25, heat: 3, main: "egg", weekend: true,
+  split: { p2: "3 eggs, larger half of the chilaquiles", p1: "2 eggs", share: 0.6 },
+  ing: [["tortC",6,"pc","cut in wedges"],["salsaverde",300,"g"],["egg",5,"pc"],["leipa",50,"g"],["greek",80,"g"],["redonion",0.5,"pc"],["jalap",1,"pc"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
+  steps: ["Heat oven to 220 °C. Toss tortilla wedges with half the oil and bake 8–10 minutes until crisp.",
+    "Simmer the salsa verde with the chopped jalapeño for 3 minutes.",
+    "Fold the baked chips through the salsa, just long enough to coat.",
+    "Fry the eggs in the remaining oil.",
+    "Plate chips, top with eggs, crumbled leipäjuusto, yoghurt, red onion and coriander."] },
+
+{ id: "b10", meal: "breakfast", name: "Rye toast with avocado, raejuusto and jalapeño", time: 8, heat: 2, main: "dairy",
+  split: { p2: "3 slices", p1: "2 slices", share: 0.6 },
+  ing: [["rye",5,"pc"],["cottage",350,"g"],["avocado",1,"pc"],["tomato",1,"pc"],["pickjal",30,"g"],["lime",0.5,"pc"],["chilipw",1,"pinch"]],
+  steps: ["Toast the rye bread.",
+    "Mash the avocado with lime juice and a pinch of salt.",
+    "Spread avocado on the toast and top with raejuusto, sliced tomato, jalapeños and a pinch of chilli."] },
+
+{ id: "b11", meal: "breakfast", name: "Cinnamon banana protein licuado", time: 5, heat: 1, main: "dairy",
+  ing: [["milk",500,"ml"],["whey",40,"g"],["banana",2,"pc"],["oats",40,"g"],["cinnamon",1,"tsp"],["rye",2,"pc","toasted, optional"]],
+  steps: ["Blend milk, protein powder, bananas, oats and cinnamon with a few ice cubes.",
+    "Pour by the split. Person 2 takes the toast."] },
+
+{ id: "b12", meal: "breakfast", name: "Chorizo potato hash with eggs", time: 30, heat: 2, main: "egg", weekend: true,
+  split: { p2: "3 eggs, larger half of the hash", p1: "2 eggs", share: 0.6 },
+  ing: [["potato",500,"g","diced"],["chorizo",60,"g"],["egg",5,"pc"],["pepper",1,"pc"],["onion",1,"pc"],["cheese",30,"g"],["greek",60,"g"],["paprika",1,"tsp"],["oil",1,"tbsp"]],
+  steps: ["Microwave the diced potatoes covered for 5 minutes to par-cook.",
+    "Fry potatoes in the oil until golden, about 10 minutes. Add chorizo, onion, pepper and paprika for 4 more minutes.",
+    "Make 5 wells, crack in the eggs, cover and cook until the whites set.",
+    "Scatter cheese, serve with a spoon of yoghurt."] },
+
+// LUNCH --------------------------------------------------------------------
+{ id: "l01", meal: "lunch", name: "Chicken tinga rice bowls", time: 30, heat: 3, main: "chicken", prep: true,
+  ing: [["chk",160,"g"],["rice",120,"g"],["blackbean",100,"g"],["crushed",300,"g"],["onion",1,"pc"],["chipotle",2,"tbsp"],["garlic",2,"clove"],["oregano",1,"tsp"],["greek",60,"g"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
+  steps: ["Simmer the chicken in salted water for 15 minutes, then shred with two forks.",
+    "Cook the rice meanwhile.",
+    "Fry sliced onion and garlic in the oil for 4 minutes. Add tomatoes, chipotle and oregano and simmer 5 minutes.",
+    "Stir the shredded chicken into the sauce.",
+    "Build bowls with rice, beans, tinga, yoghurt and coriander."] },
+
+{ id: "l02", meal: "lunch", name: "Chili con carne", time: 40, heat: 3, main: "beef", prep: true,
+  ing: [["beef5",180,"g"],["kidney",200,"g"],["crushed",400,"g"],["onion",1,"pc"],["pepper",1,"pc"],["garlic",2,"clove"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["cocoa",5,"g"],["rice",100,"g"],["oil",1,"tsp"]],
+  steps: ["Brown the beef with onion and pepper in the oil.",
+    "Add garlic, cumin, chilli powder and cocoa for 1 minute.",
+    "Add tomatoes, chipotle and beans and simmer 25 minutes.",
+    "Serve over rice. It keeps 3 days in the fridge."] },
+
+{ id: "l03", meal: "lunch", name: "Chicken fajita wraps", time: 20, heat: 2, main: "chicken",
+  split: { p2: "2½ wraps", p1: "1½ wraps", share: 0.6 },
+  ing: [["chk",160,"g","sliced"],["tortL",4,"pc"],["pepper",2,"pc"],["onion",1,"pc"],["greek",100,"g"],["lime",1,"pc"],["paprika",1,"tsp"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["oil",1,"tbsp"]],
+  steps: ["Toss chicken with paprika, cumin, chilli and half the oil.",
+    "Sear chicken in a hot pan 5 minutes, then remove. Fry sliced peppers and onion in the rest of the oil for 4 minutes.",
+    "Mix yoghurt with lime juice and salt for a crema.",
+    "Fill tortillas with chicken, vegetables and crema and roll. Cut one wrap in half to split."] },
+
+{ id: "l04", meal: "lunch", name: "Turkey taco salad", time: 20, heat: 2, main: "turkey",
+  ing: [["turkeymince",180,"g"],["lettuce",200,"g"],["tomato",1,"pc"],["corn",100,"g"],["blackbean",100,"g"],["leipa",40,"g"],["chips",30,"g","crushed"],["greek",80,"g"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["lime",1,"pc"],["oil",1,"tsp"]],
+  steps: ["Brown the turkey mince with cumin and chilli powder.",
+    "Whisk yoghurt, chipotle and lime juice into a dressing.",
+    "Toss lettuce, tomato, corn and beans.",
+    "Top with turkey, crumbled leipäjuusto and crushed chips. Dress just before eating."] },
+
+{ id: "l05", meal: "lunch", name: "Citrus chicken thighs with sweet potato", time: 35, heat: 2, main: "chicken", prep: true, side: true,
+  ing: [["thigh",250,"g"],["sweetpot",500,"g","cubed"],["lime",1,"pc"],["garlic",2,"clove"],["oregano",1,"tsp"],["chilipw",1,"tsp"],["salsaverde",100,"g"],["greek",80,"g"],["oil",1,"tbsp"]],
+  steps: ["Heat oven to 220 °C. Marinate the thighs in lime juice, garlic, oregano and chilli.",
+    "Toss sweet potato in oil and roast 10 minutes.",
+    "Add the thighs to the tray and roast 20 minutes more.",
+    "Slice and serve with salsa verde on the side and yoghurt."] },
+
+{ id: "l06", meal: "lunch", name: "Chipotle beef burrito bowls", time: 25, heat: 3, main: "beef",
+  ing: [["strips",180,"g"],["rice",120,"g"],["corn",100,"g"],["tomato",2,"pc"],["redonion",0.5,"pc"],["jalap",1,"pc"],["chipotle",1,"tbsp"],["cheese",30,"g"],["lime",1,"pc"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
+  steps: ["Cook the rice with a squeeze of lime.",
+    "Dice tomato, red onion and jalapeño with coriander and lime for a pico de gallo.",
+    "Toss beef strips with chipotle and salt. Sear in a very hot pan 3 minutes.",
+    "Build bowls with rice, beef, corn, pico and cheese."] },
+
+{ id: "l07", meal: "lunch", name: "Chicken and leipäjuusto quesadillas", time: 20, heat: 2, main: "chicken", side: true,
+  split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
+  ing: [["chk",130,"g"],["tortL",4,"pc"],["cheese",40,"g"],["leipa",40,"g","grated"],["pepper",1,"pc"],["pickjal",20,"g"],["cumin",1,"tsp"],["salsa",80,"g"],["oil",1,"tsp"]],
+  steps: ["Slice the chicken thin, season with cumin and salt, and fry until cooked.",
+    "Fry diced pepper briefly in the same pan.",
+    "Fill half of each tortilla with chicken, pepper, both cheeses and jalapeño, then fold.",
+    "Toast 2 minutes per side, cut each in half and serve with salsa."] },
+
+{ id: "l08", meal: "lunch", name: "Sopa de lima (chicken lime soup)", time: 30, heat: 2, main: "chicken",
+  ing: [["chk",220,"g"],["stock",1,"pc"],["onion",1,"pc"],["tomato",2,"pc"],["jalap",1,"pc"],["garlic",2,"clove"],["lime",2,"pc"],["oregano",1,"tsp"],["tortC",3,"pc","cut in strips"],["avocado",0.5,"pc"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
+  steps: ["Fry onion, garlic and jalapeño in half the oil. Add tomatoes, oregano, 1.2 l water and the stock cube.",
+    "Add whole chicken breasts and simmer 15 minutes. Remove, shred and return.",
+    "Bake tortilla strips with the rest of the oil at 220 °C for 8 minutes.",
+    "Season the soup with lime juice and serve with tortilla strips, avocado and coriander."] },
+
+{ id: "l09", meal: "lunch", name: "Beef picadillo with potatoes", time: 30, heat: 2, main: "beef", prep: true,
+  ing: [["beef10",220,"g"],["potato",400,"g","small dice"],["carrot",150,"g","small dice"],["peas",80,"g"],["crushed",200,"g"],["onion",1,"pc"],["garlic",2,"clove"],["jalap",1,"pc"],["cumin",1,"tsp"],["oil",1,"tsp"]],
+  steps: ["Brown the beef with onion, garlic and jalapeño.",
+    "Add potatoes, carrots, cumin, tomatoes and 200 ml water. Cover and simmer 15 minutes.",
+    "Add peas for the last 3 minutes. Season well.",
+    "Eat as is or in tortillas. Keeps 3 days."] },
+
+{ id: "l10", meal: "lunch", name: "Black bean and chorizo soup", time: 30, heat: 2, main: "pork", prep: true,
+  ing: [["chorizo",80,"g"],["blackbean",460,"g"],["lentil",60,"g"],["crushed",400,"g"],["onion",1,"pc"],["garlic",2,"clove"],["stock",1,"pc"],["cumin",1,"tsp"],["chipotle",1,"tbsp"],["greek",100,"g"],["lime",1,"pc"]],
+  steps: ["Fry the diced chorizo until crisp. Remove a spoonful for topping.",
+    "Fry onion and garlic in the chorizo fat. Add cumin, beans, lentils, tomatoes, chipotle, stock cube and 600 ml water.",
+    "Simmer 20 minutes, then blend half the soup for body.",
+    "Serve with yoghurt, lime and the crisp chorizo."] },
+
+{ id: "l11", meal: "lunch", name: "Esquites chicken salad", time: 20, heat: 2, main: "chicken",
+  ing: [["chk",180,"g"],["corn",250,"g"],["feta",50,"g"],["greek",80,"g"],["lime",1,"pc"],["redonion",0.5,"pc"],["jalap",1,"pc"],["lettuce",150,"g"],["chilipw",1,"tsp"],["cilantro",0.25,"bunch"],["oil",1,"tsp"]],
+  steps: ["Season chicken with chilli and salt and pan-fry 5–6 minutes per side. Rest and slice.",
+    "Char the drained corn in a dry, very hot pan for 5 minutes.",
+    "Mix corn with yoghurt, lime, red onion, jalapeño and crumbled feta.",
+    "Serve over lettuce with the chicken on top."] },
+
+{ id: "l12", meal: "lunch", name: "Turkey and black bean enchilada bake", time: 40, heat: 2, main: "turkey", prep: true,
+  split: { p2: "3½ enchiladas", p1: "2½ enchiladas", share: 0.58 },
+  ing: [["turkeymince",160,"g"],["blackbean",150,"g"],["tortS",6,"pc"],["crushed",400,"g"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["onion",1,"pc"],["cheese",40,"g"],["oil",1,"tsp"]],
+  steps: ["Heat oven to 200 °C. Blend tomatoes with chipotle, cumin and salt for the sauce.",
+    "Brown turkey and onion, then stir in the beans and a third of the sauce.",
+    "Roll the filling in tortillas, lay in a dish and cover with remaining sauce and cheese.",
+    "Bake 20 minutes."] },
+
+{ id: "l13", meal: "lunch", name: "Carne asada tortas", time: 20, heat: 2, main: "beef", side: true,
+  split: { p2: "2 tortas", p1: "1 torta with a cucumber-chilli salad", share: 0.63 },
+  ing: [["sirloin",180,"g"],["roll",3,"pc"],["refried",120,"g"],["avocado",1,"pc"],["pickjal",30,"g"],["greek",50,"g"],["chipotle",1,"tsp"],["lettuce",60,"g"],["cucumber",150,"g"],["lime",1,"pc"],["oil",1,"tsp"]],
+  steps: ["Season the sirloin with salt, lime and oil. Sear 3 minutes per side, rest 5 minutes, slice thin.",
+    "Mix yoghurt and chipotle.",
+    "Toast the rolls, spread with refried beans and chipotle yoghurt.",
+    "Fill with steak, avocado, lettuce and jalapeños.",
+    "Toss cucumber with lime and chilli for Person 1's side."] },
+
+{ id: "l14", meal: "lunch", name: "Caldo de res (beef and vegetable soup)", time: 90, heat: 1, main: "beef", prep: true, side: true,
+  ing: [["chuck",250,"g","cubed"],["potato",300,"g"],["carrot",200,"g"],["cabbage",200,"g"],["corncob",1,"pc","cut in 4"],["onion",1,"pc"],["garlic",3,"clove"],["bay",2,"pc"],["stock",1,"pc"],["lime",1,"pc"],["habanero",1,"pc","for a side salsa"],["redonion",0.5,"pc"]],
+  steps: ["Cover beef with 1.5 l water, add onion, garlic, bay and stock cube. Simmer 60 minutes, skimming.",
+    "Add potatoes, carrots and corn and simmer 15 minutes. Add cabbage for the last 5 minutes.",
+    "Chop habanero and red onion with lime and salt for a sharp table salsa.",
+    "Serve in deep bowls with salsa on the side. Freezes well."] },
+
+{ id: "l15", meal: "lunch", name: "Taco pasta", time: 20, heat: 2, main: "beef", prep: true,
+  ing: [["beef5",180,"g"],["pasta",160,"g"],["salsa",200,"g"],["onion",1,"pc"],["pepper",1,"pc"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["cheese",30,"g"],["pickjal",30,"g"]],
+  steps: ["Cook the pasta.",
+    "Brown beef with onion, pepper, cumin and chilli.",
+    "Stir in salsa and a splash of pasta water.",
+    "Toss with the pasta, top with cheese and jalapeños."] },
+
+{ id: "l16", meal: "lunch", name: "Chicken burritos with rice and beans", time: 30, heat: 2, main: "chicken", prep: true, side: true,
+  split: { p2: "2½ burritos", p1: "1½ burritos", share: 0.6 },
+  ing: [["thigh",140,"g"],["rice",80,"g"],["blackbean",120,"g"],["tortL",4,"pc"],["cheese",30,"g"],["greek",60,"g"],["salsa",100,"g"],["cumin",1,"tsp"],["paprika",1,"tsp"],["lime",1,"pc"],["oil",1,"tsp"]],
+  steps: ["Cook rice with lime zest.",
+    "Season chicken with cumin, paprika and salt, fry 10 minutes and chop.",
+    "Fill tortillas with rice, beans, chicken, cheese and yoghurt, fold in the sides and roll.",
+    "Toast seam-side down. Salsa on the side. Wrap in foil for a packed lunch."] },
+
+{ id: "l17", meal: "lunch", name: "Molletes with chorizo and pico", time: 15, heat: 2, main: "pork",
+  split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
+  ing: [["roll",4,"pc","halved"],["refried",250,"g"],["chorizo",50,"g"],["cheese",70,"g"],["tomato",2,"pc"],["redonion",0.5,"pc"],["jalap",1,"pc"],["cilantro",0.25,"bunch"],["lime",1,"pc"]],
+  steps: ["Heat oven grill to 225 °C. Fry the diced chorizo until crisp.",
+    "Spread refried beans on the roll halves, top with chorizo and cheese.",
+    "Grill 5 minutes until bubbling.",
+    "Top with a pico of tomato, red onion, jalapeño, coriander and lime."] },
+
+{ id: "l18", meal: "lunch", name: "Spicy beef tostadas", time: 20, heat: 3, main: "beef",
+  split: { p2: "4 tostadas", p1: "2 tostadas with extra lettuce", share: 0.6 },
+  ing: [["beef5",160,"g"],["refried",150,"g"],["tortC",6,"pc"],["lettuce",100,"g"],["tomato",1,"pc"],["leipa",40,"g"],["greek",60,"g"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["oil",1,"tsp"]],
+  steps: ["Brush tortillas lightly with oil and bake at 220 °C for 6–8 minutes until crisp.",
+    "Brown beef with cumin and chipotle.",
+    "Spread each tostada with refried beans, add beef, lettuce, tomato, leipäjuusto and yoghurt."] },
+
+// DINNER -------------------------------------------------------------------
+{ id: "d01", meal: "dinner", name: "Yoghurt-dough pizza with chipotle chicken", time: 40, heat: 2, main: "chicken",
+  split: { p2: "5 slices", p1: "3 slices", share: 0.62 },
+  ing: [["flour",200,"g"],["greek",200,"g"],["bpowder",2,"tsp"],["passata",150,"g"],["chipotle",1,"tbsp"],["chk",130,"g"],["mozz",80,"g"],["redonion",0.5,"pc"],["pickjal",30,"g"],["oregano",1,"tsp"],["oil",1,"tsp"]],
+  steps: ["Heat oven to 250 °C. Knead flour, yoghurt, baking powder and a pinch of salt into a dough. Roll thin on baking paper.",
+    "Slice chicken thin, toss with half the chipotle and fry 4 minutes.",
+    "Mix passata with remaining chipotle and oregano. Spread on the dough.",
+    "Top with chicken, mozzarella, red onion and jalapeños.",
+    "Bake 10–12 minutes on the lowest rack. Cut into 8 slices."] },
+
+{ id: "d02", meal: "dinner", name: "Chipotle burgers with yoghurt sauce and wedges", time: 40, heat: 2, main: "beef", side: true,
+  split: { p2: "2 burgers, more wedges", p1: "1 burger, side salad", share: 0.62 },
+  ing: [["beef10",360,"g"],["bun",3,"pc"],["cheese",45,"g"],["greek",100,"g"],["chipotle",1,"tbsp"],["potato",500,"g"],["lettuce",80,"g"],["tomato",1,"pc"],["redonion",0.5,"pc"],["paprika",1,"tsp"],["oil",1,"tbsp"]],
+  steps: ["Heat oven to 225 °C. Cut potatoes into wedges, toss with oil, paprika and salt, roast 30 minutes.",
+    "Shape 3 patties of 120 g, season well.",
+    "Mix yoghurt with chipotle and salt. This replaces mayo.",
+    "Fry patties 3–4 minutes per side, top with cheese for the last minute.",
+    "Build burgers with lettuce, tomato, red onion and the chipotle yoghurt."] },
+
+{ id: "d03", meal: "dinner", name: "Carne asada tacos with charro beans", time: 35, heat: 3, main: "beef", side: true,
+  split: { p2: "6 tacos", p1: "4 tacos", share: 0.6 },
+  ing: [["sirloin",220,"g"],["tortC",10,"pc"],["blackbean",230,"g"],["bacon",40,"g"],["tomato",1,"pc"],["onion",1,"pc"],["jalap",1,"pc"],["garlic",2,"clove"],["lime",2,"pc"],["cumin",1,"tsp"],["cilantro",0.5,"bunch"],["salsa",100,"g"],["oil",1,"tsp"]],
+  steps: ["Marinate steak in lime juice, garlic, cumin, salt and oil for at least 15 minutes.",
+    "For the beans: fry the diced bacon, add half the onion, the jalapeño and tomato, then the beans and 150 ml water. Simmer 10 minutes.",
+    "Sear steak in a very hot pan 3 minutes per side. Rest and chop small.",
+    "Warm tortillas. Fill with steak, the rest of the onion finely chopped and coriander.",
+    "Serve with beans and salsa on the side."] },
+
+{ id: "d04", meal: "dinner", name: "Chicken al pastor tacos", time: 35, heat: 3, main: "chicken", side: true,
+  split: { p2: "6 tacos", p1: "4 tacos", share: 0.6 },
+  ing: [["thigh",290,"g"],["pineapple",200,"g"],["tortC",10,"pc"],["chipotle",1,"tbsp"],["ancho",1,"pc"],["vinegar",1,"tbsp"],["garlic",2,"clove"],["oregano",1,"tsp"],["onion",1,"pc"],["cilantro",0.5,"bunch"],["lime",1,"pc"],["salsa",100,"g"],["oil",1,"tbsp"]],
+  steps: ["Soak the ancho in hot water 10 minutes, then blend with chipotle, vinegar, garlic, oregano, half the pineapple and salt.",
+    "Marinate the thighs in the paste for at least 20 minutes.",
+    "Grill or pan-fry thighs over high heat 5 minutes per side. Rest and slice thin.",
+    "Sear the remaining pineapple in the same pan.",
+    "Serve in warm tortillas with pineapple, onion, coriander and lime. Salsa on the side."] },
+
+{ id: "d05", meal: "dinner", name: "Chicken enchiladas rojas", time: 45, heat: 2, main: "chicken",
+  split: { p2: "3½ enchiladas", p1: "2½ enchiladas", share: 0.58 },
+  ing: [["chk",200,"g"],["tortS",6,"pc"],["crushed",400,"g"],["ancho",2,"pc"],["onion",1,"pc"],["garlic",2,"clove"],["cumin",1,"tsp"],["cheese",40,"g"],["greek",80,"g"],["cilantro",0.25,"bunch"],["oil",1,"tsp"]],
+  steps: ["Soak anchos in hot water 10 minutes. Blend with tomatoes, half the onion, garlic, cumin and salt.",
+    "Simmer chicken in salted water 15 minutes and shred. Mix with a third of the sauce.",
+    "Heat oven to 200 °C. Roll chicken in tortillas, lay seam-down in a dish.",
+    "Cover with the rest of the sauce and cheese. Bake 20 minutes.",
+    "Top with yoghurt, sliced onion and coriander."] },
+
+{ id: "d06", meal: "dinner", name: "Chilli-rubbed steak, sweet potato and salsa verde", time: 40, heat: 2, main: "beef", side: true,
+  ing: [["sirloin",250,"g"],["sweetpot",600,"g"],["salsaverde",150,"g"],["greek",80,"g"],["lettuce",100,"g"],["chilipw",1,"tsp"],["cumin",1,"tsp"],["paprika",1,"tsp"],["lime",1,"pc"],["oil",1,"tbsp"]],
+  steps: ["Heat oven to 220 °C. Roast sweet potato wedges in half the oil for 30 minutes.",
+    "Rub steak with chilli, cumin, paprika and salt.",
+    "Sear 3–4 minutes per side, rest 5 minutes, slice.",
+    "Serve with sweet potato, salad dressed with lime, yoghurt, and salsa verde on the side."] },
+
+{ id: "d07", meal: "dinner", name: "Quick mole chicken with rice", time: 40, heat: 2, main: "chicken",
+  ing: [["thigh",320,"g"],["pb",30,"g"],["cocoa",10,"g"],["ancho",2,"pc"],["chipotle",1,"tbsp"],["crushed",400,"g"],["onion",1,"pc"],["garlic",2,"clove"],["cinnamon",0.5,"tsp"],["cumin",1,"tsp"],["rice",120,"g"],["stock",1,"pc"],["oil",1,"tbsp"]],
+  steps: ["Soak anchos in hot water 10 minutes.",
+    "Fry onion and garlic in oil. Blend with anchos, chipotle, tomatoes, peanut butter, cocoa, cinnamon, cumin and stock cube with 200 ml water.",
+    "Brown the thighs, pour over the mole and simmer covered 20 minutes.",
+    "Cook rice meanwhile. Serve chicken and sauce over rice."] },
+
+{ id: "d08", meal: "dinner", name: "Turkey albóndigas in chipotle sauce", time: 40, heat: 3, main: "turkey",
+  split: { p2: "12 meatballs", p1: "8 meatballs", share: 0.6 },
+  ing: [["turkeymince",290,"g"],["oats",30,"g"],["egg",1,"pc"],["garlic",3,"clove"],["cumin",1,"tsp"],["crushed",400,"g"],["chipotle",2,"tbsp"],["onion",1,"pc"],["rice",120,"g"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
+  steps: ["Mix turkey, oats, egg, half the garlic, cumin and salt. Roll 20 meatballs.",
+    "Brown the meatballs in the oil, then remove.",
+    "Fry onion and the rest of the garlic. Add tomatoes and chipotle, simmer 5 minutes.",
+    "Return meatballs, cover and simmer 15 minutes.",
+    "Serve over rice with coriander."] },
+
+{ id: "d09", meal: "dinner", name: "Sheet-pan chicken fajitas", time: 30, heat: 2, main: "chicken", side: true,
+  split: { p2: "3½ fajitas", p1: "2½ fajitas", share: 0.58 },
+  ing: [["chk",250,"g"],["pepper",3,"pc"],["redonion",1,"pc"],["tortS",6,"pc"],["greek",100,"g"],["lime",1,"pc"],["paprika",2,"tsp"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["salsa",100,"g"],["oil",1,"tbsp"]],
+  steps: ["Heat oven to 230 °C.",
+    "Slice chicken, peppers and onion into strips. Toss with oil, spices and salt on a tray.",
+    "Roast 18–20 minutes, then squeeze over lime.",
+    "Serve in warm tortillas with yoghurt and salsa on the side."] },
+
+{ id: "d10", meal: "dinner", name: "Beef and rice stuffed peppers", time: 50, heat: 2, main: "beef",
+  split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
+  ing: [["beef5",250,"g"],["rice",80,"g"],["blackbean",120,"g"],["pepper",4,"pc"],["crushed",200,"g"],["onion",1,"pc"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["cheese",50,"g"],["greek",60,"g"],["oil",1,"tsp"]],
+  steps: ["Heat oven to 200 °C. Cook the rice.",
+    "Brown beef with onion and cumin, add tomatoes, chipotle and beans, and simmer 5 minutes. Stir in the rice.",
+    "Halve the peppers lengthways and remove seeds. Fill with the beef mixture.",
+    "Cover with foil and bake 25 minutes. Uncover, add cheese and bake 10 more.",
+    "Serve with a spoon of yoghurt."] },
+
+{ id: "d11", meal: "dinner", name: "Pollo en salsa verde with rice and beans", time: 35, heat: 3, main: "chicken",
+  ing: [["thigh",290,"g"],["salsaverde",300,"g"],["jalap",2,"pc"],["onion",1,"pc"],["garlic",2,"clove"],["cilantro",0.5,"bunch"],["rice",120,"g"],["blackbean",150,"g"],["greek",60,"g"],["oil",1,"tbsp"]],
+  steps: ["Brown the thighs in the oil and set aside.",
+    "Fry onion, garlic and jalapeños. Blend with salsa verde, half the coriander and 100 ml water.",
+    "Return chicken to the pan with the sauce and simmer covered 20 minutes.",
+    "Cook rice and warm the beans with a pinch of cumin and salt.",
+    "Serve with yoghurt and the remaining coriander."] },
+
+{ id: "d12", meal: "dinner", name: "Bistec a la mexicana", time: 25, heat: 3, main: "beef",
+  ing: [["strips",290,"g"],["tomato",3,"pc"],["onion",1,"pc"],["jalap",2,"pc"],["garlic",2,"clove"],["rice",120,"g"],["cilantro",0.25,"bunch"],["oil",1,"tbsp"]],
+  steps: ["Cook rice.",
+    "Sear beef strips in batches in a very hot pan with oil, 2 minutes each. Set aside.",
+    "Fry onion, garlic and sliced jalapeños 3 minutes. Add chopped tomatoes and cook 5 minutes until saucy.",
+    "Return the beef, season well and serve over rice with coriander."] },
+
+{ id: "d13", meal: "dinner", name: "Chipotle chicken pasta", time: 25, heat: 2, main: "chicken",
+  ing: [["chk",220,"g"],["pasta",180,"g"],["creamch",75,"g"],["greek",100,"g"],["chipotle",2,"tbsp"],["garlic",2,"clove"],["spinach",80,"g"],["pepper",1,"pc"],["oil",1,"tsp"]],
+  steps: ["Cook the pasta. Keep a cup of pasta water.",
+    "Fry sliced chicken and pepper in oil 6 minutes. Add garlic for 1 minute.",
+    "Off the heat, stir in cream cheese, yoghurt, chipotle and a splash of pasta water. Off the heat stops the yoghurt splitting.",
+    "Toss with pasta and spinach until it wilts."] },
+
+{ id: "d14", meal: "dinner", name: "Beef barbacoa rice bowls", time: 150, heat: 3, main: "beef", side: true,
+  ing: [["chuck",320,"g"],["chipotle",2,"tbsp"],["ancho",1,"pc"],["garlic",3,"clove"],["cumin",1,"tsp"],["oregano",1,"tsp"],["bay",2,"pc"],["vinegar",1,"tbsp"],["lime",1,"pc"],["rice",120,"g"],["redonion",1,"pc","pickled"],["salsa",100,"g"],["cilantro",0.25,"bunch"]],
+  steps: ["Blend chipotle, soaked ancho, garlic, cumin, oregano, vinegar, lime juice and 200 ml water.",
+    "Put beef in a pot with the sauce and bay leaves. Cover and cook at 160 °C in the oven for 2 hours, until it falls apart.",
+    "Slice red onion thin and cover with vinegar, a pinch of sugar and salt.",
+    "Shred beef in its juices. Serve over rice with pickled onion and coriander. Salsa on the side."] },
+
+{ id: "d15", meal: "dinner", name: "Baked chicken taquitos", time: 35, heat: 2, main: "chicken", side: true,
+  split: { p2: "6 taquitos", p1: "4 taquitos", share: 0.6 },
+  ing: [["chk",220,"g"],["tortC",10,"pc"],["cheese",50,"g"],["refried",100,"g"],["salsa",100,"g"],["cumin",1,"tsp"],["greek",100,"g"],["lime",1,"pc"],["lettuce",150,"g"],["tomato",1,"pc"],["oil",1,"tbsp"]],
+  steps: ["Simmer chicken 15 minutes and shred. Mix with refried beans, cheese, cumin and a few spoons of salsa.",
+    "Heat oven to 220 °C. Warm tortillas so they roll without cracking.",
+    "Roll the filling tightly in tortillas, place seam-down on a tray and brush with oil.",
+    "Bake 15 minutes until crisp.",
+    "Serve with lime yoghurt, a simple salad and salsa on the side."] },
+
+// CHEAT DINNERS ------------------------------------------------------------
+{ id: "c01", meal: "dinner", cheat: true, name: "Birria-style beef tacos with consomé", time: 180, heat: 3, main: "beef", side: true,
+  split: { p2: "7 tacos", p1: "5 tacos", share: 0.58 },
+  ing: [["chuck",500,"g"],["guajillo",4,"pc"],["ancho",2,"pc"],["chipotle",1,"tbsp"],["crushed",200,"g"],["onion",1,"pc"],["garlic",4,"clove"],["cumin",1,"tsp"],["oregano",1,"tsp"],["cinnamon",0.5,"tsp"],["bay",2,"pc"],["vinegar",1,"tbsp"],["stock",1,"pc"],["tortC",12,"pc"],["mozz",120,"g"],["cilantro",0.5,"bunch"],["lime",2,"pc"]],
+  steps: ["Toast the dried chillies 30 seconds in a dry pan, then soak 15 minutes in hot water.",
+    "Blend chillies, tomatoes, half the onion, garlic, spices, vinegar and 300 ml soaking water.",
+    "Put beef, sauce, bay, stock cube and 500 ml water in a pot. Cover and cook at 160 °C for 2½ hours.",
+    "Shred the beef. Skim the red fat from the broth into a bowl.",
+    "Dip tortillas in the fat, fry with mozzarella and beef until crisp, then fold.",
+    "Serve with the broth for dipping, chopped onion, coriander and lime."] },
+
+{ id: "c02", meal: "dinner", cheat: true, name: "Loaded nachos supreme", time: 30, heat: 3, main: "beef",
+  ing: [["chips",250,"g"],["beef10",300,"g"],["cheddar",120,"g","grated"],["refried",200,"g"],["avocado",2,"pc"],["lime",1,"pc"],["tomato",2,"pc"],["redonion",0.5,"pc"],["pickjal",50,"g"],["greek",100,"g"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["cilantro",0.5,"bunch"]],
+  steps: ["Heat oven to 200 °C. Brown beef with cumin and chilli.",
+    "Mash avocados with lime and salt for guacamole. Dice tomato and red onion.",
+    "Layer chips, warm refried beans, beef and cheddar in two layers on a tray.",
+    "Bake 8–10 minutes until the cheese melts.",
+    "Top with jalapeños, tomato, onion, guacamole, yoghurt and coriander. Divide by the split onto two plates."] },
+
+{ id: "c03", meal: "dinner", cheat: true, name: "Bacon smash burgers with chipotle mayo and fries", time: 35, heat: 2, main: "beef",
+  split: { p2: "2 double burgers, more fries", p1: "1 double burger", share: 0.62 },
+  ing: [["beef10",390,"g"],["bacon",100,"g"],["bun",3,"pc"],["cheddar",90,"g"],["fries",600,"g"],["mayo",3,"tbsp"],["chipotle",1,"tbsp"],["pickjal",30,"g"],["redonion",0.5,"pc"],["lettuce",60,"g"]],
+  steps: ["Bake the fries as the pack says.",
+    "Fry the bacon crisp.",
+    "Roll beef into 6 balls. Smash each flat in a very hot pan, season, cook 2 minutes, flip, add cheese.",
+    "Mix mayo and chipotle. It is a cheat night, so the real stuff.",
+    "Stack two patties per bun with bacon, jalapeños, onion, lettuce and chipotle mayo."] },
+
+{ id: "c04", meal: "dinner", cheat: true, name: "Beef and cheese chimichangas", time: 35, heat: 3, main: "beef", side: true,
+  split: { p2: "2½ chimichangas", p1: "1½ chimichangas", share: 0.62 },
+  ing: [["beef10",350,"g"],["tortL",4,"pc"],["cheddar",100,"g"],["refried",150,"g"],["onion",1,"pc"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["oil",4,"tbsp"],["greek",100,"g"],["lime",1,"pc"],["salsa",120,"g"],["lettuce",100,"g"]],
+  steps: ["Brown beef with onion, cumin and chipotle.",
+    "Spread refried beans on the tortillas, add beef and cheddar, fold into tight parcels.",
+    "Shallow-fry seam-side down in the oil, 2–3 minutes per side until golden.",
+    "Serve on lettuce with lime yoghurt and salsa on the side."] },
+
+{ id: "c05", meal: "dinner", cheat: true, name: "Chorizo and jalapeño pizza night", time: 30, heat: 3, main: "pork",
+  split: { p2: "9 slices", p1: "7 slices", share: 0.57 },
+  ing: [["pdough",500,"g"],["passata",200,"g"],["chipotle",1,"tbsp"],["chorizo",100,"g"],["mozz",200,"g"],["pickjal",50,"g"],["redonion",1,"pc"],["oregano",1,"tsp"],["honey",1,"tbsp"],["habanero",1,"pc","optional"]],
+  steps: ["Heat oven to its maximum. Stretch the dough into two pizzas.",
+    "Mix passata with chipotle and oregano and spread thin.",
+    "Top with mozzarella, sliced chorizo, red onion and jalapeños.",
+    "Bake 8–10 minutes until blistered.",
+    "Drizzle with honey and, if you dare, thin slices of habanero. Cut each into 8."] }
+];
+
+// ---- Optional snacks ----------------------------------------------------
+// Picked per person to close the gap to the daily protein target.
+var SNACKS = [
+  { id: "s1", name: "Protein shake", desc: "30 g whey in water", p: 24, k: 115, ing: [["whey",30,"g"]] },
+  { id: "s2", name: "Maitorahka with berries", desc: "200 g quark, 100 g frozen berries", p: 25, k: 177, ing: [["quark",200,"g"],["berries",100,"g"]] },
+  { id: "s3", name: "Raejuusto with chilli-lime cucumber", desc: "200 g cottage cheese, cucumber, Tajín-style chilli-lime salt", p: 24, k: 200, ing: [["cottage",200,"g"],["cucumber",100,"g"]] },
+  { id: "s4", name: "Skyr with honey", desc: "200 g skyr, 1 tsp honey", p: 22, k: 140, ing: [["skyr",200,"g"]] }
+];
+
+if (typeof module !== "undefined") module.exports = { PEOPLE, DEFAULT_SHARE, CAT, RECIPES, SNACKS };
+
+</script>
+<script>
+// ---- Rotation engine -----------------------------------------------------
+// Deterministic: the same date always gets the same meals (before swaps).
+var Engine = (function () {
+  var D = (typeof module !== "undefined") ? require("./data.js") : null;
+  var CATX = D ? D.CAT : CAT, RX = D ? D.RECIPES : RECIPES, SX = D ? D.SNACKS : SNACKS,
+      PX = D ? D.PEOPLE : PEOPLE, SHARE = D ? D.DEFAULT_SHARE : DEFAULT_SHARE;
+
+  var EPOCH = Date.UTC(2025, 0, 6); // a Monday
+  var DAY = 86400000;
+  var RULES = { breakfast: 5, lunch: 9, dinner: 12, cheat: 3 }; // min days between repeats
+  var byId = {}; RX.forEach(function (r) { byId[r.id] = r; });
+
+  function grams(it) {
+    var c = CATX[it[0]], a = it[1], u = it[2];
+    if (!c) return 0;
+    if (u === "g" || u === "ml") return a;
+    if (u === "pc") return a * (c.w || 0);
+    if (u === "tbsp") return a * (c.t || 0);
+    if (u === "tsp") return a * (c.t || 0) / 3;
+    return 0;
+  }
+  function nutrOf(ing) {
+    var p = 0, k = 0;
+    ing.forEach(function (it) {
+      var c = CATX[it[0]], g = grams(it);
+      if (c && c.p != null) { p += g * c.p / 100; k += g * c.k / 100; }
+    });
+    return { p: p, k: k };
+  }
+  RX.forEach(function (r) { var n = nutrOf(r.ing); r.P = n.p; r.K = n.k; r.share = r.split ? r.split.share : SHARE; });
+
+  function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  var pools = {
+    wkBreakfast: RX.filter(function (r) { return r.meal === "breakfast" && !r.weekend; }),
+    allBreakfast: RX.filter(function (r) { return r.meal === "breakfast"; }),
+    wkndBreakfast: RX.filter(function (r) { return r.meal === "breakfast" && r.weekend; }),
+    lunch: RX.filter(function (r) { return r.meal === "lunch"; }),
+    dinner: RX.filter(function (r) { return r.meal === "dinner" && !r.cheat; }),
+    cheat: RX.filter(function (r) { return r.cheat; })
+  };
+
+  var plan = [], last = {}, rand = rng(20261018);
+
+  function pick(pool, idx, gap, avoidMain) {
+    var best = null, bestScore = -Infinity;
+    pool.forEach(function (r) {
+      var since = last[r.id] == null ? 999 : idx - last[r.id];
+      var score = Math.min(since, 60) + rand() * 6;
+      if (since < gap) score -= 1000;
+      if (avoidMain && avoidMain.indexOf(r.main) >= 0) score -= 25;
+      if (score > bestScore) { bestScore = score; best = r; }
+    });
+    last[best.id] = idx;
+    return best;
+  }
+
+  function extendTo(idx) {
+    while (plan.length <= idx) {
+      var i = plan.length, dow = new Date(EPOCH + i * DAY).getUTCDay(); // 0 Sun..6 Sat
+      var weekend = dow === 0 || dow === 6;
+      var prev = plan[i - 1];
+      var b = weekend ? pick(pools.wkndBreakfast, i, 6) : pick(pools.wkBreakfast, i, RULES.breakfast);
+      var l = pick(pools.lunch, i, RULES.lunch, prev ? [prev.d.main] : null);
+      var d = dow === 6 ? pick(pools.cheat, i, RULES.cheat)
+                        : pick(pools.dinner, i, RULES.dinner, [l.main].concat(prev ? [prev.d.main] : []));
+      plan.push({ b: b, l: l, d: d });
+    }
+  }
+
+  function idxOf(y, m, dd) { return Math.round((Date.UTC(y, m, dd) - EPOCH) / DAY); }
+  function key(y, m, dd) { return y + "-" + String(m + 1).padStart(2, "0") + "-" + String(dd).padStart(2, "0"); }
+
+  function fillSnacks(person, have, i) {
+    var target = PX[person].protein, gap = target - have, out = [];
+    var off = person === "p1" ? 0 : 2;
+    var n = 0;
+    // At least one snack a day (training support), a second one if still short.
+    while (((out.length === 0 && gap > 0) || gap > 6) && out.length < 2) {
+      var s = SX[(i + off + n) % SX.length]; n++;
+      out.push(s); gap -= s.p;
+    }
+    return out;
+  }
+
+  // overrides: { "2026-10-18|b": "b03", ... }
+  function day(y, m, dd, overrides) {
+    var i = idxOf(y, m, dd);
+    if (i < 0) return null;
+    extendTo(i);
+    var base = plan[i], k = key(y, m, dd), ov = overrides || {};
+    var meals = {
+      b: byId[ov[k + "|b"]] || base.b,
+      l: byId[ov[k + "|l"]] || base.l,
+      d: byId[ov[k + "|d"]] || base.d
+    };
+    var res = { key: k, meals: meals, base: base, people: {} };
+    ["p1", "p2"].forEach(function (p) {
+      var mp = 0, mk = 0;
+      ["b", "l", "d"].forEach(function (s) {
+        var r = meals[s], sh = p === "p2" ? r.share : 1 - r.share;
+        mp += r.P * sh; mk += r.K * sh;
+      });
+      var sn = fillSnacks(p, mp, i);
+      var sp = sn.reduce(function (a, s) { return a + s.p; }, 0), sk = sn.reduce(function (a, s) { return a + s.k; }, 0);
+      res.people[p] = { mealP: mp, mealK: mk, snacks: sn, p: mp + sp, k: mk + sk, target: PX[p].protein };
+    });
+    res.cheat = !!meals.d.cheat;
+    return res;
+  }
+
+  function alternatives(slot, y, m, dd) {
+    var dow = new Date(Date.UTC(y, m, dd)).getUTCDay();
+    if (slot === "b") return (dow === 0 || dow === 6) ? pools.allBreakfast : pools.wkBreakfast;
+    if (slot === "l") return pools.lunch;
+    return dow === 6 ? pools.cheat.concat(pools.dinner) : pools.dinner;
+  }
+
+  return { day: day, byId: byId, grams: grams, nutrOf: nutrOf, alternatives: alternatives, idxOf: idxOf, key: key, RULES: RULES, EPOCH: EPOCH };
+})();
+if (typeof module !== "undefined") module.exports = Engine;
+
+</script>
+<script>
+(function () {
+  var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var DOWS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var SLOT = { b: "Breakfast", l: "Lunch", d: "Dinner" };
+  var now = new Date(), TODAY = { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
+  var state = { offset: 0, sel: { y: TODAY.y, m: TODAY.m, d: TODAY.d }, view: "day", recipe: null, week: null };
+  var ov = {};
+  try { ov = JSON.parse(localStorage.getItem("mpd-swaps") || "{}") || {}; } catch (e) { ov = {}; }
+  function saveOv() { try { localStorage.setItem("mpd-swaps", JSON.stringify(ov)); } catch (e) {} }
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function r0(x) { return Math.round(x); }
+  function frac(a) {
+    var w = Math.floor(a), f = a - w, s = f === 0.5 ? "½" : f === 0.25 ? "¼" : f === 0.75 ? "¾" : f ? String(+f.toFixed(2)).slice(1) : "";
+    return (w ? w : "") + s || "0";
+  }
+  function isoWeek(y, m, d) {
+    var t = new Date(Date.UTC(y, m, d)), dn = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - dn);
+    var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+  }
+  function addDays(o, n) { var t = new Date(Date.UTC(o.y, o.m, o.d + n)); return { y: t.getUTCFullYear(), m: t.getUTCMonth(), d: t.getUTCDate() }; }
+  function dow(o) { return new Date(Date.UTC(o.y, o.m, o.d)).getUTCDay(); }
+  function mondayOf(o) { var w = dow(o) || 7; return addDays(o, 1 - w); }
+  function same(a, b) { return a && b && a.y === b.y && a.m === b.m && a.d === b.d; }
+  function before(a, b) { return Date.UTC(a.y, a.m, a.d) < Date.UTC(b.y, b.m, b.d); }
+  function dayPlan(o) { return Engine.day(o.y, o.m, o.d, ov); }
+  function heat(n) { var s = ""; for (var i = 1; i <= 3; i++) s += i <= n ? "●" : '<span class="off">●</span>'; return '<span class="heat" aria-label="Heat ' + n + ' of 3">' + s + "</span>"; }
+
+  $("targets").innerHTML = ["p1", "p2"].map(function (p) {
+    return '<span class="chip">' + PEOPLE[p].label + " · <b>" + PEOPLE[p].protein + " g</b> protein a day</span>";
+  }).join("");
+
+  // ---- Calendar ----------------------------------------------------------
+  function renderMonths() {
+    var html = "";
+    for (var i = -5; i <= 6; i++) {
+      var t = new Date(TODAY.y, TODAY.m + state.offset + i, 1), y = t.getFullYear(), m = t.getMonth();
+      var isNow = y === TODAY.y && m === TODAY.m;
+      html += '<section class="month' + (isNow ? " now" : "") + '" id="m-' + y + "-" + m + '"><h2>' + MONTHS[m] + "<span>" + y + "</span></h2>";
+      html += '<div class="grid"><span class="wd">wk</span>' + ["Mo","Tu","We","Th","Fr","Sa","Su"].map(function (w) { return '<span class="wd">' + w + "</span>"; }).join("");
+      var first = (new Date(Date.UTC(y, m, 1)).getUTCDay() + 6) % 7, days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      var cells = [], k;
+      for (k = 0; k < first; k++) cells.push(null);
+      for (k = 1; k <= days; k++) cells.push(k);
+      while (cells.length % 7) cells.push(null);
+      for (var r = 0; r < cells.length; r += 7) {
+        var anyDay = cells.slice(r, r + 7).filter(Boolean)[0];
+        var wk = isoWeek(y, m, anyDay), mon = mondayOf({ y: y, m: m, d: anyDay });
+        var wsel = state.view === "week" && state.week && same(state.week, mon);
+        html += '<button class="wk' + (wsel ? " sel" : "") + '" data-wk="' + mon.y + "," + mon.m + "," + mon.d + '" aria-label="Week ' + wk + ' summary">' + wk + "</button>";
+        for (var c = 0; c < 7; c++) {
+          var dd = cells[r + c];
+          if (!dd) { html += '<span class="d blank"></span>'; continue; }
+          var o = { y: y, m: m, d: dd }, ok = Engine.idxOf(y, m, dd) >= 0, cls = "d";
+          if (ok && dayPlan(o).cheat) cls += " cheat";
+          if (same(o, TODAY)) cls += " today";
+          if (before(o, TODAY)) cls += " past";
+          if (state.view !== "week" && same(o, state.sel)) cls += " sel";
+          html += '<button class="' + cls + '" data-day="' + y + "," + m + "," + dd + '"' + (ok ? "" : " disabled") + ' aria-label="' + dd + " " + MONTHS[m] + '">' + dd + "</button>";
+        }
+      }
+      html += "</div></section>";
+    }
+    $("months").innerHTML = html;
+  }
+
+  // ---- Panel views ---------------------------------------------------------
+  function personCard(label, have, target, kcal) {
+    var pct = Math.min(100, have / target * 100);
+    return '<div class="person"><div class="lbl">' + label + '</div><div class="num">' + r0(have) + ' <small>/ ' + target + " g protein</small></div>" +
+      '<div class="bar"><i class="' + (have < target - 5 ? "low" : "") + '" style="width:' + pct + '%"></i></div><div class="kcal">≈ ' + r0(kcal) + " kcal</div></div>";
+  }
+  function dateTitle(o) { return DOWS[dow(o)] + " " + o.d + " " + MONTHS[o.m]; }
+
+  function viewDay() {
+    var o = state.sel, plan = dayPlan(o);
+    if (!plan) return '<div class="p-in"><p class="empty">No plan before January 2025.</p></div>';
+    var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + '</div><h2 class="p-title">' + dateTitle(o) + "</h2></div>" +
+      '<button class="sheet-close" data-close aria-label="Close">×</button></div>';
+    h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
+    h += '<div class="meals">';
+    ["b", "l", "d"].forEach(function (s) {
+      var r = plan.meals[s], swapped = !!ov[plan.key + "|" + s];
+      h += '<button class="meal" data-recipe="' + s + '"><span class="slot">' + SLOT[s] + (r.cheat ? '<span class="tag cheat">Cheat night</span>' : "") + (swapped ? '<span class="tag swap">Swapped</span>' : "") + "</span>" +
+        '<span class="name">' + esc(r.name) + '</span><span class="go" aria-hidden="true">›</span>' +
+        '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P2 " + r0(r.P * r.share) + " g · P1 " + r0(r.P * (1 - r.share)) + " g</span></button>";
+    });
+    h += "</div>";
+    h += '<div class="snacks">' + ["p1", "p2"].map(function (p) {
+      var sn = plan.people[p].snacks;
+      return "<div><h3>" + PEOPLE[p].label + "</h3>" + (sn.length ? "<ul>" + sn.map(function (s, i) { return "<li><b>Optional snack " + (i + 1) + "</b><br>" + esc(s.name) + " <span class=\"kcal\">" + s.p + " g</span></li>"; }).join("") + "</ul>" : '<span class="empty">No snack needed today</span>') + "</div>";
+    }).join("") + "</div>";
+    h += '<button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " summary and shopping list</button>";
+    return h + "</div>";
+  }
+
+  function fmtIng(it) {
+    var c = CAT[it[0]], a = it[1], u = it[2], amt;
+    if (u === "g" || u === "ml") amt = a >= 1000 ? (a / 1000).toString().replace(".", ",") + (u === "g" ? " kg" : " l") : a + " " + u;
+    else if (u === "pc") amt = frac(a);
+    else if (u === "clove") amt = frac(a) + (a > 1 ? " cloves" : " clove");
+    else if (u === "bunch") amt = frac(a) + " bunch";
+    else amt = frac(a) + " " + u;
+    return '<li><span class="amt">' + amt + "</span><span>" + esc(c.n) + (it[3] ? ' <span class="note">· ' + esc(it[3]) + "</span>" : "") + '<br><span class="fi">' + esc(c.fi) + "</span></span></li>";
+  }
+
+  function viewRecipe() {
+    var o = state.sel, plan = dayPlan(o), s = state.recipe, r = plan.meals[s], k = plan.key + "|" + s;
+    var sp = r.split || { p2: "Larger portion, about " + Math.round(r.share * 100) + " % of the pan", p1: "About " + Math.round((1 - r.share) * 100) + " % of the pan" };
+    var h = '<div class="p-in"><div class="p-head"><button class="back" data-back>‹ ' + dateTitle(o) + '</button><button class="sheet-close" data-close aria-label="Close">×</button></div>';
+    h += '<div><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + " · " + r.time + " min · serves 2</div><h2 class=\"p-title\">" + esc(r.name) + "</h2></div>";
+    h += '<div class="split">' +
+      '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>" + esc(sp.p2) + '</b><div class="kcal">' + r0(r.P * r.share) + " g protein · ≈ " + r0(r.K * r.share) + " kcal</div></div>" +
+      '<div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>" + esc(sp.p1) + '</b><div class="kcal">' + r0(r.P * (1 - r.share)) + " g protein · ≈ " + r0(r.K * (1 - r.share)) + " kcal</div></div></div>";
+    h += '<div class="note-box">Heat ' + heat(r.heat) + " · " + (r.side ? "Serve the salsa or chilli on the side." : "Heat is cooked in; adjust the chilli to taste.") + (r.prep ? " Good for cooking ahead." : "") + "</div>";
+    h += '<div class="sec"><h3>Ingredients for two</h3><ul class="ing">' + r.ing.map(fmtIng).join("") + "</ul></div>";
+    h += '<div class="sec"><h3>Directions</h3><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></div>";
+    var alts = Engine.alternatives(s, o.y, o.m, o.d);
+    h += '<div class="sec"><h3>Swap this meal</h3><div class="swap-row"><select id="swap-sel" aria-label="Choose another recipe">' +
+      alts.map(function (a) { return '<option value="' + a.id + '"' + (a.id === r.id ? " selected" : "") + ">" + esc(a.name) + (a.cheat ? " (cheat)" : "") + "</option>"; }).join("") + "</select>" +
+      (ov[k] ? '<button class="btn" data-reset>Back to plan</button>' : "") + '</div><p class="kcal">Swaps are saved on this device only and don\'t change the rest of the rotation.</p></div>';
+    return h + "</div>";
+  }
+
+  function viewWeek() {
+    var mon = state.week, days = [], i;
+    for (i = 0; i < 7; i++) days.push(addDays(mon, i));
+    var plans = days.map(dayPlan).filter(Boolean);
+    var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">' + mon.d + " " + MONTHS[mon.m].slice(0, 3) + " – " + days[6].d + " " + MONTHS[days[6].m].slice(0, 3) + " " + days[6].y + '</div><h2 class="p-title">Week ' + isoWeek(mon.y, mon.m, mon.d) + '</h2></div><button class="sheet-close" data-close aria-label="Close">×</button></div>';
+    if (!plans.length) return h + '<p class="empty">No plan for this week.</p></div>';
+    var sum = { p1p: 0, p1k: 0, p2p: 0, p2k: 0 };
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Day</th><th>P1 g</th><th>P1 kcal</th><th>P2 g</th><th>P2 kcal</th></tr></thead><tbody>';
+    days.forEach(function (o) {
+      var pl = dayPlan(o); if (!pl) return;
+      sum.p1p += pl.people.p1.p; sum.p1k += pl.people.p1.k; sum.p2p += pl.people.p2.p; sum.p2k += pl.people.p2.k;
+      h += '<tr><td><button data-day="' + o.y + "," + o.m + "," + o.d + '">' + DOWS[dow(o)].slice(0, 3) + " " + o.d + "</button>" + (pl.cheat ? ' <span class="tag cheat">Cheat</span>' : "") + "</td><td>" + r0(pl.people.p1.p) + "</td><td>" + r0(pl.people.p1.k) + "</td><td>" + r0(pl.people.p2.p) + "</td><td>" + r0(pl.people.p2.k) + "</td></tr>";
+    });
+    var n = plans.length;
+    h += '<tr class="avg"><td>Daily average</td><td>' + r0(sum.p1p / n) + "</td><td>" + r0(sum.p1k / n) + "</td><td>" + r0(sum.p2p / n) + "</td><td>" + r0(sum.p2k / n) + "</td></tr></tbody></table></div>";
+    h += '<p class="kcal">Targets: ' + PEOPLE.p1.label + " " + PEOPLE.p1.protein + " g, " + PEOPLE.p2.label + " " + PEOPLE.p2.protein + " g protein a day. Calories are estimates from the recipe weights.</p>";
+
+    // shopping list
+    var agg = {}, pantry = {};
+    function add(it, mult) {
+      var c = CAT[it[0]]; if (!c) return;
+      if (c.pantry) { pantry[c.n] = 1; return; }
+      var u = it[2] === "clove" || it[2] === "bunch" || it[2] === "pc" || it[2] === "g" || it[2] === "ml" ? it[2] : null;
+      if (!u) { pantry[c.n] = 1; return; }
+      var key = it[0] + "|" + u; agg[key] = agg[key] || { c: c, u: u, a: 0 }; agg[key].a += it[1] * mult;
+    }
+    plans.forEach(function (pl) {
+      ["b", "l", "d"].forEach(function (s) { pl.meals[s].ing.forEach(function (it) { add(it, 1); }); });
+      ["p1", "p2"].forEach(function (p) { pl.people[p].snacks.forEach(function (sn) { sn.ing.forEach(function (it) { add(it, 1); }); }); });
+    });
+    var bySec = {}, text = [];
+    Object.keys(agg).forEach(function (k) { var x = agg[k]; (bySec[x.c.s] = bySec[x.c.s] || []).push(x); });
+    var order = ["Meat", "Dairy & eggs", "Vegetables & fruit", "Bread & grains", "Tins & jars", "Frozen", "Other"];
+    h += '<div class="sec shop"><div class="p-head"><h3>Shopping list</h3><button class="btn" id="copy">Copy list</button></div>';
+    order.forEach(function (sec) {
+      var list = bySec[sec]; if (!list) return;
+      list.sort(function (a, b) { return a.c.n.localeCompare(b.c.n); });
+      h += "<h4>" + sec + "</h4><ul>"; text.push(sec.toUpperCase());
+      list.forEach(function (x) {
+        var a = x.a, amt;
+        if (x.u === "g" || x.u === "ml") { a = Math.ceil(a / 10) * 10; amt = a >= 1000 ? (a / 1000).toFixed(1).replace(".", ",") + (x.u === "g" ? " kg" : " l") : a + " " + x.u; }
+        else if (x.u === "pc") amt = Math.ceil(a) + " pcs";
+        else if (x.u === "clove") amt = Math.ceil(a) + " cloves";
+        else amt = Math.ceil(a) + " bunch";
+        h += "<li><span>" + esc(x.c.n) + "</span><span>" + amt + "</span></li>"; text.push("- " + x.c.n + ": " + amt);
+      });
+      h += "</ul>";
+    });
+    var pk = Object.keys(pantry).sort();
+    h += '<h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
+    text.push("PANTRY: " + pk.join(", "));
+    state.shopText = "Week " + isoWeek(mon.y, mon.m, mon.d) + "\n" + text.join("\n");
+    return h + "</div>";
+  }
+
+  function renderPanel() {
+    var p = $("panel");
+    p.innerHTML = state.view === "recipe" ? viewRecipe() : state.view === "week" ? viewWeek() : viewDay();
+    p.scrollTop = 0;
+    var sel = $("swap-sel");
+    if (sel) sel.addEventListener("change", function () {
+      var o = state.sel, k = Engine.key(o.y, o.m, o.d) + "|" + state.recipe, base = dayPlan(o).base[state.recipe].id;
+      if (sel.value === base) delete ov[k]; else ov[k] = sel.value;
+      saveOv(); renderMonths(); renderPanel();
+    });
+    var cp = $("copy");
+    if (cp) cp.addEventListener("click", function () {
+      var done = function () { cp.textContent = "Copied"; setTimeout(function () { cp.textContent = "Copy list"; }, 1500); };
+      try { navigator.clipboard.writeText(state.shopText).then(done, function () { cp.textContent = "Copy not available"; }); } catch (e) { cp.textContent = "Copy not available"; }
+    });
+  }
+
+  var mq = window.matchMedia("(min-width: 1100px)");
+  function openSheet(v) { if (mq.matches) return; $("panel").classList.toggle("open", v); $("backdrop").hidden = !v; }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-day],[data-wk],[data-recipe],[data-back],[data-close],[data-reset],#backdrop");
+    if (!t) return;
+    if (t.id === "backdrop" || t.hasAttribute("data-close")) { openSheet(false); return; }
+    if (t.hasAttribute("data-day")) { var a = t.getAttribute("data-day").split(",").map(Number); state.sel = { y: a[0], m: a[1], d: a[2] }; state.view = "day"; }
+    else if (t.hasAttribute("data-wk")) { var w = t.getAttribute("data-wk").split(",").map(Number); state.week = { y: w[0], m: w[1], d: w[2] }; state.view = "week"; }
+    else if (t.hasAttribute("data-recipe")) { state.recipe = t.getAttribute("data-recipe"); state.view = "recipe"; }
+    else if (t.hasAttribute("data-back")) { state.view = "day"; }
+    else if (t.hasAttribute("data-reset")) { var o = state.sel; delete ov[Engine.key(o.y, o.m, o.d) + "|" + state.recipe]; saveOv(); }
+    renderMonths(); renderPanel(); openSheet(true);
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") openSheet(false); });
+
+  function centerNow() {
+    var t = new Date(TODAY.y, TODAY.m + state.offset, 1), el = $("m-" + t.getFullYear() + "-" + t.getMonth());
+    if (el) el.scrollIntoView({ block: "center" });
+  }
+  $("prev").addEventListener("click", function () { state.offset -= 3; renderMonths(); centerNow(); });
+  $("next").addEventListener("click", function () { state.offset += 3; renderMonths(); centerNow(); });
+  $("today").addEventListener("click", function () { state.offset = 0; state.sel = { y: TODAY.y, m: TODAY.m, d: TODAY.d }; state.view = "day"; renderMonths(); renderPanel(); centerNow(); openSheet(true); });
+
+  renderMonths(); renderPanel();
+  requestAnimationFrame(centerNow);
+})();
+</script>
