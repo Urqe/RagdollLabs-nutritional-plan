@@ -45,10 +45,9 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 
 Order agreed after the 2026-10-19 review (see "Review 2026-10-19" below):
 
-1. v0.8: Private store data
-2. v0.9: Correct numbers
-3. v0.10: Cook and shop from the app
-4. v0.11: Today first, phone and iPad
+1. v0.9: Correct numbers
+2. v0.10: Cook and shop from the app
+3. v0.11: Today first, phone and iPad
 
 ---
 
@@ -60,7 +59,7 @@ How prices are collected
 - K-Ruoka blocks automated fetching, so prices cannot be scraped. They come from a browser session on K-Ruoka (signed in, reference store selected) or are entered by hand.
 - Prices live in their own file, `src/prices.js`, separate from nutrition data, so a price refresh only touches one file.
 - Start with estimates marked `estimate`, then replace them with checked prices. The page shows which prices are still estimates.
-- Reference store: a K-chain market. a second K-chain store is the second store, used when the first store doesn't stock an item and as a sanity check on a sample basket.
+- Prices based on a K-chain market, with a second store used when the first doesn't stock an item and as a sanity check on a sample basket.
 - Costs are shown for the household, never split per person: per day and per month.
 
 Scope
@@ -88,7 +87,7 @@ Shipped notes
 - Estimated food cost: about 24 € a day, 670–750 € a month for the household.
 
 Decided
-- Reference store a K-chain market, with a second K-chain store as the second store.
+- Prices based on a K-chain market, with a second store as backup.
 - Costs shown per day and per month for the household, no per-person split.
 
 ---
@@ -250,16 +249,16 @@ Notes
 
 ---
 
-## v0.8: Neutral store wording
+## v0.8: Neutral store wording (shipped)
 
 Goal: the repo and the page say prices are based on "a K-chain market", without naming a store.
 
-- [ ] Remove store names from `src/prices.js` (`PRICE_META`), the page, README, this file and the build output. Product names, pack sizes and prices stay in `src/prices.js` as they are.
-- [ ] Price note on the page: "Prices are estimates based on a K-chain market."
-- [ ] Rename the `store`/`alt` fields so they no longer hold a store name.
+- [x] Remove store names from `src/prices.js` (`PRICE_META`), the page, README, this file and the build output. Product names, pack sizes and prices stay in `src/prices.js` as they are.
+- [x] Price note on the page: "Prices are estimates based on a K-chain market."
+- [x] `PRICE_META` now has `basis: "a K-chain market"` instead of `store`/`alt`; the per-item `store` field is gone.
 
-Decision needed before shipping
-- [ ] Git history: store names are in about 25 earlier commits. Either rewrite history and force-push (as done for body data in v0.1), or leave it and accept that old commits show them. Rewriting doesn't reach copies someone already cloned.
+Open decision
+- [ ] Git history: store names are still in commits before v0.8. Either rewrite history and force-push (as done for body data in v0.1), or leave it. Rewriting doesn't reach copies someone already cloned. Not done in v0.8 because a force-push needs an explicit go-ahead.
 
 Checks
 - No store names in tracked files or either built page (manual search; the names are not written into a check script).
@@ -405,3 +404,4 @@ Not taken:
 | v0.6 | 2026-10-18 | Light/dark/automatic theme switch, RagdollLabs cat logo and footer, visual refresh, fix for page stretch from hidden layers. |
 | v0.6.1 | 2026-10-18 | No beetroot or bananas: 8 recipes adjusted, banned-ingredient check added. |
 | v0.7 | 2026-10-18 | Shopping list grouped into three trips per week (Mon–Tue, Wed–Thu, Fri–Sun), with per-trip copy. |
+| v0.8 | 2026-10-19 | Store names removed; prices described as based on a K-chain market. Git history not rewritten (open decision). |

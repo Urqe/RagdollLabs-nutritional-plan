@@ -1,9 +1,9 @@
 // ---- Prices, pack sizes and shelf life -----------------------------------
-// Reference store: a K-chain market. Second store: a second K-chain store.
+// Prices are estimates based on a K-chain market.
 // status "estimate" = typical everyday price, not yet checked in the store.
 // packs: [size, unit, price €]. loose: [unit, € per unit] for items sold by weight or piece.
 // keeps: days it stays good once opened (or bought, for fresh produce). freezes: freezes well.
-var PRICE_META = { store: "a K-chain market", alt: "a second K-chain store", updated: "2026-10-18" };
+var PRICE_META = { basis: "a K-chain market", updated: "2026-10-18" };
 
 var PRICES = {
   // Meat
@@ -110,6 +110,6 @@ var PRICES = {
   peanut:     { product: "Unsalted peanuts", packs: [[300,"g",2.49]], keeps: 90, freezes: false },
   darkchoc:   { product: "Dark chocolate 70 %", packs: [[100,"g",2.29]], keeps: 180, freezes: false }
 };
-Object.keys(PRICES).forEach(function (k) { PRICES[k].status = PRICES[k].status || "estimate"; PRICES[k].checked = PRICES[k].checked || null; PRICES[k].store = PRICES[k].store || PRICE_META.store; });
+Object.keys(PRICES).forEach(function (k) { PRICES[k].status = PRICES[k].status || "estimate"; PRICES[k].checked = PRICES[k].checked || null; });
 
 if (typeof module !== "undefined") module.exports = { PRICES, PRICE_META };

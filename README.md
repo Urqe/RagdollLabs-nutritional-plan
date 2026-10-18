@@ -75,7 +75,7 @@ tools/test-ui.py      browser test of zoom, touch gestures, taps, keyboard and l
 
 ## Prices
 
-Prices are for a K-chain market, with a second K-chain store as the second store. They are estimates until checked in the store; each entry in `src/prices.js` has a `status` (`estimate` or `checked`) and the date it was checked. To update a price, change the pack prices, set `status: "checked"` and the `checked` date.
+Prices are estimates based on a K-chain market. They are refreshed as a separate task when needed; each entry in `src/prices.js` has a `status` (`estimate` or `checked`) and the date it was checked. To update a price, change the pack prices, set `status: "checked"` and the `checked` date.
 
 The shopping list is split into three trips a week. Short-lived items are bought per trip; items that keep for 10 days or more are bought once, on the first trip that needs them. Leftovers from an earlier trip are used first. Each purchase is the cheapest mix of pack sizes, preferring fewer packs when the price is within 3 %. Long-life items (dry goods, frozen food, protein powder) are listed separately with how long a pack lasts, and are not counted in the weekly checkout total.
 
