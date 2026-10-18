@@ -8,10 +8,11 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 2. Make the changes in `src/`, `tools/` or the docs. Never edit `index.html` by hand.
 3. Run the checks:
    - `node tools/check-year.js`: weekly protein averages at or above both targets, no repeat violations.
+   - `node tools/check-prices.js`: every ingredient priced, no unit mismatches.
    - `python3 build.py`: rebuilds `index.html`.
    - Privacy check: no height, weight or other body data anywhere in the repo (automated from v0.3, manual search until then).
 4. Open the page in a browser at phone and desktop width and click through one day, one recipe and one week.
-5. Commit, open a pull request into `main`, merge.
+5. Commit, merge into `main` (pull request on GitHub, or `git merge --no-ff` locally), push.
 6. GitHub Pages updates from `main` automatically. Republish the Claude page from the new `index.html` too.
 7. Update this file: tick the items, add the release to the log with the date and anything that changed from the plan.
 
@@ -39,7 +40,7 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 
 ## Current focus
 
-1. v0.2 Prices and pack guidance
+1. v0.2.1 Check prices in the store
 2. v0.3 Calendar zoom and touch
 3. v0.4 Recipe library to 80 and waste-aware rotation
 
@@ -47,7 +48,7 @@ Everything after v0.4 is later work and can be reordered.
 
 ---
 
-## v0.2: Prices and pack guidance
+## v0.2: Prices and pack guidance (shipped)
 
 Goal: every recipe, day and month shows an estimated cost from K-Ruoka prices, and each week's shopping list says which pack sizes to buy.
 
@@ -59,26 +60,47 @@ How prices are collected
 - Costs are shown for the household, never split per person: per day and per month.
 
 Scope
-- [ ] `src/prices.js`: one row per catalogue ingredient with product name, store, the pack sizes on sale (with price for each), unit price (€/kg, €/l or €/pc), status (`estimate` or `checked`) and date checked.
-- [ ] Shelf life per ingredient: how many days it keeps once opened or bought fresh, and whether it freezes well. Used by the pack guidance below and the waste-aware rotation in v0.4.
-- [ ] Fill estimates for all non-pantry ingredients (about 110), preferring everyday K-Menu and Pirkka-level products.
-- [ ] Replace estimates with checked prices from the reference store.
-- [ ] Recipe cost for the household, on the recipe view.
-- [ ] Cost per day on the day view. Cost per month (and the daily average) on a month summary; the weekly summary shows the week's cost.
-- [ ] Shopping list: rounds up to whole packs and shows the expected checkout total. Pantry items listed without price.
-- [ ] Pack guidance in the weekly shopping list: which pack size to buy for each item ("chicken breast: 1 × 1 kg, uses 860 g, 140 g left"), choosing the cheapest combination of packs that covers the week.
-- [ ] Leftover warnings: items where the chosen pack leaves more than about 20 % unused, with a note on whether the rest freezes, keeps until next week, or will be wasted.
-- [ ] Swap menu shows the cost difference of each alternative.
-- [ ] `tools/check-prices.js`: lists missing prices, remaining estimates and prices older than 90 days.
-- [ ] Page note: "Prices estimated from K-Ruoka, last checked <date>".
+- [x] `src/prices.js`: one row per catalogue ingredient with product name, store, the pack sizes on sale (with price for each), unit price (€/kg, €/l or €/pc), status (`estimate` or `checked`) and date checked.
+- [x] Shelf life per ingredient: how many days it keeps once opened or bought fresh, and whether it freezes well. Used by the pack guidance below and the waste-aware rotation in v0.4.
+- [x] Fill estimates for all non-pantry ingredients (about 110), preferring everyday K-Menu and Pirkka-level products.
+- [ ] Replace estimates with checked prices from the reference store. Moved to v0.2.1.
+- [x] Recipe cost for the household, on the recipe view.
+- [x] Cost per day on the day view. Cost per month (and the daily average) on a month summary; the weekly summary shows the week's cost.
+- [x] Shopping list: rounds up to whole packs and shows the expected checkout total. Pantry items listed without price.
+- [x] Pack guidance in the weekly shopping list: which pack size to buy for each item ("chicken breast: 1 × 1 kg, uses 860 g, 140 g left"), choosing the cheapest combination of packs that covers the week.
+- [x] Leftover warnings: items where the chosen pack leaves more than about 20 % unused, with a note on whether the rest freezes, keeps until next week, or will be wasted.
+- [x] Swap menu shows the cost difference of each alternative.
+- [x] `tools/check-prices.js`: lists missing prices, remaining estimates and prices older than 90 days.
+- [x] Page note: "Prices estimated from K-Ruoka, last checked <date>".
 
 Checks
-- Every non-pantry ingredient has a price.
-- A sample week's shopping total matches a real K-Ruoka basket within about 10 %.
+- [x] Every non-pantry ingredient has a price.
+- [ ] A sample week's shopping total matches a real K-Ruoka basket within about 10 %. Moved to v0.2.1.
+
+Shipped notes
+- All 86 priced ingredients are estimates. K-Ruoka blocks automated reading, so checking needs a browser session or manual entry.
+- Long-life items (dry goods, frozen, protein powder) are listed separately in the shopping list with how long a pack lasts, and are left out of the weekly checkout total.
+- The pack picker prefers fewer packs when the price is within 3 %.
+- Estimated food cost: about 24 € a day, 670–750 € a month for the household.
 
 Decided
 - Reference store a K-chain market, with a second K-chain store as the second store.
 - Costs shown per day and per month for the household, no per-person split.
+
+---
+
+## v0.2.1: Check prices in the store
+
+Goal: replace the estimates with real prices from a K-chain market.
+
+Scope
+- [ ] Check all 86 ingredients on K-Ruoka with a K-chain market selected, in a browser session, and record product, pack sizes, prices and date. Use a second K-chain store for anything the first store doesn't stock.
+- [ ] Set `status: "checked"` and the `checked` date for each.
+- [ ] Price one sample week's shopping list as a real K-Ruoka basket and compare with the app's checkout total.
+
+Checks
+- `node tools/check-prices.js` reports 0 estimates.
+- Sample basket within about 10 % of the app's total.
 
 ---
 
@@ -179,3 +201,4 @@ Checks
 | Version | Date | Notes |
 |---|---|---|
 | v0.1 | 2026-10-18 | First version. Recipes reworked in the Come Conmigo style the same day. |
+| v0.2 | 2026-10-18 | Prices, pack guidance, leftover warnings, month cost summary. Prices are estimates; store check moved to v0.2.1. |

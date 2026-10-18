@@ -138,9 +138,20 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
 .shop h4 { margin: 10px 0 2px; font-size: .85rem; }
 .shop ul { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
 .shop li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-bottom: 1px solid var(--line); }
-.shop li span:last-child { font-family: var(--f-mono); font-size: .8rem; white-space: nowrap; }
+.shop li > span:last-child { font-family: var(--f-mono); font-size: .8rem; white-space: nowrap; }
 .pantry { font-size: .85rem; color: var(--muted); }
 .empty { color: var(--muted); font-size: .9rem; }
+.mh { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; border-radius: 6px; }
+.mh:hover, .mh.sel { color: var(--cobalt); }
+.costline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 9px 12px; border-radius: 8px; background: var(--cobalt-soft); font-size: .9rem; }
+.costline b { font-family: var(--f-mono); font-weight: 500; font-size: 1rem; white-space: nowrap; }
+.shop li { align-items: flex-start; padding: 6px 0; }
+.shop .it { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.shop .det { font-size: .76rem; color: var(--muted); }
+.shop .buy { text-align: right; }
+.adv.waste { color: var(--chile); font-weight: 600; }
+.adv.freeze, .adv.keeps { color: var(--good); }
+.price-note { margin: 0; }
 </style>
 
 <header class="top">
@@ -160,7 +171,7 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     <div class="legend">
       <span><i class="ring"></i>Today</span>
       <span><i class="dot"></i>Cheat night</span>
-      <span>Tap a week number for the weekly summary and shopping list</span>
+      <span>Tap a week number for the weekly summary and shopping list, or a month name for its cost</span>
     </div>
     <div class="months" id="months"></div>
   </main>
@@ -170,6 +181,12 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
 
 <script>
 /*DATA*/
+</script>
+<script>
+/*PRICES*/
+</script>
+<script>
+/*PRICING*/
 </script>
 <script>
 /*ENGINE*/
@@ -204,6 +221,23 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
   function same(a, b) { return a && b && a.y === b.y && a.m === b.m && a.d === b.d; }
   function before(a, b) { return Date.UTC(a.y, a.m, a.d) < Date.UTC(b.y, b.m, b.d); }
   function dayPlan(o) { return Engine.day(o.y, o.m, o.d, ov); }
+  function eur(x, dec) { return (dec === 0 ? String(Math.round(x)) : x.toFixed(2).replace(".", ",")) + " €"; }
+  function priceNote() { return '<p class="kcal price-note">Prices are estimates for ' + esc(PRICE_META.store) + ", not yet checked in the store. Updated " + esc(PRICE_META.updated) + ".</p>"; }
+  function monthPlans(y, m) {
+    var n = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(), out = [];
+    for (var d = 1; d <= n; d++) { var pl = dayPlan({ y: y, m: m, d: d }); if (pl) out.push({ o: { y: y, m: m, d: d }, pl: pl }); }
+    return out;
+  }
+  function fmtPack(a, u) {
+    if (u === "g" || u === "ml") return a >= 1000 ? String(a / 1000).replace(".", ",") + (u === "g" ? " kg" : " l") : a + " " + u;
+    return a + (u === "pc" ? " pcs" : u === "clove" ? " cloves" : " bunch");
+  }
+  function fmtQty(a, u) {
+    if (u === "g" || u === "ml") { a = Math.ceil(a / 10) * 10; return a >= 1000 ? (a / 1000).toFixed(a % 1000 ? 1 : 0).replace(".", ",") + (u === "g" ? " kg" : " l") : a + " " + u; }
+    if (u === "pc") return frac(Math.round(a * 4) / 4) + " pcs";
+    if (u === "clove") return Math.ceil(a) + " cloves";
+    return frac(Math.round(a * 4) / 4) + " bunch";
+  }
   function heat(n) { var s = ""; for (var i = 1; i <= 3; i++) s += i <= n ? "●" : '<span class="off">●</span>'; return '<span class="heat" aria-label="Heat ' + n + ' of 3">' + s + "</span>"; }
 
   $("targets").innerHTML = ["p1", "p2"].map(function (p) {
@@ -216,7 +250,9 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     for (var i = -5; i <= 6; i++) {
       var t = new Date(TODAY.y, TODAY.m + state.offset + i, 1), y = t.getFullYear(), m = t.getMonth();
       var isNow = y === TODAY.y && m === TODAY.m;
-      html += '<section class="month' + (isNow ? " now" : "") + '" id="m-' + y + "-" + m + '"><h2>' + MONTHS[m] + "<span>" + y + "</span></h2>";
+      var mp = monthPlans(y, m), mcost = mp.reduce(function (s, x) { return s + x.pl.cost; }, 0);
+      var msel = state.view === "month" && state.month && state.month.y === y && state.month.m === m;
+      html += '<section class="month' + (isNow ? " now" : "") + '" id="m-' + y + "-" + m + '"><h2><button class="mh' + (msel ? " sel" : "") + '" data-month="' + y + "," + m + '" aria-label="' + MONTHS[m] + ' summary">' + MONTHS[m] + "</button><span>" + y + (mp.length ? " · ≈ " + eur(mcost, 0) : "") + "</span></h2>";
       html += '<div class="grid"><span class="wd">wk</span>' + ["Mo","Tu","We","Th","Fr","Sa","Su"].map(function (w) { return '<span class="wd">' + w + "</span>"; }).join("");
       var first = (new Date(Date.UTC(y, m, 1)).getUTCDay() + 6) % 7, days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
       var cells = [], k;
@@ -235,7 +271,7 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
           if (ok && dayPlan(o).cheat) cls += " cheat";
           if (same(o, TODAY)) cls += " today";
           if (before(o, TODAY)) cls += " past";
-          if (state.view !== "week" && same(o, state.sel)) cls += " sel";
+          if (state.view !== "week" && state.view !== "month" && same(o, state.sel)) cls += " sel";
           html += '<button class="' + cls + '" data-day="' + y + "," + m + "," + dd + '"' + (ok ? "" : " disabled") + ' aria-label="' + dd + " " + MONTHS[m] + '">' + dd + "</button>";
         }
       }
@@ -258,21 +294,22 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + '</div><h2 class="p-title">' + dateTitle(o) + "</h2></div>" +
       '<button class="sheet-close" data-close aria-label="Close">×</button></div>';
     h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
+    h += '<div class="costline"><span>Food cost today</span><b>≈ ' + eur(plan.cost) + "</b></div>";
     h += '<div class="meals">';
     ["b", "l", "d"].forEach(function (s) {
       var r = plan.meals[s], swapped = !!ov[plan.key + "|" + s];
       h += '<button class="meal" data-recipe="' + s + '"><span class="slot">' + SLOT[s] + (r.cheat ? '<span class="tag cheat">Cheat night</span>' : "") + (swapped ? '<span class="tag swap">Swapped</span>' : "") + "</span>" +
         '<span class="name">' + esc(r.name) + '</span><span class="go" aria-hidden="true">›</span>' +
-        '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P2 " + r0(r.P * r.share) + " g · P1 " + r0(r.P * (1 - r.share)) + " g</span></button>";
+        '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P2 " + r0(r.P * r.share) + " g · P1 " + r0(r.P * (1 - r.share)) + " g · ≈ " + eur(r.C) + "</span></button>";
     });
     h += "</div>";
     h += '<div class="snacks"><h3>Optional extras</h3><ul>' +
       "<li><b>Morning juice</b> · " + esc(plan.juice.name) + ' <span class="kcal">Blend with ½ cup water and ice</span></li>' +
       plan.snacks.map(function (s, i) {
         return "<li><b>Optional snack " + (i + 1) + "</b> · " + esc(s.name) + ' <span class="kcal">' + esc(s.desc) + " · " + s.p + " g protein each</span></li>";
-      }).join("") + '</ul><p class="kcal">Daily totals above include optional snack 1.</p></div>';
+      }).join("") + '</ul><p class="kcal">Daily totals above include optional snack 1. The food cost includes the juice and both snacks.</p></div>';
     h += '<button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " summary and shopping list</button>";
-    return h + "</div>";
+    return h + priceNote() + "</div>";
   }
 
   function fmtIng(it) {
@@ -289,7 +326,7 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     var o = state.sel, plan = dayPlan(o), s = state.recipe, r = plan.meals[s], k = plan.key + "|" + s;
     var sp = r.split || { p2: "Larger portion, about " + Math.round(r.share * 100) + " % of the pan", p1: "About " + Math.round((1 - r.share) * 100) + " % of the pan" };
     var h = '<div class="p-in"><div class="p-head"><button class="back" data-back>‹ ' + dateTitle(o) + '</button><button class="sheet-close" data-close aria-label="Close">×</button></div>';
-    h += '<div><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + " · " + r.time + " min · serves 2</div><h2 class=\"p-title\">" + esc(r.name) + "</h2></div>";
+    h += '<div><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + " · " + r.time + " min · serves 2 · ≈ " + eur(r.C) + "</div><h2 class=\"p-title\">" + esc(r.name) + "</h2></div>";
     h += '<div class="split">' +
       '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>" + esc(sp.p2) + '</b><div class="kcal">' + r0(r.P * r.share) + " g protein · ≈ " + r0(r.K * r.share) + " kcal</div></div>" +
       '<div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>" + esc(sp.p1) + '</b><div class="kcal">' + r0(r.P * (1 - r.share)) + " g protein · ≈ " + r0(r.K * (1 - r.share)) + " kcal</div></div></div>";
@@ -298,7 +335,9 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     h += '<div class="sec"><h3>Directions</h3><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></div>";
     var alts = Engine.alternatives(s, o.y, o.m, o.d);
     h += '<div class="sec"><h3>Swap this meal</h3><div class="swap-row"><select id="swap-sel" aria-label="Choose another recipe">' +
-      alts.map(function (a) { return '<option value="' + a.id + '"' + (a.id === r.id ? " selected" : "") + ">" + esc(a.name) + (a.cheat ? " (cheat)" : "") + "</option>"; }).join("") + "</select>" +
+      alts.map(function (a) {
+        var dlt = a.C - r.C, ds = a.id === r.id ? "" : " (" + (dlt >= 0 ? "+" : "−") + eur(Math.abs(dlt)) + ")";
+        return '<option value="' + a.id + '"' + (a.id === r.id ? " selected" : "") + ">" + esc(a.name) + (a.cheat ? " (cheat)" : "") + ds + "</option>"; }).join("") + "</select>" +
       (ov[k] ? '<button class="btn" data-reset>Back to plan</button>' : "") + '</div><p class="kcal">Swaps are saved on this device only and don\'t change the rest of the rotation.</p></div>';
     return h + "</div>";
   }
@@ -309,59 +348,104 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     var plans = days.map(dayPlan).filter(Boolean);
     var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">' + mon.d + " " + MONTHS[mon.m].slice(0, 3) + " – " + days[6].d + " " + MONTHS[days[6].m].slice(0, 3) + " " + days[6].y + '</div><h2 class="p-title">Week ' + isoWeek(mon.y, mon.m, mon.d) + '</h2></div><button class="sheet-close" data-close aria-label="Close">×</button></div>';
     if (!plans.length) return h + '<p class="empty">No plan for this week.</p></div>';
-    var sum = { p1p: 0, p1k: 0, p2p: 0, p2k: 0 };
-    h += '<div class="tbl-wrap"><table><thead><tr><th>Day</th><th>P1 g</th><th>P1 kcal</th><th>P2 g</th><th>P2 kcal</th></tr></thead><tbody>';
+    var sum = { p1p: 0, p1k: 0, p2p: 0, p2k: 0, c: 0 };
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Day</th><th>P1 g</th><th>P1 kcal</th><th>P2 g</th><th>P2 kcal</th><th>Cost</th></tr></thead><tbody>';
     days.forEach(function (o) {
       var pl = dayPlan(o); if (!pl) return;
-      sum.p1p += pl.people.p1.p; sum.p1k += pl.people.p1.k; sum.p2p += pl.people.p2.p; sum.p2k += pl.people.p2.k;
-      h += '<tr><td><button data-day="' + o.y + "," + o.m + "," + o.d + '">' + DOWS[dow(o)].slice(0, 3) + " " + o.d + "</button>" + (pl.cheat ? ' <span class="tag cheat">Cheat</span>' : "") + "</td><td>" + r0(pl.people.p1.p) + "</td><td>" + r0(pl.people.p1.k) + "</td><td>" + r0(pl.people.p2.p) + "</td><td>" + r0(pl.people.p2.k) + "</td></tr>";
+      sum.p1p += pl.people.p1.p; sum.p1k += pl.people.p1.k; sum.p2p += pl.people.p2.p; sum.p2k += pl.people.p2.k; sum.c += pl.cost;
+      h += '<tr><td><button data-day="' + o.y + "," + o.m + "," + o.d + '">' + DOWS[dow(o)].slice(0, 3) + " " + o.d + "</button>" + (pl.cheat ? ' <span class="tag cheat">Cheat</span>' : "") + "</td><td>" + r0(pl.people.p1.p) + "</td><td>" + r0(pl.people.p1.k) + "</td><td>" + r0(pl.people.p2.p) + "</td><td>" + r0(pl.people.p2.k) + "</td><td>" + eur(pl.cost) + "</td></tr>";
     });
     var n = plans.length;
-    h += '<tr class="avg"><td>Daily average</td><td>' + r0(sum.p1p / n) + "</td><td>" + r0(sum.p1k / n) + "</td><td>" + r0(sum.p2p / n) + "</td><td>" + r0(sum.p2k / n) + "</td></tr></tbody></table></div>";
+    h += '<tr class="avg"><td>Daily average</td><td>' + r0(sum.p1p / n) + "</td><td>" + r0(sum.p1k / n) + "</td><td>" + r0(sum.p2p / n) + "</td><td>" + r0(sum.p2k / n) + "</td><td>" + eur(sum.c / n) + "</td></tr></tbody></table></div>";
+    h += '<div class="costline"><span>Food cost this week</span><b>≈ ' + eur(sum.c) + "</b></div>";
     h += '<p class="kcal">Targets: ' + PEOPLE.p1.label + " " + PEOPLE.p1.protein + " g, " + PEOPLE.p2.label + " " + PEOPLE.p2.protein + " g protein a day. Calories are estimates from the recipe weights.</p>";
 
-    // shopping list
-    var agg = {}, pantry = {};
+    // shopping list with pack guidance
+    var need = {}, pantry = {};
     function add(it, mult) {
       var c = CAT[it[0]]; if (!c) return;
-      if (c.pantry) { pantry[c.n] = 1; return; }
-      var u = it[2] === "clove" || it[2] === "bunch" || it[2] === "pc" || it[2] === "g" || it[2] === "ml" ? it[2] : null;
-      if (!u) { pantry[c.n] = 1; return; }
-      var key = it[0] + "|" + u; agg[key] = agg[key] || { c: c, u: u, a: 0 }; agg[key].a += it[1] * mult;
+      if (c.pantry || !PRICES[it[0]]) { pantry[c.n] = 1; return; }
+      need[it[0]] = (need[it[0]] || 0) + Pricing.need(it) * mult;
     }
     plans.forEach(function (pl) {
       ["b", "l", "d"].forEach(function (s) { pl.meals[s].ing.forEach(function (it) { add(it, 1); }); });
       pl.snacks.forEach(function (sn) { sn.ing.forEach(function (it) { add(it, 2); }); }); // both snacks, for two
       pl.juice.ing.forEach(function (it) { add(it, 2); });
     });
-    var bySec = {}, text = [];
-    Object.keys(agg).forEach(function (k) { var x = agg[k]; (bySec[x.c.s] = bySec[x.c.s] || []).push(x); });
+    var bySec = {}, text = [], total = 0, risk = [], riskSum = 0, stock = [], stockUsed = 0;
+    Object.keys(need).forEach(function (id) {
+      if (need[id] <= 0) return;
+      if (Pricing.isStock(id)) {
+        var used = need[id] * Pricing.unitPrice(id), pk = PRICES[id].packs[PRICES[id].packs.length - 1];
+        stockUsed += used; stock.push({ c: CAT[id], u: Pricing.packUnit(id), need: need[id], pk: pk, used: used });
+        return;
+      }
+      var res = Pricing.bestPacks(id, need[id]), adv = Pricing.leftoverAdvice(id, res), u = Pricing.packUnit(id);
+      total += res.cost;
+      if (adv && adv.kind === "waste") { risk.push(CAT[id].n); riskSum += adv.value; }
+      (bySec[CAT[id].s] = bySec[CAT[id].s] || []).push({ id: id, c: CAT[id], p: PRICES[id], res: res, adv: adv, u: u, need: need[id] });
+    });
     var order = ["Meat", "Dairy & eggs", "Vegetables & fruit", "Bread & grains", "Tins & jars", "Frozen", "Other"];
     h += '<div class="sec shop"><div class="p-head"><h3>Shopping list</h3><button class="btn" id="copy">Copy list</button></div>';
+    h += '<div class="costline"><span>Expected checkout, fresh items</span><b>≈ ' + eur(total) + "</b></div>";
     order.forEach(function (sec) {
       var list = bySec[sec]; if (!list) return;
       list.sort(function (a, b) { return a.c.n.localeCompare(b.c.n); });
       h += "<h4>" + sec + "</h4><ul>"; text.push(sec.toUpperCase());
       list.forEach(function (x) {
-        var a = x.a, amt;
-        if (x.u === "g" || x.u === "ml") { a = Math.ceil(a / 10) * 10; amt = a >= 1000 ? (a / 1000).toFixed(1).replace(".", ",") + (x.u === "g" ? " kg" : " l") : a + " " + x.u; }
-        else if (x.u === "pc") amt = Math.ceil(a) + " pcs";
-        else if (x.u === "clove") amt = Math.ceil(a) + " cloves";
-        else amt = Math.ceil(a) + " bunch";
-        h += "<li><span>" + esc(x.c.n) + "</span><span>" + amt + "</span></li>"; text.push("- " + x.c.n + ": " + amt);
+        var buy = x.res.loose ? fmtQty(x.res.buy, x.u) : x.res.packs.map(function (pk) { return pk[0] + " × " + fmtPack(pk[1][0], pk[1][1]); }).join(" + ");
+        var detail = "uses " + fmtQty(x.need, x.u);
+        if (!x.res.loose && x.res.left > 0.001) detail += " · " + fmtQty(x.res.left, x.u) + " left";
+        if (x.adv) detail += ', <span class="adv ' + x.adv.kind + '">' + esc(x.adv.text) + "</span>";
+        h += '<li><span class="it"><span>' + esc(x.c.n) + '</span><span class="det">' + detail + '</span></span><span class="buy">' + buy + "<br>" + eur(x.res.cost) + "</span></li>";
+        text.push("- " + x.c.n + ": " + buy + " (" + eur(x.res.cost) + ")" + (x.adv ? ", " + x.adv.text : ""));
       });
       h += "</ul>";
     });
+    if (stock.length) {
+      stock.sort(function (a, b) { return a.c.n.localeCompare(b.c.n); });
+      h += '<h4>Long-life items · buy when you run out</h4><ul>'; text.push("LONG-LIFE (BUY WHEN YOU RUN OUT)");
+      stock.forEach(function (x) {
+        var weeks = Math.round(x.pk[0] / x.need), lasts = "a " + fmtPack(x.pk[0], x.pk[1]) + " pack lasts " + (weeks <= 1 ? "about a week" : "about " + weeks + " weeks");
+        h += '<li><span class="it"><span>' + esc(x.c.n) + '</span><span class="det">uses ' + fmtQty(x.need, x.u) + " this week · " + lasts + '</span></span><span class="buy">' + eur(x.pk[2]) + "<br>per pack</span></li>";
+        text.push("- " + x.c.n + ": " + lasts + " (" + eur(x.pk[2]) + ")");
+      });
+      h += '</ul><p class="kcal">Long-life stock used this week ≈ ' + eur(stockUsed) + ". It counts toward the food cost but not the checkout total.</p>";
+    }
+    if (risk.length) h += '<p class="note-box">Likely to go to waste this week (≈ ' + eur(riskSum) + "): " + risk.map(esc).join(", ") + ". Plan these into the start of next week or swap a meal to use them up.</p>";
     var pk = Object.keys(pantry).sort();
-    h += '<p class="kcal">Includes the morning juice and both optional snacks for two people each day.</p><h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
+    h += '<p class="kcal">Pack sizes are the cheapest mix that covers the week. Includes the morning juice and both optional snacks for two people each day.</p><h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
     text.push("PANTRY: " + pk.join(", "));
+    text.push("Expected checkout ≈ " + eur(total));
     state.shopText = "Week " + isoWeek(mon.y, mon.m, mon.d) + "\n" + text.join("\n");
-    return h + "</div>";
+    return h + priceNote() + "</div>";
+  }
+
+  function viewMonth() {
+    var y = state.month.y, m = state.month.m, mp = monthPlans(y, m);
+    var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">Month summary</div><h2 class="p-title">' + MONTHS[m] + " " + y + '</h2></div><button class="sheet-close" data-close aria-label="Close">×</button></div>';
+    if (!mp.length) return h + '<p class="empty">No plan for this month.</p></div>';
+    var c = 0, p1 = 0, p2 = 0, cheat = 0, weeks = {};
+    mp.forEach(function (x) {
+      c += x.pl.cost; p1 += x.pl.people.p1.p; p2 += x.pl.people.p2.p; if (x.pl.cheat) cheat++;
+      var mo = mondayOf(x.o), k = mo.y + "," + mo.m + "," + mo.d;
+      weeks[k] = weeks[k] || { mon: mo, c: 0, n: 0 }; weeks[k].c += x.pl.cost; weeks[k].n++;
+    });
+    var n = mp.length;
+    h += '<div class="people"><div class="person"><div class="lbl">Food cost this month</div><div class="num">≈ ' + eur(c, 0) + '</div><div class="kcal">' + eur(c / n) + ' a day on average</div></div>' +
+      '<div class="person"><div class="lbl">Protein, daily average</div><div class="num">' + r0(p1 / n) + ' <small>/ ' + r0(p2 / n) + ' g</small></div><div class="kcal">' + PEOPLE.p1.label + " / " + PEOPLE.p2.label + " · " + cheat + " cheat nights</div></div></div>";
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Week</th><th>Days in month</th><th>Cost</th></tr></thead><tbody>';
+    Object.keys(weeks).forEach(function (k) {
+      var w = weeks[k];
+      h += '<tr><td><button data-wk="' + k + '">Week ' + isoWeek(w.mon.y, w.mon.m, w.mon.d) + "</button></td><td>" + w.n + "</td><td>" + eur(w.c) + "</td></tr>";
+    });
+    h += "</tbody></table></div>";
+    return h + priceNote() + "</div>";
   }
 
   function renderPanel() {
     var p = $("panel");
-    p.innerHTML = state.view === "recipe" ? viewRecipe() : state.view === "week" ? viewWeek() : viewDay();
+    p.innerHTML = state.view === "recipe" ? viewRecipe() : state.view === "week" ? viewWeek() : state.view === "month" ? viewMonth() : viewDay();
     p.scrollTop = 0;
     var sel = $("swap-sel");
     if (sel) sel.addEventListener("change", function () {
@@ -380,11 +464,12 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
   function openSheet(v) { if (mq.matches) return; $("panel").classList.toggle("open", v); $("backdrop").hidden = !v; }
 
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-day],[data-wk],[data-recipe],[data-back],[data-close],[data-reset],#backdrop");
+    var t = e.target.closest("[data-day],[data-wk],[data-month],[data-recipe],[data-back],[data-close],[data-reset],#backdrop");
     if (!t) return;
     if (t.id === "backdrop" || t.hasAttribute("data-close")) { openSheet(false); return; }
     if (t.hasAttribute("data-day")) { var a = t.getAttribute("data-day").split(",").map(Number); state.sel = { y: a[0], m: a[1], d: a[2] }; state.view = "day"; }
     else if (t.hasAttribute("data-wk")) { var w = t.getAttribute("data-wk").split(",").map(Number); state.week = { y: w[0], m: w[1], d: w[2] }; state.view = "week"; }
+    else if (t.hasAttribute("data-month")) { var mm = t.getAttribute("data-month").split(",").map(Number); state.month = { y: mm[0], m: mm[1] }; state.view = "month"; }
     else if (t.hasAttribute("data-recipe")) { state.recipe = t.getAttribute("data-recipe"); state.view = "recipe"; }
     else if (t.hasAttribute("data-back")) { state.view = "day"; }
     else if (t.hasAttribute("data-reset")) { var o = state.sel; delete ov[Engine.key(o.y, o.m, o.d) + "|" + state.recipe]; saveOv(); }

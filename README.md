@@ -9,7 +9,9 @@ Open `index.html` in a browser. It is a single self-contained page with no serve
 - Twelve months centred on the current month, with ISO week numbers and Monday-first weeks.
 - Tap a day for breakfast, lunch, dinner and optional snacks, with protein and calories per person.
 - Tap a meal for ingredients for two, directions and how to split the portions.
-- Tap a week number for daily totals, weekly averages and a combined shopping list.
+- Tap a week number for daily totals, weekly cost and a shopping list that says which pack sizes to buy, what will be left over, and what is likely to go to waste.
+- Tap a month name for the month's food cost and daily average.
+- Food cost is shown for the household per recipe, day, week and month.
 - Any single meal can be swapped. Swaps are saved in the browser on that device only.
 
 ## Portions
@@ -41,20 +43,29 @@ Dinners also avoid repeating the main protein of the previous dinner or the same
 ```
 index.html            built page (generated, do not edit by hand)
 src/data.js           targets, ingredient catalogue with nutrition values, recipes, optional snacks
+src/prices.js         prices, pack sizes, shelf life and freezing per ingredient
+src/pricing.js        recipe costs, cheapest pack mix and leftover advice
 src/engine.js         rotation engine and daily protein/calorie calculation
 src/app.html          page layout, styles and UI code
 build.py              inlines src/*.js into src/app.html and writes index.html
 tools/check-year.js   runs a year of the plan and reports protein, snacks and repeat violations
+tools/check-prices.js reports missing prices, remaining estimates, stale prices and cost levels
 ```
 
 ## Changing things
 
 1. Edit files in `src/`. To add a recipe, add an entry to `RECIPES` in `src/data.js` using ingredient ids from `CAT`. Protein and calories are calculated from the ingredient weights.
-2. Run `node tools/check-year.js` to confirm targets are still met and no repeat rules are broken.
+2. Run `node tools/check-year.js` to confirm targets are still met and no repeat rules are broken, and `node tools/check-prices.js` to confirm every ingredient has a price.
 3. Run `python3 build.py` to rebuild `index.html`.
+
+## Prices
+
+Prices are for a K-chain market, with a second K-chain store as the second store. They are estimates until checked in the store; each entry in `src/prices.js` has a `status` (`estimate` or `checked`) and the date it was checked. To update a price, change the pack prices, set `status: "checked"` and the `checked` date.
+
+The shopping list picks the cheapest mix of pack sizes that covers the week, preferring fewer packs when the price is within 3 %. Long-life items (dry goods, frozen food, protein powder) are listed separately with how long a pack lasts, and are not counted in the weekly checkout total.
 
 ## Planned
 
-See [RELEASE_PLAN.md](RELEASE_PLAN.md) for upcoming releases, starting with K-Ruoka-based prices in v0.2.
+See [RELEASE_PLAN.md](RELEASE_PLAN.md) for upcoming releases.
 
 Nutrition values are per 100 g estimates for typical Finnish supermarket products. Check labels if exact numbers matter.
