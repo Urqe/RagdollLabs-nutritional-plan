@@ -40,9 +40,7 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 
 ## Current focus
 
-1. v0.2.1 Check prices in the store
-2. v0.3 Calendar zoom and touch
-3. v0.4 Recipe library to 80 and waste-aware rotation
+1. v0.4 Recipe library to 80 and waste-aware rotation
 
 Everything after v0.4 is later work and can be reordered.
 
@@ -63,7 +61,7 @@ Scope
 - [x] `src/prices.js`: one row per catalogue ingredient with product name, store, the pack sizes on sale (with price for each), unit price (€/kg, €/l or €/pc), status (`estimate` or `checked`) and date checked.
 - [x] Shelf life per ingredient: how many days it keeps once opened or bought fresh, and whether it freezes well. Used by the pack guidance below and the waste-aware rotation in v0.4.
 - [x] Fill estimates for all non-pantry ingredients (about 110), preferring everyday K-Menu and Pirkka-level products.
-- [ ] Replace estimates with checked prices from the reference store. Moved to v0.2.1.
+- [ ] Replace estimates with checked prices from the reference store. Moved to the backlog (Check prices in the store).
 - [x] Recipe cost for the household, on the recipe view.
 - [x] Cost per day on the day view. Cost per month (and the daily average) on a month summary; the weekly summary shows the week's cost.
 - [x] Shopping list: rounds up to whole packs and shows the expected checkout total. Pantry items listed without price.
@@ -75,7 +73,7 @@ Scope
 
 Checks
 - [x] Every non-pantry ingredient has a price.
-- [ ] A sample week's shopping total matches a real K-Ruoka basket within about 10 %. Moved to v0.2.1.
+- [ ] A sample week's shopping total matches a real K-Ruoka basket within about 10 %. Moved to the backlog (Check prices in the store).
 
 Shipped notes
 - All 86 priced ingredients are estimates. K-Ruoka blocks automated reading, so checking needs a browser session or manual entry.
@@ -89,22 +87,7 @@ Decided
 
 ---
 
-## v0.2.1: Check prices in the store
-
-Goal: replace the estimates with real prices from a K-chain market.
-
-Scope
-- [ ] Check all 86 ingredients on K-Ruoka with a K-chain market selected, in a browser session, and record product, pack sizes, prices and date. Use a second K-chain store for anything the first store doesn't stock.
-- [ ] Set `status: "checked"` and the `checked` date for each.
-- [ ] Price one sample week's shopping list as a real K-Ruoka basket and compare with the app's checkout total.
-
-Checks
-- `node tools/check-prices.js` reports 0 estimates.
-- Sample basket within about 10 % of the app's total.
-
----
-
-## v0.3: Calendar zoom and touch
+## v0.3: Calendar zoom and touch (shipped)
 
 Goal: move between year, month and day by pinching or zooming, while taps and clicks keep working as they do now.
 
@@ -114,20 +97,27 @@ Zoom levels
 - Day: the full day fills the screen, with the meals, snacks and juice inline, the same content as today's day panel.
 
 Scope
-- [ ] Pinch out on a month in the year view to open that month; pinch out on a day in the month view to open that day. Pinch in to go back up a level.
-- [ ] The pinch targets whatever is under your fingers, so you land on the month or day you pinched.
-- [ ] Desktop: trackpad pinch and Ctrl + scroll do the same. Keyboard: + and − change level, arrow keys move between days or months.
-- [ ] Zoom buttons (− / +) and a breadcrumb (Year › October › Sun 18) for people who don't pinch.
-- [ ] Taps and clicks unchanged: tap a day to select it, tap a meal to open the recipe. A tap never zooms by accident.
-- [ ] Swipe left and right to move to the previous or next month or day at month and day level.
-- [ ] Smooth transition between levels that respects reduced-motion settings.
-- [ ] The level you were at is remembered on the device and in the URL anchor, so a bookmark can open straight to a month or today.
-- [ ] Browser page zoom keeps working for accessibility. The app only takes over pinch gestures inside the calendar.
+- [x] Pinch out on a month in the year view to open that month; pinch out on a day in the month view to open that day. Pinch in to go back up a level.
+- [x] The pinch targets whatever is under your fingers, so you land on the month or day you pinched.
+- [x] Desktop: trackpad pinch and Ctrl + scroll do the same. Keyboard: + and − change level, arrow keys move between days or months.
+- [x] Zoom buttons (− / +) and a breadcrumb (Year › October › Sun 18) for people who don't pinch.
+- [x] Taps and clicks unchanged: tap a day to select it, tap a meal to open the recipe. A tap never zooms by accident.
+- [x] Swipe left and right to move to the previous or next month or day at month and day level.
+- [x] Smooth transition between levels that respects reduced-motion settings.
+- [x] The level you were at is remembered on the device and in the URL anchor, so a bookmark can open straight to a month or today.
+- [x] Browser page zoom keeps working for accessibility. The app only takes over pinch gestures inside the calendar.
 
 Checks
-- On a phone and a tablet: pinch to month, pinch to day, pinch back, and tap still selects in every level.
-- On desktop: trackpad pinch, Ctrl + scroll, buttons and keyboard all reach the same three levels.
-- No horizontal page scroll at any level.
+- [x] On a phone and a tablet: pinch to month, pinch to day, pinch back, and tap still selects in every level.
+- [x] On desktop: trackpad pinch, Ctrl + scroll, buttons and keyboard all reach the same three levels.
+- [x] No horizontal page scroll at any level.
+
+Shipped notes
+- Checked in headless Chromium at phone, tablet and desktop widths with simulated touch. Worth a real-device check on iPhone Safari, where pinch handling differs.
+- Phones show the month as a list of days grouped by week instead of a 7-column grid, because meal names don't fit in phone-width columns.
+- At day level the meals are shown in full, with ingredients and directions expandable. On desktop the side panel shows that week's summary and shopping list.
+- Taps are ignored for 350 ms after a pinch or swipe so a gesture never opens a day by accident.
+- The target chips in the header are hidden on phones to keep the header to one row.
 
 ---
 
@@ -155,6 +145,19 @@ Checks
 ---
 
 ## Later
+
+### Check prices in the store (was v0.2.1)
+
+Goal: replace the estimates with real prices from a K-chain market.
+
+Scope
+- [ ] Check all 86 ingredients on K-Ruoka with a K-chain market selected, in a browser session, and record product, pack sizes, prices and date. Use a second K-chain store for anything the first store doesn't stock.
+- [ ] Set `status: "checked"` and the `checked` date for each.
+- [ ] Price one sample week's shopping list as a real K-Ruoka basket and compare with the app's checkout total.
+
+Checks
+- `node tools/check-prices.js` reports 0 estimates.
+- Sample basket within about 10 % of the app's total.
 
 ### Settings and privacy
 - [ ] Settings panel: protein targets per person, display names, which day is the cheat night. Saved on the device only; the repo keeps neutral defaults.
@@ -201,4 +204,5 @@ Checks
 | Version | Date | Notes |
 |---|---|---|
 | v0.1 | 2026-10-18 | First version. Recipes reworked in the Come Conmigo style the same day. |
-| v0.2 | 2026-10-18 | Prices, pack guidance, leftover warnings, month cost summary. Prices are estimates; store check moved to v0.2.1. |
+| v0.2 | 2026-10-18 | Prices, pack guidance, leftover warnings, month cost summary. Prices are estimates; store check moved to the backlog. |
+| v0.3 | 2026-10-18 | Year, month and day zoom with pinch, trackpad, keyboard and buttons; swipe between months and days; phone agenda at month level. |
