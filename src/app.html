@@ -293,6 +293,17 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
   function same(a, b) { return a && b && a.y === b.y && a.m === b.m && a.d === b.d; }
   function before(a, b) { return Date.UTC(a.y, a.m, a.d) < Date.UTC(b.y, b.m, b.d); }
   function dayPlan(o) { return Engine.day(o.y, o.m, o.d, ov); }
+  function mealName(r) { return (r.leftover ? "Leftovers: " : "") + r.name; }
+  function mealTags(r) {
+    return (r.cheat ? '<span class="tag cheat">Cheat night</span>' : "") +
+      (r.leftover ? '<span class="tag swap">Leftovers</span>' : "") +
+      (r.batch === 2 ? '<span class="tag swap">Double batch</span>' : "");
+  }
+  function mealNote(r) {
+    if (r.leftover) return "Leftovers from yesterday's dinner, cooked as a double batch. Reheat and portion by the split.";
+    if (r.batch === 2) return "Cook a double batch: double every amount below. Half goes in the fridge for tomorrow's lunch. The cost shown covers both meals.";
+    return "";
+  }
   function eur(x, dec) { return (dec === 0 ? String(Math.round(x)) : x.toFixed(2).replace(".", ",")) + " €"; }
   function priceNote() { return '<p class="kcal price-note">Prices are estimates for ' + esc(PRICE_META.store) + ", not yet checked in the store. Updated " + esc(PRICE_META.updated) + ".</p>"; }
   function monthPlans(y, m) {
@@ -396,7 +407,7 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
         html += '<button class="' + cls + '" data-day="' + y + "," + m + "," + dd + '" aria-label="' + DOWS[dow(o)] + " " + dd + " " + MONTHS[m] + '">' +
           '<span class="dn">' + dd + (pl.cheat ? '<span class="ct" aria-label="Cheat night"></span>' : "") + "</span>" +
           '<span class="ml"><i>B</i>' + esc(pl.meals.b.name) + "</span>" +
-          '<span class="ml"><i>L</i>' + esc(pl.meals.l.name) + "</span>" +
+          '<span class="ml"><i>L</i>' + esc(mealName(pl.meals.l)) + "</span>" +
           '<span class="ml"><i>D</i>' + esc(pl.meals.d.name) + "</span>" +
           '<span class="dp">' + r0(pl.people.p1.p) + " · " + r0(pl.people.p2.p) + " g</span></button>";
       }
@@ -410,7 +421,7 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
       if (same(o, state.sel)) cls += " sel";
       if (before(o, TODAY)) cls += " past";
       list += '<button class="' + cls + '" data-day="' + o.y + "," + o.m + "," + o.d + '"><span class="ag-d"><b>' + o.d + "</b>" + DOWS[dow(o)].slice(0, 3) + (pl.cheat ? '<span class="ct" aria-label="Cheat night"></span>' : "") + "</span>" +
-        '<span class="ag-m"><span>' + esc(pl.meals.b.name) + "</span><span>" + esc(pl.meals.l.name) + "</span><span>" + esc(pl.meals.d.name) + "</span></span>" +
+        '<span class="ag-m"><span>' + esc(pl.meals.b.name) + "</span><span>" + esc(mealName(pl.meals.l)) + "</span><span>" + esc(pl.meals.d.name) + "</span></span>" +
         '<span class="ag-p">' + r0(pl.people.p1.p) + "<br>" + r0(pl.people.p2.p) + " g</span></button>";
     });
     $("months").className = "";
@@ -425,8 +436,8 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     h += '<div class="costline"><span>Food cost today</span><b>≈ ' + eur(plan.cost) + "</b></div>";
     ["b", "l", "d"].forEach(function (s) {
       var r = plan.meals[s], sp = r.split || { p2: "about " + Math.round(r.share * 100) + " % of the pan", p1: "about " + Math.round((1 - r.share) * 100) + " % of the pan" };
-      h += '<article class="dmeal"><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + " · " + r.time + " min · ≈ " + eur(r.C) + "</div>" +
-        "<h3>" + esc(r.name) + "</h3>" +
+      h += '<article class="dmeal"><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + (r.leftover ? " · Leftovers" : "") + (r.batch === 2 ? " · Double batch" : "") + " · " + r.time + " min · ≈ " + eur(r.C) + "</div>" +
+        "<h3>" + esc(mealName(r)) + "</h3>" + (mealNote(r) ? '<div class="kcal">' + esc(mealNote(r)) + "</div>" : "") +
         '<div class="kcal">' + PEOPLE.p2.label + ": " + esc(sp.p2) + " (" + r0(r.P * r.share) + " g) · " + PEOPLE.p1.label + ": " + esc(sp.p1) + " (" + r0(r.P * (1 - r.share)) + " g) · " + heat(r.heat) + "</div>" +
         "<details><summary>Ingredients and directions</summary><ul class=\"ing\">" + r.ing.map(fmtIng).join("") + '</ul><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>" +
         '<div class="row"><button class="btn" data-recipe="' + s + '">Open recipe and swap</button></div></article>';
@@ -515,8 +526,8 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     h += '<div class="meals">';
     ["b", "l", "d"].forEach(function (s) {
       var r = plan.meals[s], swapped = !!ov[plan.key + "|" + s];
-      h += '<button class="meal" data-recipe="' + s + '"><span class="slot">' + SLOT[s] + (r.cheat ? '<span class="tag cheat">Cheat night</span>' : "") + (swapped ? '<span class="tag swap">Swapped</span>' : "") + "</span>" +
-        '<span class="name">' + esc(r.name) + '</span><span class="go" aria-hidden="true">›</span>' +
+      h += '<button class="meal" data-recipe="' + s + '"><span class="slot">' + SLOT[s] + mealTags(r) + (swapped ? '<span class="tag swap">Swapped</span>' : "") + "</span>" +
+        '<span class="name">' + esc(mealName(r)) + '</span><span class="go" aria-hidden="true">›</span>' +
         '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P2 " + r0(r.P * r.share) + " g · P1 " + r0(r.P * (1 - r.share)) + " g · ≈ " + eur(r.C) + "</span></button>";
     });
     h += "</div>";
@@ -547,8 +558,9 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     h += '<div class="split">' +
       '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>" + esc(sp.p2) + '</b><div class="kcal">' + r0(r.P * r.share) + " g protein · ≈ " + r0(r.K * r.share) + " kcal</div></div>" +
       '<div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>" + esc(sp.p1) + '</b><div class="kcal">' + r0(r.P * (1 - r.share)) + " g protein · ≈ " + r0(r.K * (1 - r.share)) + " kcal</div></div></div>";
+    if (mealNote(r)) h += '<div class="note-box">' + esc(mealNote(r)) + "</div>";
     h += '<div class="note-box">Heat ' + heat(r.heat) + " · " + (r.side ? "Serve the salsa or chilli on the side." : "Heat is cooked in; adjust the chilli to taste.") + (r.prep ? " Good for cooking ahead." : "") + "</div>";
-    h += '<div class="sec"><h3>Ingredients for two</h3><ul class="ing">' + r.ing.map(fmtIng).join("") + "</ul></div>";
+    h += '<div class="sec"><h3>Ingredients for two' + (r.batch === 2 ? ", one batch" : "") + '</h3><ul class="ing">' + r.ing.map(fmtIng).join("") + "</ul></div>";
     h += '<div class="sec"><h3>Directions</h3><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></div>";
     var alts = Engine.alternatives(s, o.y, o.m, o.d);
     h += '<div class="sec"><h3>Swap this meal</h3><div class="swap-row"><select id="swap-sel" aria-label="Choose another recipe">' +
@@ -585,7 +597,7 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
       need[it[0]] = (need[it[0]] || 0) + Pricing.need(it) * mult;
     }
     plans.forEach(function (pl) {
-      ["b", "l", "d"].forEach(function (s) { pl.meals[s].ing.forEach(function (it) { add(it, 1); }); });
+      ["b", "l", "d"].forEach(function (s) { var r = pl.meals[s], mult = r.leftover ? 0 : (r.batch || 1); if (mult) r.ing.forEach(function (it) { add(it, mult); }); });
       pl.snacks.forEach(function (sn) { sn.ing.forEach(function (it) { add(it, 2); }); }); // both snacks, for two
       pl.juice.ing.forEach(function (it) { add(it, 2); });
     });

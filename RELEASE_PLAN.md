@@ -9,6 +9,7 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 3. Run the checks:
    - `node tools/check-year.js`: weekly protein averages at or above both targets, no repeat violations.
    - `node tools/check-prices.js`: every ingredient priced, no unit mismatches.
+   - `node tools/check-waste.js`: weekly waste estimate not higher than the last release.
    - `python3 build.py`: rebuilds `index.html`.
    - Privacy check: no height, weight or other body data anywhere in the repo (automated from v0.3, manual search until then).
 4. Open the page in a browser at phone and desktop width and click through one day, one recipe and one week.
@@ -40,9 +41,7 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 
 ## Current focus
 
-1. v0.4 Recipe library to 80 and waste-aware rotation
-
-Everything after v0.4 is later work and can be reordered.
+Nothing scheduled. Pick the next release from Later.
 
 ---
 
@@ -121,26 +120,34 @@ Shipped notes
 
 ---
 
-## v0.4: Recipe library to 80 and waste-aware rotation
+## v0.4: Recipe library to 80 and waste-aware rotation (shipped)
 
 Goal: more variety, with dishes from new Come Conmigo plans folded in, and weekly plans that use up what you buy.
 
 Scope
-- [ ] Add 30 recipes: 6 breakfasts, 12 lunches, 9 dinners, 3 cheat dinners.
-- [ ] Every new recipe has prices in `src/prices.js` (depends on v0.2).
-- [ ] Routine for new plan PDFs: give the links, adapt dishes to the food rules and Finnish ingredients, add them as recipes, run the year check.
-- [ ] Cook once, eat twice: mark dinners that make enough for the next day's lunch and let the rotation pair them.
-- [ ] Waste-aware weekly rotation: when a week's plan opens a pack that won't keep (fresh coriander, a 400 g tub of cottage cheese, a 1 kg pack of chicken), the rotation prefers other recipes that week that use up the rest before it spoils. Uses the shelf-life data from v0.2.
-- [ ] Weekly waste score in the weekly summary: estimated euros of food left unused at the end of the week, with the items listed.
-- [ ] Seasonal tags (grill season, soup season) and a light seasonal preference in the rotation.
-- [ ] Longer repeat gaps to match the bigger library: lunch 14 days, dinner 18 days.
-- [ ] Optional: a budget preference so the rotation leans toward cheaper dinners on weekdays.
+- [x] Add 30 recipes: 6 breakfasts, 12 lunches, 9 dinners, 3 cheat dinners.
+- [x] Every new recipe has prices in `src/prices.js` (depends on v0.2).
+- [x] Routine for new plan PDFs: give the links, adapt dishes to the food rules and Finnish ingredients, add them as recipes, run the year check.
+- [x] Cook once, eat twice: mark dinners that make enough for the next day's lunch and let the rotation pair them.
+- [x] Waste-aware weekly rotation: when a week's plan opens a pack that won't keep (fresh coriander, a 400 g tub of cottage cheese, a 1 kg pack of chicken), the rotation prefers other recipes that week that use up the rest before it spoils. Uses the shelf-life data from v0.2.
+- [x] Weekly waste score in the weekly summary: estimated euros of food left unused at the end of the week, with the items listed.
+- [x] Seasonal tags (grill season, soup season) and a light seasonal preference in the rotation.
+- [x] Longer repeat gaps to match the bigger library: lunch 14 days, dinner 18 days.
+- [x] Optional: a budget preference so the rotation leans toward cheaper dinners on weekdays.
 
 Checks
-- No recipe appears more than 20 times a year.
-- Weekly protein averages still at or above both targets.
-- Weekly cost stays within the range set in v0.2 (no week more than 25 % above the average).
-- Estimated weekly waste lower than in v0.2, measured on the same year of weeks.
+- [x] No recipe appears more than 20 times a year (highest: 20).
+- [x] Weekly protein averages still at or above both targets (Person 1 110–118 g, Person 2 148–159 g).
+- [x] Weekly cost stays within the range set in v0.2: highest week +15 % above the average of about 166 €.
+- [x] Estimated weekly waste lower than in v0.2: 4.06 € a week, down from 7.56 €.
+
+Shipped notes
+- Added 32 recipes instead of 30: 8 breakfasts instead of 6, because the 20-uses-a-year limit needs at least 19 breakfasts. The library is now 82 recipes.
+- Repeat gaps: weekday breakfast 7 days, weekend breakfast 10, lunch 14, dinner 18, cheat dinner 35.
+- 7 dinners are marked cook once, eat twice; about 51 lunches a year are leftovers from a double batch. Swapping either meal undoes the pairing.
+- Juices are now picked two per week and alternated, which removed most of the mint and beetroot waste.
+- New tool: `tools/check-waste.js`.
+- Remaining waste is mostly part-used yoghurt, cream cheese, lettuce and fresh herbs.
 
 ---
 
@@ -206,3 +213,4 @@ Checks
 | v0.1 | 2026-10-18 | First version. Recipes reworked in the Come Conmigo style the same day. |
 | v0.2 | 2026-10-18 | Prices, pack guidance, leftover warnings, month cost summary. Prices are estimates; store check moved to the backlog. |
 | v0.3 | 2026-10-18 | Year, month and day zoom with pinch, trackpad, keyboard and buttons; swipe between months and days; phone agenda at month level. |
+| v0.4 | 2026-10-18 | 82 recipes, waste-aware weekly rotation, cook once eat twice, seasons, weekday budget lean. Waste estimate 7.56 → 4.06 € a week. |
