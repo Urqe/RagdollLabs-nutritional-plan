@@ -200,6 +200,15 @@ Shipped notes
 
 ---
 
+## v0.5.1: Swipe down to close the day sheet (shipped)
+
+- [x] On phones and tablets, pulling the day sheet down from its top (or from the handle) drags it with the finger; past a quarter of its height, or with a flick, it closes at the flick's speed, otherwise it springs back.
+- [x] Grab handle at the top of the sheet; the dimmed background fades as the sheet is pulled down.
+- [x] Swiping inside the sheet or on the dimmed area no longer scrolls the calendar behind it.
+- [x] `tools/test-ui.py`: sheet opens on tap, page behind stays still while swiping in the sheet and when closing, a slow short pull springs back, a pull down closes it.
+
+---
+
 ## Later
 
 ### Check prices in the store (was v0.2.1)
@@ -265,3 +274,4 @@ Checks
 | v0.4 | 2026-10-18 | 82 recipes, waste-aware weekly rotation, cook once eat twice, seasons, weekday budget lean. Waste estimate 7.56 → 4.06 € a week. |
 | v0.4.1 | 2026-10-18 | Review fixes: link validation, 2032 range cap, restore on today, yearly use cap, smoother touch pinch and swipe, browser test suite. |
 | v0.5 | 2026-10-18 | Full HTML document for Pages (fixes iPhone quirks mode), plan built ahead, 1:1 pinch, continuous zoom, page-turn swipe, prepared layers; start-up 700 → 31 ms. |
+| v0.5.1 | 2026-10-18 | Swipe down to close the day sheet; the page behind no longer scrolls. |
