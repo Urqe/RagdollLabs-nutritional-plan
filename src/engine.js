@@ -71,17 +71,8 @@ var Engine = (function () {
   function idxOf(y, m, dd) { return Math.round((Date.UTC(y, m, dd) - EPOCH) / DAY); }
   function key(y, m, dd) { return y + "-" + String(m + 1).padStart(2, "0") + "-" + String(dd).padStart(2, "0"); }
 
-  function fillSnacks(person, have, i) {
-    var target = PX[person].protein, gap = target - have, out = [];
-    var off = person === "p1" ? 0 : 2;
-    var n = 0;
-    // At least one snack a day (training support), a second one if still short.
-    while (((out.length === 0 && gap > 0) || gap > 6) && out.length < 2) {
-      var s = SX[(i + off + n) % SX.length]; n++;
-      out.push(s); gap -= s.p;
-    }
-    return out;
-  }
+  // Two optional snacks a day, the same for both people. Daily totals count snack 1.
+  function snacksFor(i) { return [SX[i % SX.length], SX[(i + 2) % SX.length]]; }
 
   // overrides: { "2026-10-18|b": "b03", ... }
   function day(y, m, dd, overrides) {
@@ -94,16 +85,15 @@ var Engine = (function () {
       l: byId[ov[k + "|l"]] || base.l,
       d: byId[ov[k + "|d"]] || base.d
     };
-    var res = { key: k, meals: meals, base: base, people: {} };
+    var sn = snacksFor(i);
+    var res = { key: k, meals: meals, base: base, snacks: sn, people: {} };
     ["p1", "p2"].forEach(function (p) {
       var mp = 0, mk = 0;
       ["b", "l", "d"].forEach(function (s) {
         var r = meals[s], sh = p === "p2" ? r.share : 1 - r.share;
         mp += r.P * sh; mk += r.K * sh;
       });
-      var sn = fillSnacks(p, mp, i);
-      var sp = sn.reduce(function (a, s) { return a + s.p; }, 0), sk = sn.reduce(function (a, s) { return a + s.k; }, 0);
-      res.people[p] = { mealP: mp, mealK: mk, snacks: sn, p: mp + sp, k: mk + sk, target: PX[p].protein };
+      res.people[p] = { mealP: mp, mealK: mk, p: mp + sn[0].p, k: mk + sn[0].k, target: PX[p].protein };
     });
     res.cheat = !!meals.d.cheat;
     return res;

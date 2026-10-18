@@ -14,7 +14,7 @@ Open `index.html` in a browser. It is a single self-contained page with no serve
 
 ## Portions
 
-Each meal is planned for two and split between Person 1 and Person 2. Where possible the split is by count (for example 6 vs 4 tacos), otherwise about 57 / 43. Each person has a daily protein target. Optional snack 1 tops it up, and optional snack 2 is added when a day is still short.
+Each meal is planned for two and split between Person 1 and Person 2. Where possible the split is by count (for example 6 vs 4 tacos), otherwise about 57 / 43. Each person has a daily protein target. Every day also lists two optional snacks you can both have. Daily totals include optional snack 1.
 
 ## Food rules
 

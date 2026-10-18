@@ -110,7 +110,8 @@ button { font: inherit; color: inherit; }
 .heat { color: var(--chile); letter-spacing: 1px; }
 .heat .off { color: var(--line); }
 
-.snacks { border-top: 1px dashed var(--line); padding-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: .85rem; }
+.snacks { border-top: 1px dashed var(--line); padding-top: 12px; font-size: .88rem; }
+.snacks .kcal { display: block; }
 .snacks h3, .sec h3 { font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 4px; font-weight: 600; }
 .snacks ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
 
@@ -764,17 +765,8 @@ var Engine = (function () {
   function idxOf(y, m, dd) { return Math.round((Date.UTC(y, m, dd) - EPOCH) / DAY); }
   function key(y, m, dd) { return y + "-" + String(m + 1).padStart(2, "0") + "-" + String(dd).padStart(2, "0"); }
 
-  function fillSnacks(person, have, i) {
-    var target = PX[person].protein, gap = target - have, out = [];
-    var off = person === "p1" ? 0 : 2;
-    var n = 0;
-    // At least one snack a day (training support), a second one if still short.
-    while (((out.length === 0 && gap > 0) || gap > 6) && out.length < 2) {
-      var s = SX[(i + off + n) % SX.length]; n++;
-      out.push(s); gap -= s.p;
-    }
-    return out;
-  }
+  // Two optional snacks a day, the same for both people. Daily totals count snack 1.
+  function snacksFor(i) { return [SX[i % SX.length], SX[(i + 2) % SX.length]]; }
 
   // overrides: { "2026-10-18|b": "b03", ... }
   function day(y, m, dd, overrides) {
@@ -787,16 +779,15 @@ var Engine = (function () {
       l: byId[ov[k + "|l"]] || base.l,
       d: byId[ov[k + "|d"]] || base.d
     };
-    var res = { key: k, meals: meals, base: base, people: {} };
+    var sn = snacksFor(i);
+    var res = { key: k, meals: meals, base: base, snacks: sn, people: {} };
     ["p1", "p2"].forEach(function (p) {
       var mp = 0, mk = 0;
       ["b", "l", "d"].forEach(function (s) {
         var r = meals[s], sh = p === "p2" ? r.share : 1 - r.share;
         mp += r.P * sh; mk += r.K * sh;
       });
-      var sn = fillSnacks(p, mp, i);
-      var sp = sn.reduce(function (a, s) { return a + s.p; }, 0), sk = sn.reduce(function (a, s) { return a + s.k; }, 0);
-      res.people[p] = { mealP: mp, mealK: mk, snacks: sn, p: mp + sp, k: mk + sk, target: PX[p].protein };
+      res.people[p] = { mealP: mp, mealK: mk, p: mp + sn[0].p, k: mk + sn[0].k, target: PX[p].protein };
     });
     res.cheat = !!meals.d.cheat;
     return res;
@@ -906,10 +897,9 @@ if (typeof module !== "undefined") module.exports = Engine;
         '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P2 " + r0(r.P * r.share) + " g · P1 " + r0(r.P * (1 - r.share)) + " g</span></button>";
     });
     h += "</div>";
-    h += '<div class="snacks">' + ["p1", "p2"].map(function (p) {
-      var sn = plan.people[p].snacks;
-      return "<div><h3>" + PEOPLE[p].label + "</h3>" + (sn.length ? "<ul>" + sn.map(function (s, i) { return "<li><b>Optional snack " + (i + 1) + "</b><br>" + esc(s.name) + " <span class=\"kcal\">" + s.p + " g</span></li>"; }).join("") + "</ul>" : '<span class="empty">No snack needed today</span>') + "</div>";
-    }).join("") + "</div>";
+    h += '<div class="snacks"><h3>Optional snacks</h3><ul>' + plan.snacks.map(function (s, i) {
+      return "<li><b>Optional snack " + (i + 1) + "</b> · " + esc(s.name) + ' <span class="kcal">' + esc(s.desc) + " · " + s.p + " g protein each</span></li>";
+    }).join("") + '</ul><p class="kcal">Daily totals above include optional snack 1.</p></div>';
     h += '<button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " summary and shopping list</button>";
     return h + "</div>";
   }
@@ -970,7 +960,7 @@ if (typeof module !== "undefined") module.exports = Engine;
     }
     plans.forEach(function (pl) {
       ["b", "l", "d"].forEach(function (s) { pl.meals[s].ing.forEach(function (it) { add(it, 1); }); });
-      ["p1", "p2"].forEach(function (p) { pl.people[p].snacks.forEach(function (sn) { sn.ing.forEach(function (it) { add(it, 1); }); }); });
+      pl.snacks.forEach(function (sn) { sn.ing.forEach(function (it) { add(it, 2); }); }); // both snacks, for two
     });
     var bySec = {}, text = [];
     Object.keys(agg).forEach(function (k) { var x = agg[k]; (bySec[x.c.s] = bySec[x.c.s] || []).push(x); });
@@ -991,7 +981,7 @@ if (typeof module !== "undefined") module.exports = Engine;
       h += "</ul>";
     });
     var pk = Object.keys(pantry).sort();
-    h += '<h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
+    h += '<p class="kcal">Includes both optional snacks for two people each day.</p><h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
     text.push("PANTRY: " + pk.join(", "));
     state.shopText = "Week " + isoWeek(mon.y, mon.m, mon.d) + "\n" + text.join("\n");
     return h + "</div>";
