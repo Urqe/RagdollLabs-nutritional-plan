@@ -25,6 +25,7 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 - Every ingredient must be buyable in a normal Finnish supermarket. Specialist items (dried chillies, chipotle) need a fallback in the recipe.
 - New recipes follow the Come Conmigo style: simple Mexican home cooking, measured raw protein, yoghurt instead of mayo or cream.
 - The rotation must stay deterministic: a date always shows the same meals unless someone swaps one.
+- No store names anywhere in the repo. Prices are "based on a K-chain market". Refreshing prices and availability is a separate task done on request; the reference stores are named in that request and not written down.
 
 ---
 
@@ -249,36 +250,19 @@ Notes
 
 ---
 
-## v0.8: Private store data
+## v0.8: Neutral store wording
 
-Goal: prices and pack sizes come from the two stores we actually use, without the public repo or the public page saying which stores they are.
+Goal: the repo and the page say prices are based on "a K-chain market", without naming a store.
 
-Why: the GitHub account links the public page to us. Store names narrow that down to a neighbourhood. Exact store prices can do the same, so they stay private too.
-
-Public side (this repo, GitHub Pages)
-- [ ] Remove store names from `src/prices.js`, the page, README, this file and the build output. Public text says "typical K-store prices, estimates".
-- [ ] Public prices stay as rounded typical prices, not copied from one store.
-- [ ] `tools/check-privacy.js`: fails the build if body data or any blocked term appears in tracked files or the built pages. The blocked terms (store names, area names) are read from the private file, so the list itself is never public.
-- [ ] Rotation keeps using the public pack data, so every device shows the same meals whether or not private data is loaded.
-
-Private side
-- [ ] Private store file (`stores.private.json`): two stores with display name, preferred order, and per product: product name, pack sizes, price, in stock yes/no, date checked. Kept in a separate private GitHub repo, never in this one; `.gitignore` blocks it here.
-- [ ] Prices collected from K-Ruoka with the right store selected, in a browser (needs the desktop app linked, or a manual check). Store 1 first; Store 2 for anything Store 1 doesn't stock.
-- [ ] Items neither store stocks are listed, and the recipe gets a substitute or a fallback note.
-- [ ] Two ways to use the private data:
-  - The Claude-hosted copy of the app is built with it. That page is private to the account by default.
-  - The public page gets a "Load store data" option in settings: pick the file once per device, saved in that browser only. No store data in URLs.
-- [ ] With store data loaded, the shopping list shows which store to buy each item from, and costs use that store's prices.
+- [ ] Remove store names from `src/prices.js` (`PRICE_META`), the page, README, this file and the build output. Product names, pack sizes and prices stay in `src/prices.js` as they are.
+- [ ] Price note on the page: "Prices are estimates based on a K-chain market."
+- [ ] Rename the `store`/`alt` fields so they no longer hold a store name.
 
 Decision needed before shipping
 - [ ] Git history: store names are in about 25 earlier commits. Either rewrite history and force-push (as done for body data in v0.1), or leave it and accept that old commits show them. Rewriting doesn't reach copies someone already cloned.
 
-What stays visible on purpose: the account name, Person 1/Person 2 portion splits and protein targets, the food rules, and that this is a Mexican-style plan for Finland. The splits and targets can move to device-only settings later if wanted (see Settings).
-
 Checks
-- `tools/check-privacy.js` passes on the repo and both built pages.
-- A fresh visit to the public page shows no store names; the private page shows both.
-- Same meals on both pages for the same date.
+- No store names in tracked files or either built page (manual search; the names are not written into a check script).
 
 ---
 
@@ -336,7 +320,7 @@ An outside code review was done on v0.7. Taken into the releases above:
 
 | Review point | Where |
 |---|---|
-| Store names and household details in the public repo | v0.8 |
+| Store names in the public repo | v0.8 (wording only; prices stay in the repo) |
 | Shelf life checked on trip day, lost waste | v0.9 |
 | Totals and shopping cover different food | v0.9 |
 | Swap doesn't refresh prepared pages | v0.9 |
