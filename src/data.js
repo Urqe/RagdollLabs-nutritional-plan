@@ -83,7 +83,6 @@ var CAT = {
   cucumber: { n: "Cucumber", fi: "kurkku", p: 0.7, k: 13, s: "Vegetables & fruit" },
   mango:    { n: "Frozen mango", fi: "pakastemango", p: 0.7, k: 60, s: "Frozen" },
   berries:  { n: "Frozen berries", fi: "pakastemarjat", p: 0.8, k: 45, s: "Frozen" },
-  banana:   { n: "Bananas", fi: "banaani", p: 1.1, k: 90, w: 120, s: "Vegetables & fruit" },
   garlic:   { n: "Garlic", fi: "valkosipuli", s: "Vegetables & fruit" },
 
   tortM:    { n: "Mini tortillas (15 cm)", fi: "minitortilla", p: 8, k: 300, w: 25, s: "Bread & grains" },
@@ -96,7 +95,7 @@ var CAT = {
   cauli:    { n: "Cauliflower", fi: "kukkakaali", p: 1.9, k: 25, s: "Vegetables & fruit" },
   celery:   { n: "Celery", fi: "varsiselleri", p: 0.7, k: 16, s: "Vegetables & fruit" },
   kohlrabi: { n: "Kohlrabi (stands in for jícama)", fi: "kyssäkaali", p: 1.7, k: 27, s: "Vegetables & fruit" },
-  beetroot: { n: "Cooked beetroot", fi: "keitetty punajuuri", p: 1.7, k: 44, s: "Vegetables & fruit" },
+  applesauce:{ n: "Apple purée, unsweetened", fi: "omenasose", p: 0.2, k: 55, s: "Tins & jars" },
   springon: { n: "Spring onions", fi: "kevätsipuli", p: 1.8, k: 32, w: 15, s: "Vegetables & fruit" },
   strawb:   { n: "Strawberries, fresh or frozen", fi: "mansikka", p: 0.7, k: 32, s: "Vegetables & fruit" },
   pear:     { n: "Pears", fi: "päärynä", p: 0.4, k: 57, w: 180, s: "Vegetables & fruit" },
@@ -144,11 +143,11 @@ var CAT = {
 // heat 1-3. side: salsa or heat served on the side. weekend: breakfast only on Sat/Sun.
 var RECIPES = [
 // BREAKFAST ----------------------------------------------------------------
-{ id: "b01", meal: "breakfast", name: "Protein oats with banana, strawberries and peanut butter", time: 10, heat: 1, main: "dairy",
-  ing: [["oats",90,"g"],["milk",400,"ml"],["whey",20,"g"],["banana",1,"pc","sliced"],["strawb",150,"g"],["pb",1,"tbsp"],["cinnamon",1,"tsp"]],
+{ id: "b01", meal: "breakfast", name: "Protein oats with pear, strawberries and peanut butter", time: 10, heat: 1, main: "dairy",
+  ing: [["oats",90,"g"],["milk",400,"ml"],["whey",20,"g"],["pear",1,"pc","sliced"],["strawb",150,"g"],["pb",1,"tbsp"],["cinnamon",1,"tsp"]],
   steps: ["Cook the oats in the milk over medium heat for 4 minutes, stirring.",
     "Take off the heat and stir in the protein powder with a splash of milk.",
-    "Divide by the split and top with banana, strawberries, a drizzle of peanut butter and cinnamon."] },
+    "Divide by the split and top with pear, strawberries, a drizzle of peanut butter and cinnamon."] },
 
 { id: "b02", meal: "breakfast", name: "Huevos rancheros", time: 15, heat: 2, main: "egg", side: true,
   split: { p2: "3 eggs, 3 tortillas", p1: "2 eggs, 3 tortillas", share: 0.58 },
@@ -173,10 +172,10 @@ var RECIPES = [
     "Warm the beans with a pinch of salt.",
     "Serve with rye bread and salsa on the side."] },
 
-{ id: "b05", meal: "breakfast", name: "Skyr with banana, mango and granola", time: 5, heat: 1, main: "dairy",
-  ing: [["skyr",350,"g"],["whey",15,"g"],["banana",0.5,"pc"],["mango",150,"g","thawed"],["granola",40,"g"],["cinnamon",0.5,"tsp"]],
+{ id: "b05", meal: "breakfast", name: "Skyr with strawberries, mango and granola", time: 5, heat: 1, main: "dairy",
+  ing: [["skyr",350,"g"],["whey",15,"g"],["strawb",100,"g"],["mango",150,"g","thawed"],["granola",40,"g"],["cinnamon",0.5,"tsp"]],
   steps: ["Stir the protein powder into the skyr until smooth.",
-    "Divide by the split and top with banana, mango, granola and cinnamon."] },
+    "Divide by the split and top with strawberries, mango, granola and cinnamon."] },
 
 { id: "b06", meal: "breakfast", name: "Turkey sincronizadas with avocado", time: 12, heat: 1, main: "turkey", side: true,
   split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
@@ -186,10 +185,10 @@ var RECIPES = [
     "Cut each into quarters and serve with spinach, sliced avocado, tomato and salsa on the side."] },
 
 { id: "b07", meal: "breakfast", name: "Arroz con leche-style protein oats", time: 10, heat: 1, main: "dairy",
-  ing: [["oats",90,"g"],["milk",400,"ml"],["whey",20,"g"],["cinnamon",1,"tsp"],["vanilla",1,"tsp"],["walnut",20,"g","chopped"],["banana",0.5,"pc"]],
+  ing: [["oats",90,"g"],["milk",400,"ml"],["whey",20,"g"],["cinnamon",1,"tsp"],["vanilla",1,"tsp"],["walnut",20,"g","chopped"],["apple",0.5,"pc","diced"]],
   steps: ["Cook the oats with the milk, half the cinnamon and the vanilla until thick and creamy.",
     "Off the heat, stir in the protein powder.",
-    "Serve dusted with the rest of the cinnamon, with walnuts and sliced banana."] },
+    "Serve dusted with the rest of the cinnamon, with walnuts and diced apple."] },
 
 { id: "b08", meal: "breakfast", name: "Egg, bean and spinach breakfast burritos", time: 15, heat: 2, main: "egg", side: true,
   split: { p2: "2 burritos with 3 eggs", p1: "2 burritos with 2 eggs", share: 0.6 },
@@ -225,8 +224,8 @@ var RECIPES = [
 
 { id: "b12", meal: "breakfast", name: "Baked cinnamon roll oats", time: 35, heat: 1, main: "dairy", weekend: true,
   split: { p2: "the larger dish", p1: "the smaller dish", share: 0.6 },
-  ing: [["oats",100,"g"],["egg",2,"pc"],["greek",150,"g","half for the glaze"],["banana",1,"pc"],["milk",150,"ml"],["whey",20,"g"],["cinnamon",1,"tsp"],["bpowder",1,"tsp"],["vanilla",1,"tsp"],["creamch",30,"g"]],
-  steps: ["Heat oven to 180 °C. Blend oats, eggs, half the yoghurt, banana, milk, protein powder, cinnamon, baking powder and vanilla.",
+  ing: [["oats",100,"g"],["egg",2,"pc"],["greek",150,"g","half for the glaze"],["applesauce",120,"g"],["milk",150,"ml"],["whey",20,"g"],["cinnamon",1,"tsp"],["bpowder",1,"tsp"],["vanilla",1,"tsp"],["creamch",30,"g"]],
+  steps: ["Heat oven to 180 °C. Blend oats, eggs, half the yoghurt, apple purée, milk, protein powder, cinnamon, baking powder and vanilla.",
     "Divide 60/40 between two greased ovenproof dishes and bake 25–30 minutes until set.",
     "Mix the rest of the yoghurt with cream cheese and a little vanilla for the glaze.",
     "Let cool a few minutes, then spread with the glaze."] },
@@ -460,8 +459,8 @@ var RECIPES = [
 
 { id: "d12", meal: "dinner", name: "Churro protein mug cakes with skyr", time: 10, heat: 1, main: "dairy",
   split: { p2: "the larger mug, more skyr", p1: "the smaller mug", share: 0.6 },
-  ing: [["oats",70,"g","blended to flour"],["whey",30,"g"],["banana",0.5,"pc"],["milk",100,"ml"],["egg",2,"pc"],["cinnamon",2,"tsp"],["vanilla",1,"tsp"],["bpowder",1,"tsp"],["walnut",20,"g"],["skyr",200,"g"]],
-  steps: ["Mash the banana and mix with oat flour, protein powder, milk, eggs, half the cinnamon, vanilla and baking powder.",
+  ing: [["oats",70,"g","blended to flour"],["whey",30,"g"],["applesauce",60,"g"],["milk",100,"ml"],["egg",2,"pc"],["cinnamon",2,"tsp"],["vanilla",1,"tsp"],["bpowder",1,"tsp"],["walnut",20,"g"],["skyr",200,"g"]],
+  steps: ["Mix the apple purée with oat flour, protein powder, milk, eggs, half the cinnamon, vanilla and baking powder.",
     "Divide 60/40 between two large mugs and microwave each 1½–2 minutes.",
     "Let cool slightly, dust with the rest of the cinnamon and top with walnuts. Skyr on the side."] },
 
@@ -567,8 +566,8 @@ var RECIPES = [
     "Serve with avocado and yoghurt."] },
 
 { id: "b17", meal: "breakfast", name: "Mango and chilli smoothie bowl", time: 5, heat: 1, main: "dairy",
-  ing: [["skyr",300,"g"],["whey",20,"g"],["mango",200,"g","frozen"],["banana",1,"pc"],["milk",100,"ml"],["granola",30,"g"],["chilisalt",1,"pinch"],["lime",0.5,"pc"]],
-  steps: ["Blend skyr, protein powder, frozen mango, banana and milk until thick.",
+  ing: [["skyr",300,"g"],["whey",20,"g"],["mango",200,"g","frozen"],["berries",100,"g","frozen"],["milk",100,"ml"],["granola",30,"g"],["chilisalt",1,"pinch"],["lime",0.5,"pc"]],
+  steps: ["Blend skyr, protein powder, frozen mango, frozen berries and milk until thick.",
     "Pour by the split and top with granola, a squeeze of lime and a pinch of chilli-lime salt."] },
 
 { id: "b18", meal: "breakfast", name: "Cottage cheese pancakes with berries", time: 20, heat: 1, main: "dairy",
@@ -586,12 +585,12 @@ var RECIPES = [
     "Divide spinach, halloumi and bacon between the holes and pour over the egg mixture to three-quarters full.",
     "Bake in a water bath 25–30 minutes until set. Rest a few minutes before turning out. Salsa on the side."] },
 
-{ id: "b20", meal: "breakfast", name: "Banana and peanut butter mug cakes", time: 5, heat: 1, main: "dairy",
+{ id: "b20", meal: "breakfast", name: "Apple-cinnamon peanut butter mug cakes", time: 5, heat: 1, main: "dairy",
   split: { p2: "the larger mug", p1: "the smaller mug", share: 0.6 },
-  ing: [["banana",1,"pc"],["oats",70,"g","blended to flour"],["egg",2,"pc"],["whey",30,"g"],["milk",100,"ml"],["cinnamon",1,"tsp"],["bpowder",0.5,"tsp"],["pb",1,"tbsp"]],
-  steps: ["Mash most of the banana and mix with oat flour, eggs, protein powder, milk, cinnamon and baking powder.",
+  ing: [["applesauce",100,"g"],["apple",0.5,"pc","sliced"],["oats",70,"g","blended to flour"],["egg",2,"pc"],["whey",30,"g"],["milk",100,"ml"],["cinnamon",1,"tsp"],["bpowder",0.5,"tsp"],["pb",1,"tbsp"]],
+  steps: ["Mix the apple purée with oat flour, eggs, protein powder, milk, cinnamon and baking powder.",
     "Divide 60/40 between two mugs and microwave each 1½–2 minutes.",
-    "Top with peanut butter and the rest of the banana, sliced."] },
+    "Top with peanut butter and the apple slices."] },
 
 // LUNCH, v0.4 ------------------------------------------------------------
 { id: "l19", meal: "lunch", name: "Turkey picadillo lettuce cups with rice", time: 25, heat: 2, main: "turkey", prep: true,
@@ -801,7 +800,7 @@ var SNACKS2 = [
 var JUICES = [
   { id: "j1", name: "Pear, celery and mint", ing: [["pear",0.25,"pc"],["cucumber",100,"g"],["celery",40,"g"],["mint",0.1,"bunch"]] },
   { id: "j2", name: "Citrus, carrot and kohlrabi", ing: [["orange",1,"pc"],["carrot",50,"g"],["kohlrabi",50,"g"]] },
-  { id: "j3", name: "Strawberry and beetroot", ing: [["strawb",60,"g"],["beetroot",40,"g"],["apple",0.25,"pc"]] },
+  { id: "j3", name: "Strawberry, apple and lime", ing: [["strawb",80,"g"],["apple",0.25,"pc"],["lime",0.25,"pc"]] },
   { id: "j4", name: "Green apple and celery", ing: [["apple",0.25,"pc"],["celery",80,"g"],["cucumber",100,"g"],["lime",0.5,"pc"]] },
   { id: "j5", name: "Pineapple and cucumber", ing: [["pineapple",80,"g"],["cucumber",100,"g"],["kohlrabi",50,"g"],["mint",0.1,"bunch"]] },
   { id: "j6", name: "Grape and kohlrabi", ing: [["grapes",80,"g"],["kohlrabi",50,"g"],["lime",0.5,"pc"]] }

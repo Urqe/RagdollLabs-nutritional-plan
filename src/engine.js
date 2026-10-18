@@ -198,7 +198,7 @@ var Engine = (function () {
         consume(dRaw.ing, d.batch || 1);
       }
 
-      // Two juices a week, alternating, so fresh herbs and beetroot get used up.
+      // Two juices a week, alternating, so fresh herbs and part-used packs get used up.
       if (dow === 1 || !weekJuices) {
         var ja = pickExtra(JX, i, "j:", 6), jb = pickExtra(JX.filter(function (j) { return j !== ja; }), i, "j:", 6);
         weekJuices = [ja, jb];

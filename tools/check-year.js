@@ -2,8 +2,11 @@ const E=require('../src/engine.js'); const D=require('../src/data.js');
 const R=D.RECIPES;
 console.log('recipes',R.length, R.reduce((a,r)=>(a[r.meal+(r.cheat?'-cheat':'')]=(a[r.meal+(r.cheat?'-cheat':'')]||0)+1,a),{}));
 // banned check
-const banned=/pork mince|kassler|fish|salmon|tuna|shrimp|prawn|eggplant|aubergine|zucchini|courgette/i;
-for(const r of R){ for(const i of r.ing){ if(!D.CAT[i[0]]) console.log('MISSING',r.id,i[0]); if(banned.test(D.CAT[i[0]]?.n||'')) console.log('BANNED',r.id,i[0]);} }
+const banned=/pork mince|kassler|fish|salmon|tuna|shrimp|prawn|eggplant|aubergine|zucchini|courgette|banana|beetroot|punajuuri|banaani/i;
+const BANNED_IDS=['banana','beetroot'];
+let bannedHits=0;
+for(const r of [...R,...D.SNACKS1,...D.SNACKS2,...D.JUICES]){ if(banned.test(r.name||'')||(r.steps||[]).some(s=>banned.test(s))){console.log('BANNED in text',r.id);bannedHits++;} for(const i of r.ing){ if(!D.CAT[i[0]]) console.log('MISSING',r.id,i[0]); if(BANNED_IDS.includes(i[0])||banned.test(D.CAT[i[0]]?.n||'')){ console.log('BANNED',r.id,i[0]); bannedHits++; } } }
+console.log('banned ingredients found:', bannedHits); if(bannedHits) process.exitCode=1;
 for(const r of R) console.log(r.id.padEnd(4), r.P.toFixed(0).padStart(4)+'g', r.K.toFixed(0).padStart(5)+'kcal', 'P2',(r.P*r.share).toFixed(0),'P1',(r.P*(1-r.share)).toFixed(0), r.name);
 // simulate a year
 let s={p1:[],p2:[]},sn={p1:[0,0,0],p2:[0,0,0]},short={p1:0,p2:0},over={p1:0,p2:0};

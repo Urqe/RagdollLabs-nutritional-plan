@@ -21,7 +21,7 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 ## Standing rules
 
 - No height, weight or other body data in the app, the README or commit history. Protein targets and portion splits are fine.
-- Food rules from the README apply to every new recipe: no fish, seafood, eggplant, zucchini, pork mince or thick pork cuts.
+- Food rules from the README apply to every new recipe: no fish, seafood, eggplant, zucchini, beetroot, bananas, pork mince or thick pork cuts. `tools/check-year.js` fails if a banned ingredient appears.
 - Every ingredient must be buyable in a normal Finnish supermarket. Specialist items (dried chillies, chipotle) need a fallback in the recipe.
 - New recipes follow the Come Conmigo style: simple Mexican home cooking, measured raw protein, yoghurt instead of mayo or cream.
 - The rotation must stay deterministic: a date always shows the same meals unless someone swaps one.
@@ -225,6 +225,15 @@ Notes
 
 ---
 
+## v0.6.1: No beetroot or bananas (shipped)
+
+- [x] Bananas replaced in 7 recipes: pear, strawberries, apple or frozen berries as toppings and fillers, unsweetened apple purée as the binder in baked oats and mug cakes. Renamed: "Protein oats with pear, strawberries and peanut butter", "Skyr with strawberries, mango and granola", "Apple-cinnamon peanut butter mug cakes".
+- [x] The strawberry and beetroot juice is now strawberry, apple and lime.
+- [x] Both removed from the ingredient catalogue and the price list; apple purée added.
+- [x] `tools/check-year.js` fails on any banned ingredient, in ingredient lists, names or directions.
+
+---
+
 ## Later
 
 ### Check prices in the store (was v0.2.1)
@@ -292,3 +301,4 @@ Checks
 | v0.5 | 2026-10-18 | Full HTML document for Pages (fixes iPhone quirks mode), plan built ahead, 1:1 pinch, continuous zoom, page-turn swipe, prepared layers; start-up 700 → 31 ms. |
 | v0.5.1 | 2026-10-18 | Swipe down to close the day sheet; the page behind no longer scrolls. |
 | v0.6 | 2026-10-18 | Light/dark/automatic theme switch, RagdollLabs cat logo and footer, visual refresh, fix for page stretch from hidden layers. |
+| v0.6.1 | 2026-10-18 | No beetroot or bananas: 8 recipes adjusted, banned-ingredient check added. |

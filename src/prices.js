@@ -53,6 +53,7 @@ var PRICES = {
   popcorn:    { product: "Popcorn kernels", packs: [[500,"g",1.99]], keeps: 365, freezes: false },
 
   // Tins and jars
+  applesauce: { product: "Apple purée, unsweetened", packs: [[350,"g",1.49]], keeps: 7, freezes: true },
   blackbean:  { product: "Black beans, 380 g tin", packs: [[230,"g",1.19]], keeps: 3, freezes: true },
   refried:    { product: "Refried beans", packs: [[435,"g",2.49]], keeps: 4, freezes: true },
   chickpea:   { product: "Chickpeas, 400 g tin", packs: [[240,"g",0.99]], keeps: 3, freezes: true },
@@ -63,7 +64,6 @@ var PRICES = {
   salsaverde: { product: "Salsa verde", packs: [[450,"g",3.49]], keeps: 14, freezes: false },
   pickjal:    { product: "Pickled jalapeños", packs: [[215,"g",2.29]], keeps: 30, freezes: false },
   pineapple:  { product: "Pineapple in juice, 565 g tin", packs: [[340,"g",1.79]], keeps: 4, freezes: true },
-  beetroot:   { product: "Cooked beetroot", packs: [[500,"g",1.49]], keeps: 5, freezes: false },
 
   // Vegetables and fruit
   potato:     { product: "Potatoes, 2 kg bag", packs: [[2000,"g",1.99]], keeps: 21, freezes: false },
@@ -76,7 +76,6 @@ var PRICES = {
   habanero:   { product: "Habanero", loose: ["pc",0.30], keeps: 10, freezes: true },
   avocado:    { product: "Avocados", loose: ["pc",1.19], keeps: 4, freezes: false },
   lime:       { product: "Limes", loose: ["pc",0.39], keeps: 14, freezes: false },
-  banana:     { product: "Bananas", loose: ["pc",0.24], keeps: 5, freezes: true },
   apple:      { product: "Green apples", loose: ["pc",0.37], keeps: 21, freezes: false },
   pear:       { product: "Pears", loose: ["pc",0.50], keeps: 7, freezes: false },
   orange:     { product: "Oranges", loose: ["pc",0.37], keeps: 14, freezes: false },
