@@ -5,6 +5,7 @@ var Engine = (function () {
   var CATX = D ? D.CAT : CAT, RX = D ? D.RECIPES : RECIPES, S1 = D ? D.SNACKS1 : SNACKS1, S2 = D ? D.SNACKS2 : SNACKS2, JX = D ? D.JUICES : JUICES,
       PX = D ? D.PEOPLE : PEOPLE, SHARE = D ? D.DEFAULT_SHARE : DEFAULT_SHARE;
 
+  var PR = (typeof module !== "undefined") ? require("./pricing.js") : (typeof Pricing !== "undefined" ? Pricing : null);
   var EPOCH = Date.UTC(2025, 0, 6); // a Monday
   var DAY = 86400000;
   // Protein the three meals should give two people together: both targets minus snack 1 each.
@@ -31,6 +32,9 @@ var Engine = (function () {
   }
   RX.forEach(function (r) { var n = nutrOf(r.ing); r.P = n.p; r.K = n.k; r.share = r.split ? r.split.share : SHARE; });
   S1.concat(S2, JX).forEach(function (s) { var n = nutrOf(s.ing); s.p = Math.round(n.p); s.k = Math.round(n.k); });
+  // Household cost of what each recipe or extra consumes (snacks and juice are per person).
+  RX.forEach(function (r) { r.C = PR ? PR.costOf(r.ing) : 0; });
+  S1.concat(S2, JX).forEach(function (s) { s.C = PR ? PR.costOf(s.ing, 2) : 0; });
 
   function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
@@ -103,6 +107,7 @@ var Engine = (function () {
       res.people[p] = { mealP: mp, mealK: mk, p: mp + sn[0].p, k: mk + sn[0].k, target: PX[p].protein };
     });
     res.cheat = !!meals.d.cheat;
+    res.cost = meals.b.C + meals.l.C + meals.d.C + sn[0].C + sn[1].C + res.juice.C;
     return res;
   }
 
