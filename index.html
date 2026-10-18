@@ -148,11 +148,16 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
 .crumbs .sep { color: var(--muted); }
 .zoom-btns { display: flex; gap: 6px; flex: none; }
 .zoom-btns .btn { width: 38px; padding: 6px 0; font-size: 1.05rem; line-height: 1; }
-.cal { touch-action: pan-y; transform-origin: 50% 0; scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 84px); }
-.cal.zin > * { animation: zin .22s ease-out; }
-.cal.zout > * { animation: zout .22s ease-out; }
-@keyframes zin { from { opacity: .4; transform: scale(.94); } to { opacity: 1; transform: none; } }
-@keyframes zout { from { opacity: .4; transform: scale(1.05); } to { opacity: 1; transform: none; } }
+.cal { touch-action: pan-y; scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 84px); }
+.cal.pinching > * { will-change: transform; }
+.cal > .settle { transition: transform .18s ease-out, opacity .18s ease-out; }
+.pinch-target { outline: 2px solid var(--cobalt); outline-offset: 2px; transition: outline-color .1s; }
+.cal.will-in .pinch-target { outline-width: 3px; box-shadow: 0 0 0 6px var(--cobalt-soft); }
+.cal.will-out > * { opacity: .75; }
+.cal.zin > * { animation: zin .24s cubic-bezier(.2,.7,.2,1); }
+.cal.zout > * { animation: zout .24s cubic-bezier(.2,.7,.2,1); }
+@keyframes zin { from { opacity: .2; transform: scale(.82); } to { opacity: 1; transform: none; } }
+@keyframes zout { from { opacity: .2; transform: scale(1.15); } to { opacity: 1; transform: none; } }
 @keyframes slidel { from { opacity: .4; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 @keyframes slider { from { opacity: .4; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
 .cal.sl > * { animation: slidel .2s ease-out; }
@@ -1277,6 +1282,8 @@ var Engine = (function () {
 
   var EPOCH = Date.UTC(2025, 0, 6); // a Monday
   var DAY = 86400000;
+  // The plan is generated day by day from EPOCH, so cap how far ahead it goes.
+  var MAX_DAYS = 365 * 8; // to the start of 2033
   // Minimum days between repeats.
   var RULES = { breakfast: 7, weekendBreakfast: 10, lunch: 14, dinner: 18, cheat: 35 };
   // Protein the three meals should give two people together: both targets minus snack 1 each.
@@ -1362,7 +1369,13 @@ var Engine = (function () {
     });
   }
 
-  var plan = [], last = {}, rand = rng(20261018), weekJuices = null;
+  var plan = [], last = {}, uses = {}, rand = rng(20261018), weekJuices = null;
+  var MAX_PER_YEAR = 20;
+  function usedInYear(id, idx) {
+    var u = uses[id]; if (!u) return 0;
+    while (u.length && u[0] <= idx - 365) u.shift();
+    return u.length;
+  }
 
   function pick(pool, idx, gap, opts) {
     opts = opts || {};
@@ -1371,13 +1384,14 @@ var Engine = (function () {
       var since = last[r.id] == null ? 999 : idx - last[r.id];
       var score = Math.min(since, 60) + rand() * 6;
       if (since < gap) score -= 1000;
+      if (usedInYear(r.id, idx) >= MAX_PER_YEAR) score -= 500;
       if (opts.avoidMain && opts.avoidMain.indexOf(r.main) >= 0) score -= W.variety;
       if (r.season) score += SEASON[r.season].indexOf(opts.month) >= 0 ? W.season : -W.offSeason;
       score += wasteScore(r.ing, (opts.mult ? opts.mult(r) : 1));
       if (opts.extra) score += opts.extra(r);
       if (score > bestScore) { bestScore = score; best = r; }
     });
-    last[best.id] = idx;
+    if (!opts.peek) { last[best.id] = idx; (uses[best.id] = uses[best.id] || []).push(idx); }
     return best;
   }
 
@@ -1409,7 +1423,7 @@ var Engine = (function () {
       var l, lAlt = null;
       if (prev && prev.d.batch) {
         l = leftoverOf(prev.dRaw);
-        lAlt = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: [prev.d.main] });
+        lAlt = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: [prev.d.main], peek: true });
       } else {
         l = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: prev ? [prev.d.main] : null });
         consume(l.ing, 1);
@@ -1454,7 +1468,7 @@ var Engine = (function () {
   // overrides: { "2026-10-18|b": "b03", ... }
   function day(y, m, dd, overrides) {
     var i = idxOf(y, m, dd);
-    if (i < 0) return null;
+    if (i < 0 || i > MAX_DAYS) return null;
     extendTo(i + 1);
     var base = plan[i], k = key(y, m, dd), ov = overrides || {};
     var prevK = i > 0 ? keyOfIdx(i - 1) : null, nextK = keyOfIdx(i + 1);
@@ -1493,7 +1507,9 @@ var Engine = (function () {
     return dow === 6 ? pools.cheat.concat(pools.dinner) : pools.dinner;
   }
 
-  return { day: day, byId: byId, grams: grams, nutrOf: nutrOf, alternatives: alternatives, idxOf: idxOf, key: key, RULES: RULES, EPOCH: EPOCH };
+  function inRange(y, m, dd) { var i = idxOf(y, m, dd); return i >= 0 && i <= MAX_DAYS; }
+
+  return { inRange: inRange, MAX_DAYS: MAX_DAYS, day: day, byId: byId, grams: grams, nutrOf: nutrOf, alternatives: alternatives, idxOf: idxOf, key: key, RULES: RULES, EPOCH: EPOCH };
 })();
 if (typeof module !== "undefined") module.exports = Engine;
 
@@ -1503,8 +1519,9 @@ if (typeof module !== "undefined") module.exports = Engine;
   var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   var DOWS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   var SLOT = { b: "Breakfast", l: "Lunch", d: "Dinner" };
-  var now = new Date(), TODAY = { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
-  var state = { offset: 0, sel: { y: TODAY.y, m: TODAY.m, d: TODAY.d }, view: "day", recipe: null, week: null, level: "year", focus: { y: TODAY.y, m: TODAY.m } };
+  function todayObj() { var n = new Date(); return { y: n.getFullYear(), m: n.getMonth(), d: n.getDate() }; }
+  var TODAY = todayObj();
+  var state = { offset: 0, sel: { y: TODAY.y, m: TODAY.m, d: TODAY.d }, view: "day", prevView: "day", recipe: null, week: null, level: "year", focus: { y: TODAY.y, m: TODAY.m } };
   var ov = {};
   try { ov = JSON.parse(localStorage.getItem("mpd-swaps") || "{}") || {}; } catch (e) { ov = {}; }
   function saveOv() { try { localStorage.setItem("mpd-swaps", JSON.stringify(ov)); } catch (e) {} }
@@ -1585,7 +1602,7 @@ if (typeof module !== "undefined") module.exports = Engine;
         for (var c = 0; c < 7; c++) {
           var dd = cells[r + c];
           if (!dd) { html += '<span class="d blank"></span>'; continue; }
-          var o = { y: y, m: m, d: dd }, ok = Engine.idxOf(y, m, dd) >= 0, cls = "d";
+          var o = { y: y, m: m, d: dd }, ok = Engine.inRange(y, m, dd), cls = "d";
           if (ok && dayPlan(o).cheat) cls += " cheat";
           if (same(o, TODAY)) cls += " today";
           if (before(o, TODAY)) cls += " past";
@@ -1665,7 +1682,7 @@ if (typeof module !== "undefined") module.exports = Engine;
 
   function renderDayBig() {
     var o = state.sel, plan = dayPlan(o);
-    if (!plan) { $("months").innerHTML = '<p class="empty">No plan before January 2025.</p>'; return; }
+    if (!plan) { $("months").innerHTML = '<p class="empty">No plan for this date. The plan runs from January 2025 to the end of 2032.</p>'; return; }
     var h = '<section class="dbig"><div class="dbig-head"><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + "</div><h2>" + dateTitle(o) + "</h2></div>";
     h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
     h += '<div class="costline"><span>Food cost today</span><b>≈ ' + eur(plan.cost) + "</b></div>";
@@ -1687,19 +1704,31 @@ if (typeof module !== "undefined") module.exports = Engine;
 
   function monthDiff(a, b) { return (a.y - b.y) * 12 + (a.m - b.m); }
   function animate(cls) {
-    var c = $("cal"); c.classList.remove("zin", "zout", "sl", "sr"); void c.offsetWidth; if (cls) c.classList.add(cls);
+    var c = $("cal"), m = $("months");
+    c.classList.remove("zin", "zout", "sl", "sr"); void c.offsetWidth; if (cls) c.classList.add(cls);
+    // Zooms grow out of (or shrink into) the point you pinched; buttons and keys use the centre.
+    if (!m.style.transformOrigin) m.style.transformOrigin = "50% 30%";
+    clearTimeout(animate.t); animate.t = setTimeout(function () { m.style.transformOrigin = ""; c.classList.remove("zin", "zout", "sl", "sr"); }, 300);
   }
   function saveLevel() {
     var tok = state.level === "year" ? "year" : state.level === "month" ? "m" + state.focus.y + "-" + (state.focus.m + 1) : "d" + Engine.key(state.sel.y, state.sel.m, state.sel.d);
     try { history.replaceState(null, "", "#" + tok); } catch (e) {}
     try { localStorage.setItem("mpd-level", tok); } catch (e) {}
   }
+  function validDay(y, m, d) {
+    if (m < 0 || m > 11 || d < 1 || d > new Date(Date.UTC(y, m + 1, 0)).getUTCDate()) return false;
+    return Engine.inRange(y, m, d);
+  }
   function readLevel() {
-    var tok = (location.hash || "").slice(1);
+    // A link (#m2026-10, #d2026-10-18) opens exactly that month or day. Without one,
+    // the level you last used is restored, but on today's month or day.
+    var tok = (location.hash || "").slice(1), fromLink = !!tok;
     if (!tok) { try { tok = localStorage.getItem("mpd-level") || ""; } catch (e) {} }
     var mm = /^m(\d{4})-(\d{1,2})$/.exec(tok), dm = /^d(\d{4})-(\d{2})-(\d{2})$/.exec(tok);
-    if (mm) { state.level = "month"; state.focus = { y: +mm[1], m: +mm[2] - 1 }; }
-    else if (dm) { state.level = "day"; state.sel = { y: +dm[1], m: +dm[2] - 1, d: +dm[3] }; state.focus = { y: state.sel.y, m: state.sel.m }; }
+    if (mm && fromLink && validDay(+mm[1], +mm[2] - 1, 1)) { state.level = "month"; state.focus = { y: +mm[1], m: +mm[2] - 1 }; }
+    else if (dm && fromLink && validDay(+dm[1], +dm[2] - 1, +dm[3])) { state.level = "day"; state.sel = { y: +dm[1], m: +dm[2] - 1, d: +dm[3] }; state.focus = { y: state.sel.y, m: state.sel.m }; }
+    else if (mm) state.level = "month";
+    else if (dm) state.level = "day";
   }
   function setLevel(lv, dir) {
     state.level = lv;
@@ -1726,12 +1755,17 @@ if (typeof module !== "undefined") module.exports = Engine;
   }
   function step(n) {
     if (state.level === "month") {
-      var t2 = new Date(Date.UTC(state.focus.y, state.focus.m + n, 1)); state.focus = { y: t2.getUTCFullYear(), m: t2.getUTCMonth() };
+      var t2 = new Date(Date.UTC(state.focus.y, state.focus.m + n, 1));
+      if (!Engine.inRange(t2.getUTCFullYear(), t2.getUTCMonth(), 1) && !Engine.inRange(t2.getUTCFullYear(), t2.getUTCMonth(), 28)) return;
+      state.focus = { y: t2.getUTCFullYear(), m: t2.getUTCMonth() };
     } else if (state.level === "day") {
-      var nd = addDays(state.sel, n); if (Engine.idxOf(nd.y, nd.m, nd.d) < 0) return;
+      var nd = addDays(state.sel, n); if (!Engine.inRange(nd.y, nd.m, nd.d)) return;
       state.sel = nd; state.focus = { y: nd.y, m: nd.m };
       if (mq.matches && state.view === "week") state.week = mondayOf(nd);
-    } else { state.offset += 3 * n; renderMonths(); centerNow(); return; }
+    } else {
+      var lim = monthDiff({ y: 2032, m: 11 }, TODAY), low = monthDiff({ y: 2025, m: 0 }, TODAY);
+      state.offset = Math.max(low + 5, Math.min(lim - 6, state.offset + 3 * n)); renderMonths(); centerNow(); return;
+    }
     saveLevel(); renderMonths(); renderPanel(); animate(n > 0 ? "sl" : "sr");
   }
   function targetAt(x, y) {
@@ -1753,7 +1787,7 @@ if (typeof module !== "undefined") module.exports = Engine;
 
   function viewDay() {
     var o = state.sel, plan = dayPlan(o);
-    if (!plan) return '<div class="p-in"><p class="empty">No plan before January 2025.</p></div>';
+    if (!plan) return '<div class="p-in"><p class="empty">No plan for this date. The plan runs from January 2025 to the end of 2032.</p></div>';
     var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + '</div><h2 class="p-title">' + dateTitle(o) + "</h2></div>" +
       '<button class="sheet-close" data-close aria-label="Close">×</button></div>';
     h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
@@ -1788,7 +1822,7 @@ if (typeof module !== "undefined") module.exports = Engine;
   function viewRecipe() {
     var o = state.sel, plan = dayPlan(o), s = state.recipe, r = plan.meals[s], k = plan.key + "|" + s;
     var sp = r.split || { p2: "Larger portion, about " + Math.round(r.share * 100) + " % of the pan", p1: "About " + Math.round((1 - r.share) * 100) + " % of the pan" };
-    var h = '<div class="p-in"><div class="p-head"><button class="back" data-back>‹ ' + dateTitle(o) + '</button><button class="sheet-close" data-close aria-label="Close">×</button></div>';
+    var h = '<div class="p-in"><div class="p-head"><button class="back" data-back>‹ ' + (state.prevView === "week" ? "Week " + isoWeek(o.y, o.m, o.d) : dateTitle(o)) + '</button><button class="sheet-close" data-close aria-label="Close">×</button></div>';
     h += '<div><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + " · " + r.time + " min · serves 2 · ≈ " + eur(r.C) + "</div><h2 class=\"p-title\">" + esc(r.name) + "</h2></div>";
     h += '<div class="split">' +
       '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>" + esc(sp.p2) + '</b><div class="kcal">' + r0(r.P * r.share) + " g protein · ≈ " + r0(r.K * r.share) + " kcal</div></div>" +
@@ -1939,8 +1973,8 @@ if (typeof module !== "undefined") module.exports = Engine;
     if (t.hasAttribute("data-day")) { var a = t.getAttribute("data-day").split(",").map(Number); state.sel = { y: a[0], m: a[1], d: a[2] }; state.view = "day"; }
     else if (t.hasAttribute("data-wk")) { var w = t.getAttribute("data-wk").split(",").map(Number); state.week = { y: w[0], m: w[1], d: w[2] }; state.view = "week"; }
     else if (t.hasAttribute("data-month")) { var mm = t.getAttribute("data-month").split(",").map(Number); state.month = { y: mm[0], m: mm[1] }; state.view = "month"; }
-    else if (t.hasAttribute("data-recipe")) { state.recipe = t.getAttribute("data-recipe"); state.view = "recipe"; }
-    else if (t.hasAttribute("data-back")) { state.view = "day"; }
+    else if (t.hasAttribute("data-recipe")) { if (state.view !== "recipe") state.prevView = state.view; state.recipe = t.getAttribute("data-recipe"); state.view = "recipe"; }
+    else if (t.hasAttribute("data-back")) { state.view = state.prevView === "week" ? "week" : "day"; }
     else if (t.hasAttribute("data-reset")) { var o = state.sel; delete ov[Engine.key(o.y, o.m, o.d) + "|" + state.recipe]; saveOv(); }
     renderMonths(); renderPanel(); openSheet(true);
   });
@@ -1961,44 +1995,95 @@ if (typeof module !== "undefined") module.exports = Engine;
   });
 
   // ---- Gestures: pinch to change level, swipe to move, taps unchanged ------
-  var cal = $("cal"), pts = {}, pinch = null, swipe = null, suppressUntil = 0, wheelAcc = 0, wheelLock = 0;
-  function ptsList() { return Object.keys(pts).map(function (k) { return pts[k]; }); }
-  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
-  cal.addEventListener("pointerdown", function (e) {
-    if (e.pointerType === "mouse") return;
-    pts[e.pointerId] = { x: e.clientX, y: e.clientY };
-    var l = ptsList();
-    if (l.length === 2) { pinch = { d0: dist(l[0], l[1]), mx: (l[0].x + l[1].x) / 2, my: (l[0].y + l[1].y) / 2, r: 1 }; swipe = null; }
-    else if (l.length === 1) swipe = { x: e.clientX, y: e.clientY };
-  });
-  cal.addEventListener("pointermove", function (e) {
-    if (!pts[e.pointerId]) return;
-    pts[e.pointerId] = { x: e.clientX, y: e.clientY };
-    if (pinch) {
-      var l = ptsList(); if (l.length < 2) return;
-      pinch.r = dist(l[0], l[1]) / pinch.d0;
-      var box = cal.getBoundingClientRect();
-      cal.style.transformOrigin = (pinch.mx - box.left) + "px " + (pinch.my - box.top) + "px";
-      cal.style.transform = "scale(" + Math.max(0.85, Math.min(1.2, pinch.r)) + ")";
-    }
-  });
-  function endPointer(e) {
-    if (!pts[e.pointerId]) return;
-    var p0 = pts[e.pointerId]; delete pts[e.pointerId];
-    if (pinch) {
-      var r = pinch.r, mx = pinch.mx, my = pinch.my;
-      cal.style.transform = ""; pinch = null; swipe = null; suppressUntil = Date.now() + 350;
-      if (r > 1.18) zoomIn(targetAt(mx, my)); else if (r < 0.85) zoomOut();
-      return;
-    }
-    if (swipe && e.type === "pointerup") {
-      var dx = p0.x - swipe.x, dy = p0.y - swipe.y; swipe = null;
-      if (state.level !== "year" && Math.abs(dx) > 70 && Math.abs(dy) < Math.abs(dx) * 0.6) { suppressUntil = Date.now() + 400; step(dx < 0 ? 1 : -1); }
+  // Touch events, not pointer events: once the browser starts scrolling it takes a
+  // pointer away, which made pinches unreliable. With touch events the second finger
+  // can claim the gesture before a scroll starts.
+  var cal = $("cal"), g = null, raf = 0, suppressUntil = 0, wheelAcc = 0, wheelLock = 0, tgtEl = null;
+  var PINCH_IN = 1.25, PINCH_OUT = 0.8;
+  function tdist(a, b) { return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); }
+  // Follow the fingers at first, then resist, so the view never jumps past the trigger point.
+  function rubber(r) { return r >= 1 ? 1 + Math.min(r - 1, 1) * 0.5 : 1 - Math.min(1 - r, 0.6) * 0.5; }
+  function markTarget(t) {
+    if (tgtEl) tgtEl.classList.remove("pinch-target");
+    tgtEl = null;
+    if (!t) return;
+    var sel = state.level === "year" && t.month ? "#m-" + t.month.y + "-" + t.month.m
+      : state.level === "month" && t.day ? '[data-day="' + t.day.y + "," + t.day.m + "," + t.day.d + '"]' : null;
+    if (sel) { tgtEl = $("months").querySelector(sel); if (tgtEl && tgtEl.offsetParent === null) tgtEl = null; }
+  }
+  function paint() {
+    raf = 0; if (!g) return;
+    var c = $("months");
+    if (g.mode === "pinch") {
+      var s = rubber(g.r);
+      c.style.transformOrigin = g.ox + "px " + g.oy + "px";
+      c.style.transform = "translate(" + g.tx + "px," + g.ty + "px) scale(" + s + ")";
+      cal.classList.toggle("will-in", g.r >= PINCH_IN && state.level !== "day");
+      cal.classList.toggle("will-out", g.r <= PINCH_OUT && state.level !== "year");
+      if (tgtEl) tgtEl.classList.toggle("pinch-target", g.r > 1.05 && state.level !== "day");
+    } else if (g.mode === "swipe" && g.lock === "x") {
+      c.style.transform = "translateX(" + g.dx * 0.6 + "px)";
+      c.style.opacity = String(1 - Math.min(Math.abs(g.dx) / 600, 0.35));
     }
   }
-  cal.addEventListener("pointerup", endPointer);
-  cal.addEventListener("pointercancel", function (e) { delete pts[e.pointerId]; if (pinch && ptsList().length < 2) { cal.style.transform = ""; pinch = null; } swipe = null; });
-  // Keep the browser's own page zoom out of the calendar (Safari), so the pinch reaches the app.
+  function schedule() { if (!raf) raf = requestAnimationFrame(paint); }
+  function settle(c) {
+    // Ease back to rest when a gesture does not change the view.
+    c.classList.add("settle"); c.style.transform = ""; c.style.opacity = "";
+    setTimeout(function () { c.classList.remove("settle"); }, 200);
+  }
+  function clearGesture() {
+    cal.classList.remove("will-in", "will-out", "pinching");
+    markTarget(null); g = null;
+  }
+  function originFor(c, x, y) { var b = c.getBoundingClientRect(); return { x: x - b.left, y: y - b.top }; }
+
+  cal.addEventListener("touchstart", function (e) {
+    if (e.touches.length === 2) {
+      var a = e.touches[0], b = e.touches[1], mx = (a.clientX + b.clientX) / 2, my = (a.clientY + b.clientY) / 2, o = originFor($("months"), mx, my);
+      g = { mode: "pinch", d0: Math.max(tdist(a, b), 1), mx0: mx, my0: my, mx: mx, my: my, ox: o.x, oy: o.y, r: 1, tx: 0, ty: 0 };
+      g.target = targetAt(mx, my); markTarget(g.target);
+      cal.classList.add("pinching");
+      e.preventDefault();
+    } else if (e.touches.length === 1 && !g) {
+      g = { mode: "swipe", x0: e.touches[0].clientX, y0: e.touches[0].clientY, dx: 0, dy: 0, lock: null };
+    }
+  }, { passive: false });
+  cal.addEventListener("touchmove", function (e) {
+    if (!g) return;
+    if (g.mode === "pinch" && e.touches.length >= 2) {
+      var a = e.touches[0], b = e.touches[1];
+      g.r = tdist(a, b) / g.d0; g.mx = (a.clientX + b.clientX) / 2; g.my = (a.clientY + b.clientY) / 2;
+      g.tx = (g.mx - g.mx0) * 0.5; g.ty = (g.my - g.my0) * 0.5;
+      e.preventDefault(); schedule();
+    } else if (g.mode === "swipe" && e.touches.length === 1) {
+      g.dx = e.touches[0].clientX - g.x0; g.dy = e.touches[0].clientY - g.y0;
+      if (!g.lock && (Math.abs(g.dx) > 10 || Math.abs(g.dy) > 10)) g.lock = Math.abs(g.dx) > Math.abs(g.dy) * 1.2 && state.level !== "year" ? "x" : "y";
+      if (g.lock === "x") { e.preventDefault(); schedule(); }
+    }
+  }, { passive: false });
+  function endTouch(e) {
+    if (!g) return;
+    var c = $("months");
+    if (g.mode === "pinch") {
+      if (e.touches.length >= 2) return; // still pinching with two fingers
+      var r = g.r, tgt = targetAt(g.mx0, g.my0) || g.target, ox = g.ox, oy = g.oy;
+      clearGesture(); suppressUntil = Date.now() + 350;
+      var lv = state.level;
+      if (r >= PINCH_IN && lv !== "day") { c.style.transform = ""; c.style.transformOrigin = ox + "px " + oy + "px"; zoomIn(tgt); }
+      else if (r <= PINCH_OUT && lv !== "year") { c.style.transform = ""; c.style.transformOrigin = ox + "px " + oy + "px"; zoomOut(); }
+      else settle(c);
+      return;
+    }
+    if (g.mode === "swipe") {
+      var dx = g.dx, lock = g.lock; clearGesture();
+      if (lock === "x" && Math.abs(dx) > 60) { suppressUntil = Date.now() + 350; c.style.transform = ""; c.style.opacity = ""; step(dx < 0 ? 1 : -1); }
+      else if (lock === "x") settle(c);
+    }
+  }
+  cal.addEventListener("touchend", endTouch);
+  cal.addEventListener("touchcancel", function () { if (g) { clearGesture(); settle($("months")); } });
+  // Keep Safari's own page zoom out of the calendar, so the pinch reaches the app.
   ["gesturestart", "gesturechange"].forEach(function (n) { cal.addEventListener(n, function (e) { e.preventDefault(); }); });
   // A pinch or swipe never turns into a tap.
   document.addEventListener("click", function (e) { if (Date.now() < suppressUntil && cal.contains(e.target)) { e.stopPropagation(); e.preventDefault(); } }, true);
@@ -2020,7 +2105,18 @@ if (typeof module !== "undefined") module.exports = Engine;
     else if (e.key === "ArrowRight" && state.level !== "year") { e.preventDefault(); step(1); }
   });
 
+  // Keep "today" right if the app stays open past midnight.
+  function checkDate() {
+    var n = todayObj(); if (same(n, TODAY)) return;
+    var wasToday = same(state.sel, TODAY); TODAY = n;
+    if (wasToday) { state.sel = { y: n.y, m: n.m, d: n.d }; if (state.level !== "day") state.focus = { y: n.y, m: n.m }; }
+    renderMonths(); renderPanel();
+  }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) checkDate(); });
+  setInterval(checkDate, 60000);
+
   readLevel();
+  if (location.hash || state.level !== "year") saveLevel(); // correct an invalid link in the address bar
   if (state.level === "day" && mq.matches) { state.view = "week"; state.week = mondayOf(state.sel); }
   renderMonths(); renderPanel();
   if (state.level === "year") requestAnimationFrame(centerNow);

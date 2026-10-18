@@ -9,7 +9,7 @@ Open `index.html` in a browser. It is a single self-contained page with no serve
 - Twelve months centred on the current month, with ISO week numbers and Monday-first weeks.
 - Three zoom levels: year, month and day. Pinch out on a month or day to open it and pinch in to go back; on desktop use trackpad pinch, Ctrl + scroll, the − / + buttons or the + and − keys. Swipe or use the arrow keys to move between months or days. Taps and clicks work the same at every level.
 - At month level each day shows its three meals and both people's protein. Phones get a list of days instead of a grid so the meal names stay readable.
-- The current level is kept in the page address (for example `#m2026-10` or `#d2026-10-18`), so a bookmark opens straight to a month or a day.
+- The current level is kept in the page address (for example `#m2026-10` or `#d2026-10-18`), so a bookmark opens straight to a month or a day. Opening the app without a link returns to the level you last used, on today's date. The plan covers January 2025 to the end of 2032.
 - Tap a day for breakfast, lunch, dinner and optional snacks, with protein and calories per person.
 - Tap a meal for ingredients for two, directions and how to split the portions.
 - Tap a week number for daily totals, weekly cost and a shopping list that says which pack sizes to buy, what will be left over, and what is likely to go to waste.
@@ -62,13 +62,14 @@ build.py              inlines src/*.js into src/app.html and writes index.html
 tools/check-year.js   runs a year of the plan and reports protein, snacks and repeat violations
 tools/check-prices.js reports missing prices, remaining estimates, stale prices and cost levels
 tools/check-waste.js  estimates weekly food waste across a year of plans
+tools/test-ui.py      browser test of zoom, touch gestures, taps, keyboard and links (needs Playwright)
 ```
 
 ## Changing things
 
 1. Edit files in `src/`. To add a recipe, add an entry to `RECIPES` in `src/data.js` using ingredient ids from `CAT`. Protein and calories are calculated from the ingredient weights.
 2. Run `node tools/check-year.js` to confirm targets are still met and no repeat rules are broken, `node tools/check-prices.js` to confirm every ingredient has a price, and `node tools/check-waste.js` to see the waste estimate.
-3. Run `python3 build.py` to rebuild `index.html`.
+3. Run `python3 build.py` to rebuild `index.html`, then `python3 tools/test-ui.py` to check the page in a browser.
 
 ## Prices
 
