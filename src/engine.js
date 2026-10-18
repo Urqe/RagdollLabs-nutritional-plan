@@ -217,7 +217,11 @@ var Engine = (function () {
   function keyOfIdx(i) { var t = new Date(EPOCH + i * DAY); return key(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()); }
 
   // overrides: { "2026-10-18|b": "b03", ... }
-  function day(y, m, dd, overrides) {
+  // inc: which optional extras count as planned food: { juice, s1, s2 } (all true by default).
+  // Protein, calories, cost and shopping all follow the same selection.
+  var ALL_EXTRAS = { juice: true, s1: true, s2: true };
+  function day(y, m, dd, overrides, inc) {
+    inc = inc || ALL_EXTRAS;
     var i = idxOf(y, m, dd);
     if (i < 0 || i > MAX_DAYS) return null;
     extendTo(i + 1);
@@ -238,17 +242,24 @@ var Engine = (function () {
       d: byId[ov[k + "|d"]] || dinner
     };
     var sn = base.snacks;
-    var res = { key: k, meals: meals, base: { b: base.b, l: lunch, d: base.dRaw }, snacks: sn, juice: base.juice, people: {} };
+    var res = { key: k, meals: meals, base: { b: base.b, l: lunch, d: base.dRaw }, snacks: sn, juice: base.juice, people: {},
+      inc: { juice: inc.juice !== false, s1: inc.s1 !== false, s2: inc.s2 !== false } };
+    var extras = [];
+    if (res.inc.juice) extras.push(base.juice);
+    if (res.inc.s1) extras.push(sn[0]);
+    if (res.inc.s2) extras.push(sn[1]);
+    res.extras = extras;
+    var xp = extras.reduce(function (a, x) { return a + x.p; }, 0), xk = extras.reduce(function (a, x) { return a + x.k; }, 0);
     ["p1", "p2"].forEach(function (p) {
       var mp = 0, mk = 0;
       ["b", "l", "d"].forEach(function (s) {
         var r = meals[s], sh = p === "p2" ? r.share : 1 - r.share;
         mp += r.P * sh; mk += r.K * sh;
       });
-      res.people[p] = { mealP: mp, mealK: mk, p: mp + sn[0].p, k: mk + sn[0].k, target: PX[p].protein };
+      res.people[p] = { mealP: mp, mealK: mk, p: mp + xp, k: mk + xk, target: PX[p].protein };
     });
     res.cheat = !!meals.d.cheat;
-    res.cost = meals.b.C + meals.l.C + meals.d.C + sn[0].C + sn[1].C + res.juice.C;
+    res.cost = meals.b.C + meals.l.C + meals.d.C + extras.reduce(function (a, x) { return a + x.C; }, 0);
     return res;
   }
 

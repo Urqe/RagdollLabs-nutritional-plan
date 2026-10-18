@@ -57,7 +57,7 @@ var CAT = {
   refried:  { n: "Refried beans, canned (no lard)", fi: "papumuhennos", p: 5.5, k: 90, s: "Tins & jars" },
   lentil:   { n: "Red lentils, dry", fi: "punaiset linssit", p: 24, k: 340, s: "Tins & jars" },
   crushed:  { n: "Crushed tomatoes", fi: "tomaattimurska", p: 1.2, k: 30, s: "Tins & jars" },
-  passata:  { n: "Passata", fi: "tomaattipyre", p: 1.3, k: 35, s: "Tins & jars" },
+  passata:  { n: "Passata", fi: "paseerattu tomaatti", p: 1.3, k: 35, s: "Tins & jars" },
   corn:     { n: "Sweetcorn, canned (drained)", fi: "maissi", p: 3, k: 80, s: "Tins & jars" },
   salsaverde:{ n: "Salsa verde, jar", fi: "salsa verde", p: 1.5, k: 30, s: "Tins & jars" },
   salsa:    { n: "Salsa roja / taco sauce, jar", fi: "salsa", p: 1.5, k: 35, s: "Tins & jars" },

@@ -169,6 +169,8 @@ button { font: inherit; color: inherit; }
 .snacks .kcal { display: block; }
 .snacks h3, .sec h3 { font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 4px; font-weight: 600; }
 .snacks ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.xtra { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; padding: 4px 0; }
+.xtra input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--cobalt); }
 
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .split .person b { display: block; font-size: .95rem; }
@@ -310,6 +312,9 @@ button, .d, .dc, .ag, .meal { -webkit-tap-highlight-color: transparent; touch-ac
 .trip-body { padding: 0 14px 12px; }
 .trip-tools { display: flex; justify-content: flex-end; }
 .shop .have { font-size: .8rem; color: var(--muted); margin: 8px 0 0; }
+.shop .have.freeze ul { margin: 4px 0 0; }
+.shop .have.freeze li { display: block; border: 0; padding: 2px 0; font-size: .8rem; }
+.shop .have.freeze li > span { font-family: inherit; font-size: inherit; white-space: normal; }
 .adv.waste { color: var(--chile); font-weight: 600; }
 .adv.freeze, .adv.keeps { color: var(--good); }
 .price-note { margin: 0; }
@@ -458,7 +463,7 @@ var CAT = {
   refried:  { n: "Refried beans, canned (no lard)", fi: "papumuhennos", p: 5.5, k: 90, s: "Tins & jars" },
   lentil:   { n: "Red lentils, dry", fi: "punaiset linssit", p: 24, k: 340, s: "Tins & jars" },
   crushed:  { n: "Crushed tomatoes", fi: "tomaattimurska", p: 1.2, k: 30, s: "Tins & jars" },
-  passata:  { n: "Passata", fi: "tomaattipyre", p: 1.3, k: 35, s: "Tins & jars" },
+  passata:  { n: "Passata", fi: "paseerattu tomaatti", p: 1.3, k: 35, s: "Tins & jars" },
   corn:     { n: "Sweetcorn, canned (drained)", fi: "maissi", p: 3, k: 80, s: "Tins & jars" },
   salsaverde:{ n: "Salsa verde, jar", fi: "salsa verde", p: 1.5, k: 30, s: "Tins & jars" },
   salsa:    { n: "Salsa roja / taco sauce, jar", fi: "salsa", p: 1.5, k: 35, s: "Tins & jars" },
@@ -1405,46 +1410,143 @@ var Pricing = (function () {
   // ---- Shopping in trips ------------------------------------------------------
   // dayNeeds: 7 objects (Mon..Sun) of ingredient id -> amount in its sold unit, fresh
   // items only. trips: arrays of day indexes, e.g. [[0,1],[2,3],[4,5,6]].
+  //
+  // Every pack is tracked on its own. A pack's shelf life ("keeps") counts from the day
+  // it is opened; loose produce counts from the day it is bought. Food is only used on a
+  // day when it is still within its shelf life on that day, oldest first.
   // Short-lived items are bought per trip. Items that keep 10 days or more are bought
-  // once, on the first trip that needs them, for the rest of the week. Leftovers from
-  // an earlier trip are used first while still good.
-  var LONG_KEEP = 10;
-  function planTrips(dayNeeds, trips) {
-    var carry = {}, out = [];
-    trips.forEach(function (days, ti) {
-      var first = days[0], need = {}, later = {};
-      days.forEach(function (d) { Object.keys(dayNeeds[d] || {}).forEach(function (id) { need[id] = (need[id] || 0) + dayNeeds[d][id]; }); });
-      for (var tj = ti + 1; tj < trips.length; tj++) trips[tj].forEach(function (d) {
-        Object.keys(dayNeeds[d] || {}).forEach(function (id) { later[id] = (later[id] || 0) + dayNeeds[d][id]; });
-      });
-      var lines = [], cost = 0;
-      Object.keys(need).forEach(function (id) {
-        var n = need[id]; if (n <= 0) return;
-        var p = PX[id], c = carry[id], use = 0;
-        if (c && c.amt > 1e-6 && first - c.day < p.keeps) use = Math.min(n, c.amt);
-        var rest = n - use;
-        if (rest <= 1e-6) { c.amt -= use; lines.push({ id: id, need: n, fromEarlier: use, buy: null, forLater: 0 }); return; }
-        var extra = p.keeps >= LONG_KEEP ? (later[id] || 0) : 0;
-        var res = bestPacks(id, rest + extra);
-        cost += res.cost;
-        carry[id] = { amt: res.buy - rest, day: first };
-        lines.push({ id: id, need: n, fromEarlier: use, buy: res, forLater: extra });
-      });
-      out.push({ days: days, lines: lines, cost: cost });
+  // once, on the first trip that needs them, for the rest of the week.
+  // Whatever is left is reported once: frozen (with the day to freeze it), keeps into
+  // next week, or wasted. Expired food is never dropped from the count.
+  var LONG_KEEP = 10, DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  function cloneLots(ls) { return ls.map(function (l) { return { trip: l.trip, bought: l.bought, opened: l.opened, size: l.size, left: l.left, last: l.last, frozen: l.frozen, usedFrozen: l.usedFrozen }; }); }
+  // Use amount on day d from lots. Returns { used, fromEarlier, short }.
+  // Food that freezes can be frozen on its last good day and used later in the week;
+  // the lot remembers the day it has to go into the freezer.
+  function draw(ls, d, amt, keeps, ti, freezes) {
+    var res = { used: 0, fromEarlier: 0, short: 0 }, rest = amt;
+    var open = ls.filter(function (l) { return l.opened !== null && l.left > 1e-9 && (freezes || d - l.opened < keeps); }).sort(function (a, b) { return a.opened - b.opened; });
+    var closed = ls.filter(function (l) { return l.opened === null && l.left > 1e-9 && l.bought <= d; }).sort(function (a, b) { return a.size - b.size; });
+    open.concat(closed).forEach(function (l) {
+      if (rest <= 1e-9) return;
+      if (l.opened === null) l.opened = d;
+      if (d - l.opened >= keeps && l.frozen == null) l.frozen = l.last === null ? l.opened : l.last;
+      if (l.frozen != null && l.usedFrozen == null) l.usedFrozen = d;
+      var u = Math.min(rest, l.left);
+      l.left -= u; rest -= u; l.last = d; res.used += u;
+      if (l.trip < ti) res.fromEarlier += u;
     });
-    // What is left at the end of the week, and what happens to it.
-    var left = [];
-    Object.keys(carry).forEach(function (id) {
-      var c = carry[id], p = PX[id]; if (c.amt <= 1e-6) return;
-      var value = c.amt * unitPrice(id); if (value < 0.3) return;
-      var life = p.keeps - (7 - c.day), kind = p.freezes ? "freeze" : life >= 3 ? "keeps" : "waste";
-      left.push({ id: id, amt: c.amt, value: value, kind: kind,
-        text: kind === "freeze" ? "freeze the rest" : kind === "keeps" ? "keeps into next week" : "likely wasted unless used early next week" });
-    });
-    return { trips: out, leftovers: left };
+    res.short = rest > 1e-6 ? rest : 0;
+    return res;
+  }
+  function addLots(ls, res, ti, day) {
+    if (res.loose) { ls.push({ trip: ti, bought: day, opened: day, size: res.buy, left: res.buy, last: null, frozen: null, usedFrozen: null }); return; }
+    res.packs.forEach(function (pk) { for (var i = 0; i < pk[0]; i++) ls.push({ trip: ti, bought: day, opened: null, size: pk[1][0], left: pk[1][0], last: null, frozen: null, usedFrozen: null }); });
+  }
+  function mergeRes(a, b) {
+    if (!a) return b;
+    var packs = a.packs.map(function (pk) { return [pk[0], pk[1]]; });
+    b.packs.forEach(function (pk) { var hit = packs.filter(function (x) { return x[1] === pk[1]; })[0]; if (hit) hit[0] += pk[0]; else packs.push([pk[0], pk[1]]); });
+    return { buy: a.buy + b.buy, cost: a.cost + b.cost, left: 0, packs: packs, loose: a.loose, count: (a.count || 0) + (b.count || 0) };
   }
 
-  return { planTrips: planTrips, LONG_KEEP: LONG_KEEP, isStock: isStock, need: need, unitPrice: unitPrice, costOf: costOf, bestPacks: bestPacks, leftoverAdvice: leftoverAdvice, packUnit: packUnit };
+  function planTrips(dayNeeds, trips) {
+    var lots = {}, out = [];
+    function needOn(d, id) { return (dayNeeds[d] || {})[id] || 0; }
+    trips.forEach(function (days, ti) {
+      var first = days[0], ids = {};
+      days.forEach(function (d) { Object.keys(dayNeeds[d] || {}).forEach(function (id) { if (needOn(d, id) > 0) ids[id] = 1; }); });
+      var lines = [], cost = 0;
+      Object.keys(ids).forEach(function (id) {
+        var p = PX[id], ls = lots[id] = lots[id] || [];
+        var windowDays = days.slice();
+        if (p.keeps >= LONG_KEEP) for (var d = days[days.length - 1] + 1; d < 7; d++) windowDays.push(d);
+        // Buy until the simulated window has no shortfall (a second pack may be needed
+        // when the first would be past its shelf life by a later day).
+        var bought = null;
+        for (var round = 0; round < 6; round++) {
+          var sim = cloneLots(ls), short = 0;
+          windowDays.forEach(function (d) { var n = needOn(d, id); if (n > 0) short += draw(sim, d, n, p.keeps, ti, p.freezes).short; });
+          if (short <= 1e-6) break;
+          var res = bestPacks(id, short);
+          addLots(ls, res, ti, first); bought = mergeRes(bought, res);
+        }
+        // What the bought amount covers beyond this trip's own days.
+        var forLater = 0;
+        if (bought) {
+          windowDays.forEach(function (d) { if (days.indexOf(d) < 0) forLater += needOn(d, id); });
+        }
+        var need = 0, fromEarlier = 0, short = 0;
+        days.forEach(function (d) { var n = needOn(d, id); if (n > 0) { var r = draw(ls, d, n, p.keeps, ti, p.freezes); need += n; fromEarlier += r.fromEarlier; short += r.short; } });
+        if (need <= 0) return;
+        if (bought) cost += bought.cost;
+        lines.push({ id: id, need: need, fromEarlier: fromEarlier, buy: bought, forLater: forLater, short: short });
+      });
+      out.push({ days: days, lines: lines, cost: cost, freeze: [] });
+    });
+    // What is left of each pack at the end of the week.
+    var left = [], byKey = {};
+    Object.keys(lots).forEach(function (id) {
+      var p = PX[id];
+      lots[id].forEach(function (l) {
+        if (l.left <= 1e-6) return;
+        var value = l.left * unitPrice(id), kind, day, text;
+        var opened = l.opened === null ? null : l.opened, end = opened === null ? null : opened + p.keeps; // first day it is no longer good
+        if (l.frozen != null) { kind = "freeze"; day = l.frozen; text = "already in the freezer"; }
+        else if (opened === null && p.freezes) { kind = "freeze"; day = l.bought; text = "unopened: freeze it"; }
+        else if (opened === null) { kind = "keeps"; day = 6; text = "unopened, keeps into next week"; }
+        else if (end - 7 >= 3) { kind = "keeps"; day = 6; text = "keeps into next week"; }
+        else if (p.freezes) { day = l.last === null ? opened : l.last; kind = "freeze"; text = "freeze the rest after " + DAYS[day]; }
+        else if (end <= 7) { kind = "waste"; day = end - 1; text = "past its shelf life after " + DAYS[day]; }
+        else { kind = "waste"; day = 6; text = "use by " + DAYS[(end - 1) % 7] + " next week or it goes to waste"; }
+        var k = id + "|" + kind + "|" + day;
+        if (!byKey[k]) { byKey[k] = { id: id, amt: 0, value: 0, kind: kind, day: day, text: text }; left.push(byKey[k]); }
+        byKey[k].amt += l.left; byKey[k].value += value;
+      });
+    });
+    left = left.filter(function (l) { return l.value >= 0.3; });
+    // Mid-week freezing so a later day can use the rest.
+    var actions = [];
+    Object.keys(lots).forEach(function (id) {
+      lots[id].forEach(function (l) {
+        if (l.frozen == null) return;
+        actions.push({ id: id, day: l.frozen, kind: "freeze", text: "freeze the rest after " + DAYS[l.frozen] + ", for " + DAYS[l.usedFrozen] });
+      });
+    });
+    // Freezing has to happen on a given day, so show it on the trip that covers that day.
+    actions.concat(left).forEach(function (l) {
+      if (l.kind !== "freeze" || l.text === "already in the freezer") return;
+      out.forEach(function (tr) { if (tr.days.indexOf(l.day) >= 0) tr.freeze.push(l); });
+    });
+    var waste = left.reduce(function (s, l) { return s + (l.kind === "waste" ? l.value : 0); }, 0);
+    return { trips: out, leftovers: left, waste: waste };
+  }
+
+  // The week's shopping from 7 day plans (Mon..Sun, null for days outside the plan).
+  // Uses exactly the food the day plan counts: meals (batch dinners doubled, leftover
+  // lunches free) and the extras in plan.extras, each for two people.
+  var TRIPS = [[0, 1], [2, 3], [4, 5, 6]];
+  function shoppingWeek(plans) {
+    var dayNeeds = [], stockNeed = {}, pantry = {};
+    plans.forEach(function (pl, di) {
+      var nd = dayNeeds[di] = {}; if (!pl) return;
+      function add(it, mult) {
+        var id = it[0], c = CATX[id]; if (!c) return;
+        if (c.pantry || !PX[id]) { pantry[c.n] = 1; return; }
+        var amt = need(it) * mult;
+        if (isStock(id)) stockNeed[id] = (stockNeed[id] || 0) + amt; else nd[id] = (nd[id] || 0) + amt;
+      }
+      ["b", "l", "d"].forEach(function (s) { var r = pl.meals[s], mult = r.leftover ? 0 : (r.batch || 1); if (mult) r.ing.forEach(function (it) { add(it, mult); }); });
+      (pl.extras || []).forEach(function (x) { x.ing.forEach(function (it) { add(it, 2); }); });
+    });
+    var plan = planTrips(dayNeeds, TRIPS);
+    plan.dayNeeds = dayNeeds; plan.stockNeed = stockNeed; plan.pantry = Object.keys(pantry).sort();
+    plan.total = plan.trips.reduce(function (s, tr) { return s + tr.cost; }, 0);
+    return plan;
+  }
+
+  return { shoppingWeek: shoppingWeek, TRIPS: TRIPS, planTrips: planTrips, LONG_KEEP: LONG_KEEP, DAYS: DAYS, isStock: isStock, need: need, unitPrice: unitPrice, costOf: costOf, bestPacks: bestPacks, leftoverAdvice: leftoverAdvice, packUnit: packUnit };
 })();
 if (typeof module !== "undefined") module.exports = Pricing;
 
@@ -1672,7 +1774,11 @@ var Engine = (function () {
   function keyOfIdx(i) { var t = new Date(EPOCH + i * DAY); return key(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()); }
 
   // overrides: { "2026-10-18|b": "b03", ... }
-  function day(y, m, dd, overrides) {
+  // inc: which optional extras count as planned food: { juice, s1, s2 } (all true by default).
+  // Protein, calories, cost and shopping all follow the same selection.
+  var ALL_EXTRAS = { juice: true, s1: true, s2: true };
+  function day(y, m, dd, overrides, inc) {
+    inc = inc || ALL_EXTRAS;
     var i = idxOf(y, m, dd);
     if (i < 0 || i > MAX_DAYS) return null;
     extendTo(i + 1);
@@ -1693,17 +1799,24 @@ var Engine = (function () {
       d: byId[ov[k + "|d"]] || dinner
     };
     var sn = base.snacks;
-    var res = { key: k, meals: meals, base: { b: base.b, l: lunch, d: base.dRaw }, snacks: sn, juice: base.juice, people: {} };
+    var res = { key: k, meals: meals, base: { b: base.b, l: lunch, d: base.dRaw }, snacks: sn, juice: base.juice, people: {},
+      inc: { juice: inc.juice !== false, s1: inc.s1 !== false, s2: inc.s2 !== false } };
+    var extras = [];
+    if (res.inc.juice) extras.push(base.juice);
+    if (res.inc.s1) extras.push(sn[0]);
+    if (res.inc.s2) extras.push(sn[1]);
+    res.extras = extras;
+    var xp = extras.reduce(function (a, x) { return a + x.p; }, 0), xk = extras.reduce(function (a, x) { return a + x.k; }, 0);
     ["p1", "p2"].forEach(function (p) {
       var mp = 0, mk = 0;
       ["b", "l", "d"].forEach(function (s) {
         var r = meals[s], sh = p === "p2" ? r.share : 1 - r.share;
         mp += r.P * sh; mk += r.K * sh;
       });
-      res.people[p] = { mealP: mp, mealK: mk, p: mp + sn[0].p, k: mk + sn[0].k, target: PX[p].protein };
+      res.people[p] = { mealP: mp, mealK: mk, p: mp + xp, k: mk + xk, target: PX[p].protein };
     });
     res.cheat = !!meals.d.cheat;
-    res.cost = meals.b.C + meals.l.C + meals.d.C + sn[0].C + sn[1].C + res.juice.C;
+    res.cost = meals.b.C + meals.l.C + meals.d.C + extras.reduce(function (a, x) { return a + x.C; }, 0);
     return res;
   }
 
@@ -1726,12 +1839,26 @@ if (typeof module !== "undefined") module.exports = Engine;
   var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   var DOWS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   var SLOT = { b: "Breakfast", l: "Lunch", d: "Dinner" };
+  // Exact plan range, from the engine: first and last day with meals.
+  var RANGE_TEXT = (function () {
+    var f = new Date(Engine.EPOCH), l = new Date(Engine.EPOCH + Engine.MAX_DAYS * 864e5);
+    function fmt(x) { return x.getUTCDate() + " " + MONTHS[x.getUTCMonth()] + " " + x.getUTCFullYear(); }
+    return "The plan covers " + fmt(f) + " to " + fmt(l) + ".";
+  })();
   function todayObj() { var n = new Date(); return { y: n.getFullYear(), m: n.getMonth(), d: n.getDate() }; }
   var TODAY = todayObj();
   var state = { offset: 0, sel: { y: TODAY.y, m: TODAY.m, d: TODAY.d }, view: "day", prevView: "day", recipe: null, week: null, level: "year", focus: { y: TODAY.y, m: TODAY.m } };
-  var ov = {};
+  var ov = {}, inc = { juice: true, s1: true, s2: true }, saveFailed = false;
   try { ov = JSON.parse(localStorage.getItem("mpd-swaps") || "{}") || {}; } catch (e) { ov = {}; }
-  function saveOv() { planCache = {}; try { localStorage.setItem("mpd-swaps", JSON.stringify(ov)); } catch (e) {} }
+  // Swaps: only "YYYY-MM-DD|b|l|d" keys with a known recipe id are kept.
+  Object.keys(ov).forEach(function (k) { if (!/^\d{4}-\d{2}-\d{2}\|[bld]$/.test(k) || typeof ov[k] !== "string" || !Engine.byId[ov[k]]) delete ov[k]; });
+  try { var ix = JSON.parse(localStorage.getItem("mpd-extras") || "null"); if (ix && typeof ix === "object") ["juice", "s1", "s2"].forEach(function (k) { if (typeof ix[k] === "boolean") inc[k] = ix[k]; }); } catch (e) {}
+  function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); saveFailed = false; } catch (e) { saveFailed = true; } }
+  function saveOv() { store("mpd-swaps", ov); planChanged(); }
+  function saveInc() { store("mpd-extras", inc); planChanged(); }
+  // Anything that changes the plan: drop cached days, prepared neighbour pages and zoom
+  // layers, then redraw what is on screen.
+  function planChanged() { planCache = {}; dropPager(); renderMonths(); renderPanel(); }
 
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -1755,7 +1882,7 @@ if (typeof module !== "undefined") module.exports = Engine;
   var planCache = {};
   function dayPlan(o) {
     var k = o.y * 10000 + o.m * 100 + o.d;
-    if (!(k in planCache)) planCache[k] = Engine.day(o.y, o.m, o.d, ov);
+    if (!(k in planCache)) planCache[k] = Engine.day(o.y, o.m, o.d, ov, inc);
     return planCache[k];
   }
   function mealName(r) { return (r.leftover ? "Leftovers: " : "") + r.name; }
@@ -1908,7 +2035,7 @@ if (typeof module !== "undefined") module.exports = Engine;
 
   function renderDayBig() {
     var o = state.sel, plan = dayPlan(o);
-    if (!plan) return { cls: "", html: '<p class="empty">No plan for this date. The plan runs from January 2025 to the end of 2032.</p>' };
+    if (!plan) return { cls: "", html: '<p class="empty">No plan for this date. ' + RANGE_TEXT + "</p>" };
     var h = '<section class="dbig"><div class="dbig-head"><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + "</div><h2>" + dateTitle(o) + "</h2></div>";
     h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
     h += '<div class="costline"><span>Food cost today</span><b>≈ ' + eur(plan.cost) + "</b></div>";
@@ -1920,10 +2047,8 @@ if (typeof module !== "undefined") module.exports = Engine;
         "<details><summary>Ingredients and directions</summary><ul class=\"ing\">" + r.ing.map(fmtIng).join("") + '</ul><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>" +
         '<div class="row"><button class="btn" data-recipe="' + s + '">Open recipe and swap</button></div></article>';
     });
-    h += '<div class="dmeal"><h3>Optional extras</h3><ul class="ing">' +
-      '<li><span class="amt">Juice</span><span>' + esc(plan.juice.name) + "</span></li>" +
-      plan.snacks.map(function (sn, i) { return '<li><span class="amt">Snack ' + (i + 1) + "</span><span>" + esc(sn.name) + ' <span class="note">· ' + sn.p + " g protein each</span></span></li>"; }).join("") +
-      '</ul><div class="row"><button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " shopping list</button></div></div>";
+    h += extrasBlock(plan, "dmeal snacks") +
+      '<div class="row"><button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " shopping list</button></div>";
     return { cls: "", html: h + "</section>" };
   }
 
@@ -1991,11 +2116,6 @@ if (typeof module !== "undefined") module.exports = Engine;
       for (var i = 0; i < all.length; i++) if (all[i].offsetParent !== null) { el = all[i]; break; }
     }
     return el;
-  }
-  function reduceMotion() { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
-  function animate() {
-    var m = $("months");
-    if (m.animate && !reduceMotion()) m.animate([{ opacity: 0.4 }, { opacity: 1 }], { duration: 180, easing: "ease-out" });
   }
   var panelTimer = 0;
   function panelLater() {
@@ -2214,10 +2334,18 @@ if (typeof module !== "undefined") module.exports = Engine;
       '<div class="bar"><i class="' + (have < target - 5 ? "low" : "") + '" style="width:' + pct + '%"></i></div><div class="kcal">≈ ' + r0(kcal) + " kcal</div></div>";
   }
   function dateTitle(o) { return DOWS[dow(o)] + " " + o.d + " " + MONTHS[o.m]; }
+  function extrasBlock(plan, cls) {
+    var items = [["juice", "Morning juice", plan.juice, "Blend with ½ cup water and ice"], ["s1", "Optional snack 1", plan.snacks[0]], ["s2", "Optional snack 2", plan.snacks[1]]];
+    return '<div class="' + cls + '"><h3>Optional extras</h3><ul class="xtras">' + items.map(function (x) {
+      var it = x[2], desc = x[3] || it.desc;
+      return '<li><label class="xtra"><input type="checkbox" data-extra="' + x[0] + '"' + (inc[x[0]] ? " checked" : "") + '><span><b>' + x[1] + "</b> · " + esc(it.name) +
+        ' <span class="kcal">' + (desc ? esc(desc) + " · " : "") + it.p + " g protein, ≈ " + it.k + " kcal each · ≈ " + eur(it.C) + " for two</span></span></label></li>";
+    }).join("") + '</ul><p class="kcal">Ticked extras count in protein, calories, cost and the shopping list on every day. Saved on this device.</p></div>';
+  }
 
   function viewDay() {
     var o = state.sel, plan = dayPlan(o);
-    if (!plan) return '<div class="p-in"><p class="empty">No plan for this date. The plan runs from January 2025 to the end of 2032.</p></div>';
+    if (!plan) return '<div class="p-in"><p class="empty">No plan for this date. ' + RANGE_TEXT + "</p></div>";
     var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + '</div><h2 class="p-title">' + dateTitle(o) + "</h2></div>" +
       '<button class="sheet-close" data-close aria-label="Close">×</button></div>';
     h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
@@ -2230,11 +2358,7 @@ if (typeof module !== "undefined") module.exports = Engine;
         '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P2 " + r0(r.P * r.share) + " g · P1 " + r0(r.P * (1 - r.share)) + " g · ≈ " + eur(r.C) + "</span></button>";
     });
     h += "</div>";
-    h += '<div class="snacks"><h3>Optional extras</h3><ul>' +
-      "<li><b>Morning juice</b> · " + esc(plan.juice.name) + ' <span class="kcal">Blend with ½ cup water and ice</span></li>' +
-      plan.snacks.map(function (s, i) {
-        return "<li><b>Optional snack " + (i + 1) + "</b> · " + esc(s.name) + ' <span class="kcal">' + esc(s.desc) + " · " + s.p + " g protein each</span></li>";
-      }).join("") + '</ul><p class="kcal">Daily totals above include optional snack 1. The food cost includes the juice and both snacks.</p></div>';
+    h += extrasBlock(plan, "snacks");
     h += '<button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " summary and shopping list</button>";
     return h + priceNote() + "</div>";
   }
@@ -2261,12 +2385,22 @@ if (typeof module !== "undefined") module.exports = Engine;
     h += '<div class="note-box">Heat ' + heat(r.heat) + " · " + (r.side ? "Serve the salsa or chilli on the side." : "Heat is cooked in; adjust the chilli to taste.") + (r.prep ? " Good for cooking ahead." : "") + "</div>";
     h += '<div class="sec"><h3>Ingredients for two' + (r.batch === 2 ? ", one batch" : "") + '</h3><ul class="ing">' + r.ing.map(fmtIng).join("") + "</ul></div>";
     h += '<div class="sec"><h3>Directions</h3><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></div>";
-    var alts = Engine.alternatives(s, o.y, o.m, o.d);
-    h += '<div class="sec"><h3>Swap this meal</h3><div class="swap-row"><select id="swap-sel" aria-label="Choose another recipe">' +
-      alts.map(function (a) {
-        var dlt = a.C - r.C, ds = a.id === r.id ? "" : " (" + (dlt >= 0 ? "+" : "−") + eur(Math.abs(dlt)) + ")";
-        return '<option value="' + a.id + '"' + (a.id === r.id ? " selected" : "") + ">" + esc(a.name) + (a.cheat ? " (cheat)" : "") + ds + "</option>"; }).join("") + "</select>" +
-      (ov[k] ? '<button class="btn" data-reset>Back to plan</button>' : "") + '</div><p class="kcal">Swaps are saved on this device only and don\'t change the rest of the rotation.</p></div>';
+    var alts = Engine.alternatives(s, o.y, o.m, o.d), base = plan.base[s], opts = [];
+    // A leftover lunch is not in the lunch list, so it gets its own entry at the top.
+    if (base.leftover) opts.push('<option value="' + base.id + '"' + (r === base ? " selected" : "") + ">" + esc(mealName(base)) + " (plan)</option>");
+    var refC = r.leftover ? 0 : r.C;
+    alts.forEach(function (a) {
+      var dlt = a.C - refC, ds = a.id === r.id && !r.leftover ? "" : " (" + (dlt >= 0 ? "+" : "−") + eur(Math.abs(dlt)) + ")";
+      opts.push('<option value="' + a.id + '"' + (a.id === r.id && !r.leftover ? " selected" : "") + ">" + esc(a.name) + (a.cheat ? " (cheat)" : "") + ds + "</option>");
+    });
+    var swapNote = "";
+    if (r.leftover) {
+      var prev = dayPlan(addDays(o, -1)), saved = prev && prev.meals.d.batch === 2 ? prev.meals.d.C / 2 : 0;
+      swapNote = "Replacing the leftovers also makes yesterday's dinner a single batch" + (saved ? ", about " + eur(saved) + " less to buy" : "") + ". ";
+    } else if (r.batch === 2) swapNote = "This dinner is cooked as a double batch for tomorrow's lunch. Swapping it gives tomorrow a normal lunch. ";
+    var saveText = saveFailed ? "This browser is not saving swaps (storage is blocked), so they last until the page is reloaded." : "Swaps are saved on this device only and don't change the rest of the rotation.";
+    h += '<div class="sec"><h3>Swap this meal</h3><div class="swap-row"><select id="swap-sel" aria-label="Choose another recipe">' + opts.join("") + "</select>" +
+      (ov[k] ? '<button class="btn" data-reset>Back to plan</button>' : "") + '</div><p class="kcal">' + esc(swapNote + saveText) + "</p></div>";
     return h + "</div>";
   }
 
@@ -2289,24 +2423,10 @@ if (typeof module !== "undefined") module.exports = Engine;
     h += '<p class="kcal">Targets: ' + PEOPLE.p1.label + " " + PEOPLE.p1.protein + " g, " + PEOPLE.p2.label + " " + PEOPLE.p2.protein + " g protein a day. Calories are estimates from the recipe weights.</p>";
 
     // shopping list, split into three trips: Mon–Tue, Wed–Thu, Fri–Sun
-    var TRIPS = [[0, 1], [2, 3], [4, 5, 6]];
-    var dayNeeds = [], stockNeed = {}, pantry = {};
-    days.forEach(function (o, di) {
-      var need = dayNeeds[di] = {}, pl = dayPlan(o); if (!pl) return;
-      function add(it, mult) {
-        var id = it[0], c = CAT[id]; if (!c) return;
-        if (c.pantry || !PRICES[id]) { pantry[c.n] = 1; return; }
-        var amt = Pricing.need(it) * mult;
-        if (Pricing.isStock(id)) stockNeed[id] = (stockNeed[id] || 0) + amt; else need[id] = (need[id] || 0) + amt;
-      }
-      ["b", "l", "d"].forEach(function (s) { var r = pl.meals[s], mult = r.leftover ? 0 : (r.batch || 1); if (mult) r.ing.forEach(function (it) { add(it, mult); }); });
-      pl.snacks.forEach(function (sn) { sn.ing.forEach(function (it) { add(it, 2); }); }); // both snacks, for two
-      pl.juice.ing.forEach(function (it) { add(it, 2); });
-    });
-    var plan = Pricing.planTrips(dayNeeds, TRIPS);
+    var plan = Pricing.shoppingWeek(days.map(dayPlan)), stockNeed = plan.stockNeed;
     var order = ["Meat", "Dairy & eggs", "Vegetables & fruit", "Bread & grains", "Tins & jars", "Frozen", "Other"];
-    var total = plan.trips.reduce(function (a, tr) { return a + tr.cost; }, 0);
-    var today = new Date(), tk = Engine.key(today.getFullYear(), today.getMonth(), today.getDate()), openTrip = 0;
+    var total = plan.total;
+    var today = new Date(), tk = Engine.key(today.getFullYear(), today.getMonth(), today.getDate()), openTrip = 0, TRIPS = Pricing.TRIPS;
     plan.trips.forEach(function (tr, ti) { var last = days[tr.days[tr.days.length - 1]]; if (Engine.key(last.y, last.m, last.d) < tk) openTrip = Math.min(ti + 1, TRIPS.length - 1); });
     function dlabel(o) { return DOWS[dow(o)].slice(0, 3) + " " + o.d; }
     function packText(res, u) { return res.loose ? fmtQty(res.buy, u) : res.packs.map(function (pk) { return pk[0] + " × " + fmtPack(pk[1][0], pk[1][1]); }).join(" + "); }
@@ -2337,6 +2457,10 @@ if (typeof module !== "undefined") module.exports = Engine;
         });
         h += "</ul>";
       });
+      if (tr.freeze.length) {
+        h += '<div class="have freeze"><b>Freezer</b><ul>' + tr.freeze.map(function (f) { return "<li>" + esc(CAT[f.id].n) + ': <span class="adv freeze">' + esc(f.text) + "</span></li>"; }).join("") + "</ul></div>";
+        tr.freeze.forEach(function (f) { text.push("Freeze: " + CAT[f.id].n + ", " + f.text); });
+      }
       if (have.length) {
         have.sort(function (a, b) { return CAT[a.id].n.localeCompare(CAT[b.id].n); });
         h += '<p class="have"><b>Already bought:</b> ' + have.map(function (l) { return esc(CAT[l.id].n); }).join(", ") + "</p>";
@@ -2363,10 +2487,10 @@ if (typeof module !== "undefined") module.exports = Engine;
       left.forEach(function (l) { h += '<li><span class="it"><span>' + esc(CAT[l.id].n) + '</span><span class="det"><span class="adv ' + l.kind + '">' + esc(l.text) + '</span></span></span><span class="buy">' + fmtQty(l.amt, Pricing.packUnit(l.id)) + "<br>" + eur(l.value) + "</span></li>"; });
       h += "</ul>";
     }
-    var risk = plan.leftovers.filter(function (l) { return l.kind === "waste"; }), riskSum = risk.reduce(function (a, l) { return a + l.value; }, 0);
+    var risk = plan.leftovers.filter(function (l) { return l.kind === "waste"; }), riskSum = plan.waste;
     if (riskSum >= 0.5) h += '<p class="note-box">Likely to go to waste this week (≈ ' + eur(riskSum) + "): " + risk.map(function (l) { return esc(CAT[l.id].n); }).join(", ") + ". Plan these into the start of next week or swap a meal to use them up.</p>";
-    var pk = Object.keys(pantry).sort();
-    h += '<p class="kcal">Pack sizes are the cheapest mix for each trip. Includes the morning juice and both optional snacks for two people each day.</p><h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
+    var pk = plan.pantry;
+    h += '<p class="kcal">Pack sizes are the cheapest mix for each trip. Shelf life counts from opening a pack (from buying, for loose produce); check the dates on the packs. Includes the extras ticked in the day view, for two people each day.</p><h4>Check the pantry</h4><p class="pantry">' + pk.map(esc).join(", ") + "</p></div>";
     return h + priceNote() + "</div>";
   }
 
@@ -2405,7 +2529,7 @@ if (typeof module !== "undefined") module.exports = Engine;
     if (sel) sel.addEventListener("change", function () {
       var o = state.sel, k = Engine.key(o.y, o.m, o.d) + "|" + state.recipe, base = dayPlan(o).base[state.recipe].id;
       if (sel.value === base) delete ov[k]; else ov[k] = sel.value;
-      saveOv(); renderMonths(); renderPanel();
+      saveOv();
     });
     Array.prototype.forEach.call(p.querySelectorAll("[data-copy]"), function (cp) {
       var label = cp.textContent;
@@ -2502,6 +2626,11 @@ if (typeof module !== "undefined") module.exports = Engine;
     else if (t.hasAttribute("data-back")) { state.view = state.prevView === "week" ? "week" : "day"; }
     else if (t.hasAttribute("data-reset")) { var o = state.sel; delete ov[Engine.key(o.y, o.m, o.d) + "|" + state.recipe]; saveOv(); }
     renderMonths(); panelDirty = true; if (mq.matches) renderPanel(); openSheet(true);
+  });
+  // Extras toggles (day view, day sheet): one setting for every day.
+  document.addEventListener("change", function (e) {
+    var x = e.target.closest && e.target.closest("[data-extra]"); if (!x) return;
+    inc[x.getAttribute("data-extra")] = x.checked; saveInc();
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") openSheet(false); });
 

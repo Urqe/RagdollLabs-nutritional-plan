@@ -7,9 +7,9 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 1. Create a branch: `release/vX.Y`.
 2. Make the changes in `src/`, `tools/` or the docs. Never edit `index.html` by hand.
 3. Run the checks:
-   - `node tools/check-year.js`: weekly protein averages at or above both targets, no repeat violations.
+   - `node tools/check-year.js`: exits with an error if a guarantee breaks (banned or unknown ingredient, repeat violation, weekly protein below target).
    - `node tools/check-prices.js`: every ingredient priced, no unit mismatches.
-   - `node tools/check-waste.js`: weekly waste estimate not clearly higher than the last release.
+   - `node tools/check-waste.js`: shelf-life examples pass; weekly waste estimate not clearly higher than the last release.
    - `python3 tools/test-ui.py`: all browser checks pass (zoom, touch, taps, sheet, theme, keyboard, links, frame timing).
    - `python3 build.py`: rebuilds `index.html`.
    - Privacy check: no height, weight or other body data anywhere in the repo (automated from v0.3, manual search until then).
@@ -45,9 +45,8 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 
 Order agreed after the 2026-10-19 review (see "Review 2026-10-19" below):
 
-1. v0.9: Correct numbers
-2. v0.10: Cook and shop from the app
-3. v0.11: Today first, phone and iPad
+1. v0.10: Cook and shop from the app
+2. v0.11: Today first, phone and iPad
 
 ---
 
@@ -257,30 +256,31 @@ Goal: the repo and the page say prices are based on "a K-chain market", without 
 - [x] Price note on the page: "Prices are estimates based on a K-chain market."
 - [x] `PRICE_META` now has `basis: "a K-chain market"` instead of `store`/`alt`; the per-item `store` field is gone.
 
-Open decision
-- [ ] Git history: store names are still in commits before v0.8. Either rewrite history and force-push (as done for body data in v0.1), or leave it. Rewriting doesn't reach copies someone already cloned. Not done in v0.8 because a force-push needs an explicit go-ahead.
+- [x] Git history rewritten on every branch to remove the store names, then force-pushed (2026-10-19). Copies cloned before that are not affected.
 
 Checks
 - No store names in tracked files or either built page (manual search; the names are not written into a check script).
 
 ---
 
-## v0.9: Correct numbers
+## v0.9: Correct numbers (shipped)
 
 Goal: what the app says matches what you buy, cook and eat.
 
-- [ ] Shelf life by the day food is eaten, not the trip day. Today a Friday trip can reuse food that is too old by Sunday. Track each pack bought (date, amount left), and keep expired leftovers in the waste figure instead of dropping them when a new pack is bought.
-- [ ] Freezing advice only when the food is still within its shelf life on the day it would be frozen, shown on the trip where it applies.
-- [ ] Totals and shopping cover the same food. Today protein and calories include meals and snack 1, while cost and shopping also include snack 2 and the juice. Add "include juice" and "include snack 2" settings (device-only), and make protein, calories, cost and shopping all follow them.
-- [ ] Swapping a meal refreshes the prepared next and previous pages too. Today, after swapping a double-batch dinner, the next day can still show the old leftover lunch until reload.
-- [ ] Leftover lunch swap list starts on the actual leftover, so any replacement, including the first in the list, can be picked. Say that replacing it also makes the previous dinner a single batch.
-- [ ] Passata's Finnish label is "tomaattipyre" (tomato paste). Change it to "paseerattu tomaatti / passata".
-- [ ] `tools/check-waste.js` uses the trip planner the app uses.
-- [ ] `tools/check-year.js` exits with an error on repeat violations, protein below target, or unknown ingredient ids, instead of only printing them.
-- [ ] Remove the duplicate `animate()` and `reduceMotion()` in `src/app.html`.
-- [ ] Plan range: say exactly what is covered (the last full week of 2032 runs into January 2033).
-- [ ] If saving a swap fails (storage blocked), say so instead of "saved on this device".
-- [ ] Browser tests for each fix above.
+- [x] Shelf life by the day food is eaten. Each pack is tracked on its own; shelf life counts from opening (from buying, for loose produce). Expired leftovers stay in the waste figure.
+- [x] Freezing: food that freezes is frozen on its last good day when a later day needs it, so the trip planner no longer buys a second pack for it. The trip shows "freeze the rest after Mon, for Fri"; end-of-week freezing is listed on the trip that covers that day.
+- [x] Totals and shopping cover the same food. Tick boxes for the juice, snack 1 and snack 2 in the day view (saved on the device, all ticked by default); protein, calories, cost and shopping all follow them.
+- [x] Swapping a meal refreshes the prepared next and previous pages, so a swapped double-batch dinner can't leave a stale leftover lunch on the next day.
+- [x] Leftover lunch is the selected first entry in the swap list; any lunch, including the first, can be picked. The note says replacing it makes yesterday's dinner a single batch and how much less that is to buy.
+- [x] Passata's Finnish label is now "paseerattu tomaatti".
+- [x] `tools/check-waste.js` uses the app's trip planner (`Pricing.shoppingWeek`) and checks fixed shelf-life examples.
+- [x] `tools/check-year.js` exits with an error on banned or unknown ingredients, repeat violations, or weekly protein below target (checked with meals and snack 1 only).
+- [x] Duplicate `animate()` and `reduceMotion()` removed.
+- [x] Plan range text is exact: 6 January 2025 to 4 January 2033.
+- [x] If the browser blocks saving, the swap note says so. Stored swaps and extras are checked on load; unknown entries are dropped.
+- [x] Browser tests for extras, swap refresh and the leftover swap list. The swap refresh test fails with the old code.
+
+Results: waste estimate 2.96 € a week (was 4.04 € with the old one-shop model), checkout about 202 € a week with all extras ticked.
 
 ---
 
@@ -404,4 +404,5 @@ Not taken:
 | v0.6 | 2026-10-18 | Light/dark/automatic theme switch, RagdollLabs cat logo and footer, visual refresh, fix for page stretch from hidden layers. |
 | v0.6.1 | 2026-10-18 | No beetroot or bananas: 8 recipes adjusted, banned-ingredient check added. |
 | v0.7 | 2026-10-18 | Shopping list grouped into three trips per week (Mon–Tue, Wed–Thu, Fri–Sun), with per-trip copy. |
-| v0.8 | 2026-10-19 | Store names removed; prices described as based on a K-chain market. Git history not rewritten (open decision). |
+| v0.8 | 2026-10-19 | Store names removed; prices described as based on a K-chain market. Git history rewritten afterwards to remove them from old commits. |
+| v0.9 | 2026-10-19 | Shelf life per pack by eating day, freezing for later days, extras tick boxes driving all totals, swap refresh and leftover swap fixes, failing checks. History rewritten to remove store names. |
