@@ -10,7 +10,7 @@ Open `index.html` in a browser, or use the GitHub Pages site. It is a single sel
 - Three zoom levels: year, month and day. Pinch out on a month or day to open it and pinch in to go back; on desktop use trackpad pinch, Ctrl + scroll, the − / + buttons or the + and − keys. Swipe or use the arrow keys to move between months or days. Taps and clicks work the same at every level.
 - At month level each day shows its three meals and both people's protein. Phones get a list of days instead of a grid so the meal names stay readable.
 - The current level is kept in the page address (for example `#m2026-10` or `#d2026-10-18`), so a bookmark opens straight to a month or a day. Opening the app without a link returns to the level you last used, on today's date. The plan covers January 2025 to the end of 2032.
-- Tap a day for breakfast, lunch, dinner and optional snacks, with protein and calories per person.
+- Tap a day for breakfast, lunch, dinner and optional snacks, with protein and calories per person. On phones and tablets the day opens as a sheet: swipe it down (or tap outside it) to close it.
 - Tap a meal for ingredients for two, directions and how to split the portions.
 - Tap a week number for daily totals, weekly cost and a shopping list that says which pack sizes to buy, what will be left over, and what is likely to go to waste.
 - Tap a month name for the month's food cost and daily average.

@@ -105,6 +105,31 @@ async def touch_suite(browser, name, w, h):
     sel = await page.eval_on_selector(f"{cell}.sel", 'e=>e.getAttribute("data-day")')
     check(f"{name}: tap still selects a day", sel.endswith(",15"), sel)
 
+    if phone:
+        # The tap above opened the day sheet. Swiping inside it must not scroll the page,
+        # and pulling it down closes it.
+        open_ = await page.eval_on_selector("#panel", "e=>e.classList.contains('open')")
+        check(f"{name}: tapping a day opens the sheet", open_)
+        y0 = await page.evaluate("window.scrollY")
+        await swipe(page, cdp, w / 2, h * 0.85, 0, -300)
+        await swipe(page, cdp, w / 2, h * 0.5, 0, 250)
+        await page.wait_for_timeout(100)
+        await page.eval_on_selector("#panel", "e=>e.scrollTo(0,0)")
+        y1 = await page.evaluate("window.scrollY")
+        check(f"{name}: swiping in the sheet leaves the page behind still", abs(y1 - y0) < 2, f"{y0} -> {y1}")
+        top = await page.eval_on_selector("#panel", "e=>e.getBoundingClientRect().top")
+        await swipe(page, cdp, w / 2, top + 60, 0, 100, steps=24)  # about 0.25 px/ms: slow
+        await page.wait_for_timeout(200)
+        still = await page.eval_on_selector("#panel", "e=>e.classList.contains('open')")
+        check(f"{name}: a short slow pull springs the sheet back", still)
+        top = await page.eval_on_selector("#panel", "e=>e.getBoundingClientRect().top")
+        await swipe(page, cdp, w / 2, top + 60, 0, 380, steps=10)
+        await page.wait_for_timeout(400)
+        closed = not await page.eval_on_selector("#panel", "e=>e.classList.contains('open')")
+        y2 = await page.evaluate("window.scrollY")
+        check(f"{name}: swiping the sheet down closes it", closed)
+        check(f"{name}: closing the sheet leaves the page behind still", abs(y2 - y0) < 2, f"{y0} -> {y2}")
+
     sw = await page.evaluate("document.documentElement.scrollWidth")
     check(f"{name}: no horizontal page scroll", sw <= w, str(sw))
     check(f"{name}: no script errors", not errors, "; ".join(errors[:2]))
