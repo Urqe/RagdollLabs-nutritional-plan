@@ -55,6 +55,6 @@ tools/check-year.js   runs a year of the plan and reports protein, snacks and re
 
 ## Planned
 
-- Estimated prices per recipe and per weekly shopping list, based on K-Ruoka prices.
+See [RELEASE_PLAN.md](RELEASE_PLAN.md) for upcoming releases, starting with K-Ruoka-based prices in v0.2.
 
 Nutrition values are per 100 g estimates for typical Finnish supermarket products. Check labels if exact numbers matter.
