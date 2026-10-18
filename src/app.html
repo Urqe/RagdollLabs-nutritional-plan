@@ -443,7 +443,7 @@ performance.mark && performance.mark("app-start");
     return "";
   }
   function eur(x, dec) { return (dec === 0 ? String(Math.round(x)) : x.toFixed(2).replace(".", ",")) + " €"; }
-  function priceNote() { return '<p class="kcal price-note">Prices are estimates for ' + esc(PRICE_META.store) + ", not yet checked in the store. Updated " + esc(PRICE_META.updated) + ".</p>"; }
+  function priceNote() { return '<p class="kcal price-note">Prices are estimates based on ' + esc(PRICE_META.basis) + ". Updated " + esc(PRICE_META.updated) + ".</p>"; }
   function monthPlans(y, m) {
     var n = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(), out = [];
     for (var d = 1; d <= n; d++) { var pl = dayPlan({ y: y, m: m, d: d }); if (pl) out.push({ o: { y: y, m: m, d: d }, pl: pl }); }

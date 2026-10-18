@@ -22,7 +22,7 @@ const stale = Object.keys(PRICES).filter(k => {
   return (today - new Date(d)) / 864e5 > STALE_DAYS;
 });
 
-console.log(`Reference store: ${PRICE_META.store} (second: ${PRICE_META.alt})`);
+console.log(`Prices based on ${PRICE_META.basis}, updated ${PRICE_META.updated}`);
 console.log(`Priced ingredients: ${Object.keys(PRICES).length}`);
 console.log(`Missing prices: ${missing.size ? [...missing].join(", ") : "none"}`);
 console.log(`Unit mismatches: ${unconvertible.size ? [...unconvertible].join(", ") : "none"}`);
