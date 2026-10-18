@@ -141,6 +141,75 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
 .shop li > span:last-child { font-family: var(--f-mono); font-size: .8rem; white-space: nowrap; }
 .pantry { font-size: .85rem; color: var(--muted); }
 .empty { color: var(--muted); font-size: .9rem; }
+.zoombar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: .9rem; min-width: 0; }
+.crumbs button { border: 0; background: none; padding: 3px 6px; border-radius: 6px; cursor: pointer; color: var(--cobalt); font-weight: 600; }
+.crumbs button[aria-current] { color: var(--ink); cursor: default; }
+.crumbs .sep { color: var(--muted); }
+.zoom-btns { display: flex; gap: 6px; flex: none; }
+.zoom-btns .btn { width: 38px; padding: 6px 0; font-size: 1.05rem; line-height: 1; }
+.cal { touch-action: pan-y; transform-origin: 50% 0; scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 84px); }
+.cal.zin > * { animation: zin .22s ease-out; }
+.cal.zout > * { animation: zout .22s ease-out; }
+@keyframes zin { from { opacity: .4; transform: scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes zout { from { opacity: .4; transform: scale(1.05); } to { opacity: 1; transform: none; } }
+@keyframes slidel { from { opacity: .4; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@keyframes slider { from { opacity: .4; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+.cal.sl > * { animation: slidel .2s ease-out; }
+.cal.sr > * { animation: slider .2s ease-out; }
+@media (prefers-reduced-motion: reduce) { .cal > * { animation: none !important; } }
+
+/* Month level */
+.mbig { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
+.mbig-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 10px; }
+.mbig-head h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.6rem; margin: 0; }
+.mbig-head span { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); }
+.mgrid { display: grid; grid-template-columns: 26px repeat(7, minmax(0, 1fr)); gap: 4px; }
+.dc { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 2px; text-align: left; min-height: 104px; min-width: 0;
+  border: 1px solid transparent; background: var(--sunk); border-radius: 8px; padding: 5px 6px; cursor: pointer; font-size: .7rem; line-height: 1.25; overflow: hidden; }
+.dc:hover { border-color: var(--cobalt); }
+.dc.blank { background: none; cursor: default; border: 0; }
+.dc .dn { font-family: var(--f-mono); font-size: .85rem; font-weight: 500; display: flex; justify-content: space-between; align-items: center; gap: 4px; }
+.dc .ml { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+.dc .ml i { font-style: normal; color: var(--muted); font-family: var(--f-mono); margin-right: 3px; }
+.dc .dp { margin-top: auto; font-family: var(--f-mono); font-size: .66rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dc .ct { width: 6px; height: 6px; border-radius: 50%; background: var(--chile); flex: none; }
+.dc.today { box-shadow: inset 0 0 0 2px var(--cobalt); }
+.dc.sel { background: var(--cobalt-soft); border-color: var(--cobalt); }
+.dc.past { opacity: .75; }
+.agenda { display: none; }
+@media (max-width: 640px) {
+  .targets { display: none; }
+  .top { padding-block: 8px; }
+  .brand { font-size: 1.1rem; }
+}
+@media (max-width: 640px) {
+  .mgrid { display: none; }
+  .mbig { padding: 12px; }
+  .agenda { display: flex; flex-direction: column; gap: 6px; }
+  .ag-wk { border: 0; background: none; text-align: left; padding: 8px 2px 2px; color: var(--cobalt); font-weight: 600; font-size: .8rem; cursor: pointer; }
+  .ag { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 10px; align-items: center; text-align: left; border: 1px solid transparent;
+    background: var(--sunk); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+  .ag.today { box-shadow: inset 0 0 0 2px var(--cobalt); }
+  .ag.sel { background: var(--cobalt-soft); border-color: var(--cobalt); }
+  .ag.past { opacity: .75; }
+  .ag-d { display: flex; flex-direction: column; font-size: .72rem; color: var(--muted); line-height: 1.2; }
+  .ag-d b { font-family: var(--f-mono); font-size: 1.1rem; color: var(--ink); font-weight: 500; }
+  .ag-d .ct { width: 6px; height: 6px; border-radius: 50%; background: var(--chile); margin-top: 3px; }
+  .ag-m { display: flex; flex-direction: column; min-width: 0; font-size: .8rem; line-height: 1.35; }
+  .ag-m span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ag-m span:last-child { font-weight: 600; }
+  .ag-p { font-family: var(--f-mono); font-size: .7rem; color: var(--muted); text-align: right; }
+}
+
+/* Day level */
+.dbig { display: flex; flex-direction: column; gap: 14px; }
+.dbig-head h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.7rem; margin: 2px 0 0; text-wrap: balance; }
+.dmeal { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.dmeal h3 { margin: 0; font-size: 1.1rem; }
+.dmeal details summary { cursor: pointer; color: var(--cobalt); font-weight: 600; }
+.dmeal details[open] summary { margin-bottom: 8px; }
+.dmeal .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .mh { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; border-radius: 6px; }
 .mh:hover, .mh.sel { color: var(--cobalt); }
 .costline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 9px 12px; border-radius: 8px; background: var(--cobalt-soft); font-size: .9rem; }
@@ -159,21 +228,24 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
     <h1 class="brand"><small>RagdollLabs</small>Mesa para dos</h1>
     <div class="targets" id="targets"></div>
     <div class="nav">
-      <button class="btn" id="prev" aria-label="Show earlier months">‹ Earlier</button>
+      <button class="btn" id="prev" aria-label="Previous">‹</button>
       <button class="btn primary" id="today">Today</button>
-      <button class="btn" id="next" aria-label="Show later months">Later ›</button>
+      <button class="btn" id="next" aria-label="Next">›</button>
     </div>
   </div>
 </header>
 
 <div class="wrap">
   <main>
-    <div class="legend">
-      <span><i class="ring"></i>Today</span>
-      <span><i class="dot"></i>Cheat night</span>
-      <span>Tap a week number for the weekly summary and shopping list, or a month name for its cost</span>
+    <div class="zoombar">
+      <nav class="crumbs" id="crumbs" aria-label="Calendar level"></nav>
+      <div class="zoom-btns">
+        <button class="btn" id="zout" aria-label="Zoom out">−</button>
+        <button class="btn" id="zin" aria-label="Zoom in">+</button>
+      </div>
     </div>
-    <div class="months" id="months"></div>
+    <div class="legend" id="legend"></div>
+    <div class="cal" id="cal"><div class="months" id="months"></div></div>
   </main>
   <div class="backdrop" id="backdrop" hidden></div>
   <aside class="panel" id="panel" aria-live="polite"></aside>
@@ -1074,7 +1146,7 @@ if (typeof module !== "undefined") module.exports = Engine;
   var DOWS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   var SLOT = { b: "Breakfast", l: "Lunch", d: "Dinner" };
   var now = new Date(), TODAY = { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
-  var state = { offset: 0, sel: { y: TODAY.y, m: TODAY.m, d: TODAY.d }, view: "day", recipe: null, week: null };
+  var state = { offset: 0, sel: { y: TODAY.y, m: TODAY.m, d: TODAY.d }, view: "day", recipe: null, week: null, level: "year", focus: { y: TODAY.y, m: TODAY.m } };
   var ov = {};
   try { ov = JSON.parse(localStorage.getItem("mpd-swaps") || "{}") || {}; } catch (e) { ov = {}; }
   function saveOv() { try { localStorage.setItem("mpd-swaps", JSON.stringify(ov)); } catch (e) {} }
@@ -1122,7 +1194,7 @@ if (typeof module !== "undefined") module.exports = Engine;
   }).join("");
 
   // ---- Calendar ----------------------------------------------------------
-  function renderMonths() {
+  function renderYear() {
     var html = "";
     for (var i = -5; i <= 6; i++) {
       var t = new Date(TODAY.y, TODAY.m + state.offset + i, 1), y = t.getFullYear(), m = t.getMonth();
@@ -1154,7 +1226,152 @@ if (typeof module !== "undefined") module.exports = Engine;
       }
       html += "</div></section>";
     }
+    $("months").className = "months";
     $("months").innerHTML = html;
+  }
+
+  // ---- Zoom levels ---------------------------------------------------------
+  var LEGEND = {
+    year: '<span><i class="ring"></i>Today</span><span><i class="dot"></i>Cheat night</span><span>Pinch out or press + on a month to open it. Tap a week number for the shopping list, a month name for its cost.</span>',
+    month: '<span><i class="dot"></i>Cheat night</span><span>Protein for Person 1 and Person 2. Pinch out on a day or press + to open it, swipe for the next month.</span>',
+    day: '<span>Swipe for the next day. Pinch in or press − to go back to the month.</span>'
+  };
+  function renderMonths() {
+    if (state.level === "month") renderMonthBig();
+    else if (state.level === "day") renderDayBig();
+    else renderYear();
+    $("legend").innerHTML = LEGEND[state.level];
+    var f = state.focus, s = state.sel, c = '<button data-level="year"' + (state.level === "year" ? ' aria-current="page"' : "") + ">Year</button>";
+    if (state.level !== "year") c += '<span class="sep">›</span><button data-level="month"' + (state.level === "month" ? ' aria-current="page"' : "") + ">" + MONTHS[f.m] + " " + f.y + "</button>";
+    if (state.level === "day") c += '<span class="sep">›</span><button data-level="day" aria-current="page">' + DOWS[dow(s)].slice(0, 3) + " " + s.d + "</button>";
+    $("crumbs").innerHTML = c;
+    $("zout").disabled = state.level === "year"; $("zin").disabled = state.level === "day";
+    var lbl = state.level === "year" ? ["Show earlier months", "Show later months"] : state.level === "month" ? ["Previous month", "Next month"] : ["Previous day", "Next day"];
+    $("prev").setAttribute("aria-label", lbl[0]); $("next").setAttribute("aria-label", lbl[1]);
+  }
+
+  function renderMonthBig() {
+    var y = state.focus.y, m = state.focus.m, mp = monthPlans(y, m), cost = mp.reduce(function (s, x) { return s + x.pl.cost; }, 0);
+    var html = '<section class="mbig" id="m-' + y + "-" + m + '"><div class="mbig-head"><h2>' + MONTHS[m] + " " + y + "</h2>" +
+      (mp.length ? '<button class="mh" data-month="' + y + "," + m + '"><span>≈ ' + eur(cost, 0) + " · " + eur(cost / mp.length) + " a day ›</span></button>" : "") + "</div>";
+    html += '<div class="mgrid"><span class="wd">wk</span>' + ["Mo","Tu","We","Th","Fr","Sa","Su"].map(function (w) { return '<span class="wd">' + w + "</span>"; }).join("");
+    var first = (new Date(Date.UTC(y, m, 1)).getUTCDay() + 6) % 7, days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(), cells = [], k;
+    for (k = 0; k < first; k++) cells.push(null);
+    for (k = 1; k <= days; k++) cells.push(k);
+    while (cells.length % 7) cells.push(null);
+    for (var r = 0; r < cells.length; r += 7) {
+      var anyDay = cells.slice(r, r + 7).filter(Boolean)[0], mon = mondayOf({ y: y, m: m, d: anyDay });
+      html += '<button class="wk" data-wk="' + mon.y + "," + mon.m + "," + mon.d + '" aria-label="Week ' + isoWeek(y, m, anyDay) + ' summary">' + isoWeek(y, m, anyDay) + "</button>";
+      for (var c = 0; c < 7; c++) {
+        var dd = cells[r + c];
+        if (!dd) { html += '<span class="dc blank"></span>'; continue; }
+        var o = { y: y, m: m, d: dd }, pl = dayPlan(o), cls = "dc";
+        if (same(o, TODAY)) cls += " today";
+        if (before(o, TODAY)) cls += " past";
+        if (same(o, state.sel)) cls += " sel";
+        if (!pl) { html += '<span class="' + cls + '"><span class="dn">' + dd + "</span></span>"; continue; }
+        html += '<button class="' + cls + '" data-day="' + y + "," + m + "," + dd + '" aria-label="' + DOWS[dow(o)] + " " + dd + " " + MONTHS[m] + '">' +
+          '<span class="dn">' + dd + (pl.cheat ? '<span class="ct" aria-label="Cheat night"></span>' : "") + "</span>" +
+          '<span class="ml"><i>B</i>' + esc(pl.meals.b.name) + "</span>" +
+          '<span class="ml"><i>L</i>' + esc(pl.meals.l.name) + "</span>" +
+          '<span class="ml"><i>D</i>' + esc(pl.meals.d.name) + "</span>" +
+          '<span class="dp">' + r0(pl.people.p1.p) + " · " + r0(pl.people.p2.p) + " g</span></button>";
+      }
+    }
+    // Phones: an agenda list reads better than seven narrow columns.
+    var list = '<div class="agenda">', lastWk = null;
+    mp.forEach(function (x) {
+      var o = x.o, pl = x.pl, wk = isoWeek(o.y, o.m, o.d), cls = "ag";
+      if (wk !== lastWk) { var mo = mondayOf(o); list += '<button class="ag-wk" data-wk="' + mo.y + "," + mo.m + "," + mo.d + '">Week ' + wk + " · shopping list ›</button>"; lastWk = wk; }
+      if (same(o, TODAY)) cls += " today";
+      if (same(o, state.sel)) cls += " sel";
+      if (before(o, TODAY)) cls += " past";
+      list += '<button class="' + cls + '" data-day="' + o.y + "," + o.m + "," + o.d + '"><span class="ag-d"><b>' + o.d + "</b>" + DOWS[dow(o)].slice(0, 3) + (pl.cheat ? '<span class="ct" aria-label="Cheat night"></span>' : "") + "</span>" +
+        '<span class="ag-m"><span>' + esc(pl.meals.b.name) + "</span><span>" + esc(pl.meals.l.name) + "</span><span>" + esc(pl.meals.d.name) + "</span></span>" +
+        '<span class="ag-p">' + r0(pl.people.p1.p) + "<br>" + r0(pl.people.p2.p) + " g</span></button>";
+    });
+    $("months").className = "";
+    $("months").innerHTML = html + "</div>" + list + "</div></section>";
+  }
+
+  function renderDayBig() {
+    var o = state.sel, plan = dayPlan(o);
+    if (!plan) { $("months").innerHTML = '<p class="empty">No plan before January 2025.</p>'; return; }
+    var h = '<section class="dbig"><div class="dbig-head"><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + "</div><h2>" + dateTitle(o) + "</h2></div>";
+    h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
+    h += '<div class="costline"><span>Food cost today</span><b>≈ ' + eur(plan.cost) + "</b></div>";
+    ["b", "l", "d"].forEach(function (s) {
+      var r = plan.meals[s], sp = r.split || { p2: "about " + Math.round(r.share * 100) + " % of the pan", p1: "about " + Math.round((1 - r.share) * 100) + " % of the pan" };
+      h += '<article class="dmeal"><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + " · " + r.time + " min · ≈ " + eur(r.C) + "</div>" +
+        "<h3>" + esc(r.name) + "</h3>" +
+        '<div class="kcal">' + PEOPLE.p2.label + ": " + esc(sp.p2) + " (" + r0(r.P * r.share) + " g) · " + PEOPLE.p1.label + ": " + esc(sp.p1) + " (" + r0(r.P * (1 - r.share)) + " g) · " + heat(r.heat) + "</div>" +
+        "<details><summary>Ingredients and directions</summary><ul class=\"ing\">" + r.ing.map(fmtIng).join("") + '</ul><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>" +
+        '<div class="row"><button class="btn" data-recipe="' + s + '">Open recipe and swap</button></div></article>';
+    });
+    h += '<div class="dmeal"><h3>Optional extras</h3><ul class="ing">' +
+      '<li><span class="amt">Juice</span><span>' + esc(plan.juice.name) + "</span></li>" +
+      plan.snacks.map(function (sn, i) { return '<li><span class="amt">Snack ' + (i + 1) + "</span><span>" + esc(sn.name) + ' <span class="note">· ' + sn.p + " g protein each</span></span></li>"; }).join("") +
+      '</ul><div class="row"><button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " shopping list</button></div></div>";
+    $("months").className = "";
+    $("months").innerHTML = h + "</section>";
+  }
+
+  function monthDiff(a, b) { return (a.y - b.y) * 12 + (a.m - b.m); }
+  function animate(cls) {
+    var c = $("cal"); c.classList.remove("zin", "zout", "sl", "sr"); void c.offsetWidth; if (cls) c.classList.add(cls);
+  }
+  function saveLevel() {
+    var tok = state.level === "year" ? "year" : state.level === "month" ? "m" + state.focus.y + "-" + (state.focus.m + 1) : "d" + Engine.key(state.sel.y, state.sel.m, state.sel.d);
+    try { history.replaceState(null, "", "#" + tok); } catch (e) {}
+    try { localStorage.setItem("mpd-level", tok); } catch (e) {}
+  }
+  function readLevel() {
+    var tok = (location.hash || "").slice(1);
+    if (!tok) { try { tok = localStorage.getItem("mpd-level") || ""; } catch (e) {} }
+    var mm = /^m(\d{4})-(\d{1,2})$/.exec(tok), dm = /^d(\d{4})-(\d{2})-(\d{2})$/.exec(tok);
+    if (mm) { state.level = "month"; state.focus = { y: +mm[1], m: +mm[2] - 1 }; }
+    else if (dm) { state.level = "day"; state.sel = { y: +dm[1], m: +dm[2] - 1, d: +dm[3] }; state.focus = { y: state.sel.y, m: state.sel.m }; }
+  }
+  function setLevel(lv, dir) {
+    state.level = lv;
+    if (lv === "day") state.focus = { y: state.sel.y, m: state.sel.m };
+    if (lv === "year") state.offset = Math.max(-60, Math.min(60, monthDiff(state.focus, TODAY)));
+    if (lv === "day" && mq.matches) { state.view = "week"; state.week = mondayOf(state.sel); }
+    saveLevel(); renderMonths(); renderPanel(); animate(dir);
+    if (lv === "year") requestAnimationFrame(centerNow); else $("cal").scrollIntoView({ block: "start" });
+  }
+  function zoomIn(target) {
+    if (state.level === "year") {
+      if (target && target.month) state.focus = target.month;
+      else state.focus = { y: state.sel.y, m: state.sel.m };
+      setLevel("month", "zin");
+    } else if (state.level === "month") {
+      if (target && target.day) state.sel = target.day;
+      else if (state.sel.y !== state.focus.y || state.sel.m !== state.focus.m) state.sel = same({ y: TODAY.y, m: TODAY.m, d: 1 }, { y: state.focus.y, m: state.focus.m, d: 1 }) ? { y: TODAY.y, m: TODAY.m, d: TODAY.d } : { y: state.focus.y, m: state.focus.m, d: 1 };
+      setLevel("day", "zin");
+    }
+  }
+  function zoomOut() {
+    if (state.level === "day") setLevel("month", "zout");
+    else if (state.level === "month") setLevel("year", "zout");
+  }
+  function step(n) {
+    if (state.level === "month") {
+      var t2 = new Date(Date.UTC(state.focus.y, state.focus.m + n, 1)); state.focus = { y: t2.getUTCFullYear(), m: t2.getUTCMonth() };
+    } else if (state.level === "day") {
+      var nd = addDays(state.sel, n); if (Engine.idxOf(nd.y, nd.m, nd.d) < 0) return;
+      state.sel = nd; state.focus = { y: nd.y, m: nd.m };
+      if (mq.matches && state.view === "week") state.week = mondayOf(nd);
+    } else { state.offset += 3 * n; renderMonths(); centerNow(); return; }
+    saveLevel(); renderMonths(); renderPanel(); animate(n > 0 ? "sl" : "sr");
+  }
+  function targetAt(x, y) {
+    var el = document.elementFromPoint(x, y); if (!el) return null;
+    var d = el.closest("[data-day]"), sec = el.closest(".month");
+    var out = {};
+    if (d) { var a = d.getAttribute("data-day").split(",").map(Number); out.day = { y: a[0], m: a[1], d: a[2] }; out.month = { y: a[0], m: a[1] }; }
+    else if (sec) { var mm = /^m-(\d+)-(\d+)$/.exec(sec.id); if (mm) out.month = { y: +mm[1], m: +mm[2] }; }
+    return out;
   }
 
   // ---- Panel views ---------------------------------------------------------
@@ -1341,8 +1558,13 @@ if (typeof module !== "undefined") module.exports = Engine;
   function openSheet(v) { if (mq.matches) return; $("panel").classList.toggle("open", v); $("backdrop").hidden = !v; }
 
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-day],[data-wk],[data-month],[data-recipe],[data-back],[data-close],[data-reset],#backdrop");
+    var t = e.target.closest("[data-day],[data-wk],[data-month],[data-recipe],[data-back],[data-close],[data-reset],[data-level],#backdrop");
     if (!t) return;
+    if (t.hasAttribute("data-level")) {
+      var lv = t.getAttribute("data-level"); if (lv === state.level) return;
+      if (lv === "year") setLevel("year", "zout"); else if (lv === "month") setLevel("month", state.level === "day" ? "zout" : "zin");
+      return;
+    }
     if (t.id === "backdrop" || t.hasAttribute("data-close")) { openSheet(false); return; }
     if (t.hasAttribute("data-day")) { var a = t.getAttribute("data-day").split(",").map(Number); state.sel = { y: a[0], m: a[1], d: a[2] }; state.view = "day"; }
     else if (t.hasAttribute("data-wk")) { var w = t.getAttribute("data-wk").split(",").map(Number); state.week = { y: w[0], m: w[1], d: w[2] }; state.view = "week"; }
@@ -1358,11 +1580,79 @@ if (typeof module !== "undefined") module.exports = Engine;
     var t = new Date(TODAY.y, TODAY.m + state.offset, 1), el = $("m-" + t.getFullYear() + "-" + t.getMonth());
     if (el) el.scrollIntoView({ block: "center" });
   }
-  $("prev").addEventListener("click", function () { state.offset -= 3; renderMonths(); centerNow(); });
-  $("next").addEventListener("click", function () { state.offset += 3; renderMonths(); centerNow(); });
-  $("today").addEventListener("click", function () { state.offset = 0; state.sel = { y: TODAY.y, m: TODAY.m, d: TODAY.d }; state.view = "day"; renderMonths(); renderPanel(); centerNow(); openSheet(true); });
+  $("prev").addEventListener("click", function () { step(-1); });
+  $("next").addEventListener("click", function () { step(1); });
+  $("zin").addEventListener("click", function () { zoomIn(null); });
+  $("zout").addEventListener("click", function () { zoomOut(); });
+  $("today").addEventListener("click", function () {
+    state.offset = 0; state.sel = { y: TODAY.y, m: TODAY.m, d: TODAY.d }; state.focus = { y: TODAY.y, m: TODAY.m };
+    if (state.level === "year") { state.view = "day"; renderMonths(); renderPanel(); centerNow(); openSheet(true); }
+    else { saveLevel(); renderMonths(); renderPanel(); animate(null); }
+  });
 
+  // ---- Gestures: pinch to change level, swipe to move, taps unchanged ------
+  var cal = $("cal"), pts = {}, pinch = null, swipe = null, suppressUntil = 0, wheelAcc = 0, wheelLock = 0;
+  function ptsList() { return Object.keys(pts).map(function (k) { return pts[k]; }); }
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+  cal.addEventListener("pointerdown", function (e) {
+    if (e.pointerType === "mouse") return;
+    pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var l = ptsList();
+    if (l.length === 2) { pinch = { d0: dist(l[0], l[1]), mx: (l[0].x + l[1].x) / 2, my: (l[0].y + l[1].y) / 2, r: 1 }; swipe = null; }
+    else if (l.length === 1) swipe = { x: e.clientX, y: e.clientY };
+  });
+  cal.addEventListener("pointermove", function (e) {
+    if (!pts[e.pointerId]) return;
+    pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (pinch) {
+      var l = ptsList(); if (l.length < 2) return;
+      pinch.r = dist(l[0], l[1]) / pinch.d0;
+      var box = cal.getBoundingClientRect();
+      cal.style.transformOrigin = (pinch.mx - box.left) + "px " + (pinch.my - box.top) + "px";
+      cal.style.transform = "scale(" + Math.max(0.85, Math.min(1.2, pinch.r)) + ")";
+    }
+  });
+  function endPointer(e) {
+    if (!pts[e.pointerId]) return;
+    var p0 = pts[e.pointerId]; delete pts[e.pointerId];
+    if (pinch) {
+      var r = pinch.r, mx = pinch.mx, my = pinch.my;
+      cal.style.transform = ""; pinch = null; swipe = null; suppressUntil = Date.now() + 350;
+      if (r > 1.18) zoomIn(targetAt(mx, my)); else if (r < 0.85) zoomOut();
+      return;
+    }
+    if (swipe && e.type === "pointerup") {
+      var dx = p0.x - swipe.x, dy = p0.y - swipe.y; swipe = null;
+      if (state.level !== "year" && Math.abs(dx) > 70 && Math.abs(dy) < Math.abs(dx) * 0.6) { suppressUntil = Date.now() + 400; step(dx < 0 ? 1 : -1); }
+    }
+  }
+  cal.addEventListener("pointerup", endPointer);
+  cal.addEventListener("pointercancel", function (e) { delete pts[e.pointerId]; if (pinch && ptsList().length < 2) { cal.style.transform = ""; pinch = null; } swipe = null; });
+  // Keep the browser's own page zoom out of the calendar (Safari), so the pinch reaches the app.
+  ["gesturestart", "gesturechange"].forEach(function (n) { cal.addEventListener(n, function (e) { e.preventDefault(); }); });
+  // A pinch or swipe never turns into a tap.
+  document.addEventListener("click", function (e) { if (Date.now() < suppressUntil && cal.contains(e.target)) { e.stopPropagation(); e.preventDefault(); } }, true);
+  // Trackpad pinch and Ctrl + scroll.
+  cal.addEventListener("wheel", function (e) {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    if (Date.now() < wheelLock) return;
+    wheelAcc += e.deltaY;
+    if (wheelAcc < -40) { wheelAcc = 0; wheelLock = Date.now() + 450; zoomIn(targetAt(e.clientX, e.clientY)); }
+    else if (wheelAcc > 40) { wheelAcc = 0; wheelLock = Date.now() + 450; zoomOut(); }
+  }, { passive: false });
+  document.addEventListener("keydown", function (e) {
+    var tag = (e.target.tagName || "").toLowerCase();
+    if (tag === "select" || tag === "input" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === "+" || e.key === "=") { e.preventDefault(); zoomIn(null); }
+    else if (e.key === "-" || e.key === "_") { e.preventDefault(); zoomOut(); }
+    else if (e.key === "ArrowLeft" && state.level !== "year") { e.preventDefault(); step(-1); }
+    else if (e.key === "ArrowRight" && state.level !== "year") { e.preventDefault(); step(1); }
+  });
+
+  readLevel();
+  if (state.level === "day" && mq.matches) { state.view = "week"; state.week = mondayOf(state.sel); }
   renderMonths(); renderPanel();
-  requestAnimationFrame(centerNow);
+  if (state.level === "year") requestAnimationFrame(centerNow);
 })();
 </script>
