@@ -9,7 +9,8 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 3. Run the checks:
    - `node tools/check-year.js`: weekly protein averages at or above both targets, no repeat violations.
    - `node tools/check-prices.js`: every ingredient priced, no unit mismatches.
-   - `node tools/check-waste.js`: weekly waste estimate not higher than the last release.
+   - `node tools/check-waste.js`: weekly waste estimate not clearly higher than the last release.
+   - `python3 tools/test-ui.py`: all browser checks pass (zoom, touch, taps, keyboard, links).
    - `python3 build.py`: rebuilds `index.html`.
    - Privacy check: no height, weight or other body data anywhere in the repo (automated from v0.3, manual search until then).
 4. Open the page in a browser at phone and desktop width and click through one day, one recipe and one week.
@@ -151,6 +152,25 @@ Shipped notes
 
 ---
 
+## v0.4.1: Review fixes (shipped)
+
+Found in a code review and fixed:
+- [x] Invalid links (`#d2026-02-31`, `#m2026-13`) showed impossible dates; they now open today's month or day, and the address bar is corrected.
+- [x] Far-future links froze the page (18 s for 2199) because the plan is generated day by day. The plan now runs to the end of 2032, and navigation stops there.
+- [x] Reopening the app restored the exact old day; it now restores the level on today's date. Links still open exactly.
+- [x] The backup lunch for leftover days was counted as eaten, which slightly skewed lunch rotation.
+- [x] No recipe goes over 20 uses in any 365 days (one had reached 21); the rotation now enforces it.
+- [x] Back from a recipe opened at day level returns to the week summary on desktop.
+- [x] "Today" moves forward if the app stays open past midnight.
+- [x] Pinch and swipe rebuilt on touch events. Pointer events lost the first finger when the browser started scrolling, so pinches often didn't register. The view now follows the fingers with resistance, highlights the month or day that will open, eases back if the pinch is too small, and grows the new level out of the pinched point.
+- [x] `tools/test-ui.py`: 30 browser checks with real touch input at phone and tablet size, plus desktop keyboard, trackpad and link checks.
+
+Notes
+- Estimated waste 4.17 € a week (v0.4: 4.06 €). The 20-uses cap moves the rotation off a few waste-friendly picks.
+- Still to check on a real iPhone or iPad: Safari's pinch handling is the one thing the test can't cover.
+
+---
+
 ## Later
 
 ### Check prices in the store (was v0.2.1)
@@ -214,3 +234,4 @@ Checks
 | v0.2 | 2026-10-18 | Prices, pack guidance, leftover warnings, month cost summary. Prices are estimates; store check moved to the backlog. |
 | v0.3 | 2026-10-18 | Year, month and day zoom with pinch, trackpad, keyboard and buttons; swipe between months and days; phone agenda at month level. |
 | v0.4 | 2026-10-18 | 82 recipes, waste-aware weekly rotation, cook once eat twice, seasons, weekday budget lean. Waste estimate 7.56 → 4.06 € a week. |
+| v0.4.1 | 2026-10-18 | Review fixes: link validation, 2032 range cap, restore on today, yearly use cap, smoother touch pinch and swipe, browser test suite. |

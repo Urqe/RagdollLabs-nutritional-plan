@@ -12,6 +12,8 @@ var Engine = (function () {
 
   var EPOCH = Date.UTC(2025, 0, 6); // a Monday
   var DAY = 86400000;
+  // The plan is generated day by day from EPOCH, so cap how far ahead it goes.
+  var MAX_DAYS = 365 * 8; // to the start of 2033
   // Minimum days between repeats.
   var RULES = { breakfast: 7, weekendBreakfast: 10, lunch: 14, dinner: 18, cheat: 35 };
   // Protein the three meals should give two people together: both targets minus snack 1 each.
@@ -97,7 +99,13 @@ var Engine = (function () {
     });
   }
 
-  var plan = [], last = {}, rand = rng(20261018), weekJuices = null;
+  var plan = [], last = {}, uses = {}, rand = rng(20261018), weekJuices = null;
+  var MAX_PER_YEAR = 20;
+  function usedInYear(id, idx) {
+    var u = uses[id]; if (!u) return 0;
+    while (u.length && u[0] <= idx - 365) u.shift();
+    return u.length;
+  }
 
   function pick(pool, idx, gap, opts) {
     opts = opts || {};
@@ -106,13 +114,14 @@ var Engine = (function () {
       var since = last[r.id] == null ? 999 : idx - last[r.id];
       var score = Math.min(since, 60) + rand() * 6;
       if (since < gap) score -= 1000;
+      if (usedInYear(r.id, idx) >= MAX_PER_YEAR) score -= 500;
       if (opts.avoidMain && opts.avoidMain.indexOf(r.main) >= 0) score -= W.variety;
       if (r.season) score += SEASON[r.season].indexOf(opts.month) >= 0 ? W.season : -W.offSeason;
       score += wasteScore(r.ing, (opts.mult ? opts.mult(r) : 1));
       if (opts.extra) score += opts.extra(r);
       if (score > bestScore) { bestScore = score; best = r; }
     });
-    last[best.id] = idx;
+    if (!opts.peek) { last[best.id] = idx; (uses[best.id] = uses[best.id] || []).push(idx); }
     return best;
   }
 
@@ -144,7 +153,7 @@ var Engine = (function () {
       var l, lAlt = null;
       if (prev && prev.d.batch) {
         l = leftoverOf(prev.dRaw);
-        lAlt = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: [prev.d.main] });
+        lAlt = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: [prev.d.main], peek: true });
       } else {
         l = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: prev ? [prev.d.main] : null });
         consume(l.ing, 1);
@@ -189,7 +198,7 @@ var Engine = (function () {
   // overrides: { "2026-10-18|b": "b03", ... }
   function day(y, m, dd, overrides) {
     var i = idxOf(y, m, dd);
-    if (i < 0) return null;
+    if (i < 0 || i > MAX_DAYS) return null;
     extendTo(i + 1);
     var base = plan[i], k = key(y, m, dd), ov = overrides || {};
     var prevK = i > 0 ? keyOfIdx(i - 1) : null, nextK = keyOfIdx(i + 1);
@@ -228,6 +237,8 @@ var Engine = (function () {
     return dow === 6 ? pools.cheat.concat(pools.dinner) : pools.dinner;
   }
 
-  return { day: day, byId: byId, grams: grams, nutrOf: nutrOf, alternatives: alternatives, idxOf: idxOf, key: key, RULES: RULES, EPOCH: EPOCH };
+  function inRange(y, m, dd) { var i = idxOf(y, m, dd); return i >= 0 && i <= MAX_DAYS; }
+
+  return { inRange: inRange, MAX_DAYS: MAX_DAYS, day: day, byId: byId, grams: grams, nutrOf: nutrOf, alternatives: alternatives, idxOf: idxOf, key: key, RULES: RULES, EPOCH: EPOCH };
 })();
 if (typeof module !== "undefined") module.exports = Engine;
