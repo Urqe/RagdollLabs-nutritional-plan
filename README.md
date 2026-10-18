@@ -24,7 +24,7 @@ Each meal is planned for two and split between Person 1 and Person 2. Where poss
 
 ## Food rules
 
-- No fish, seafood, eggplant or zucchini.
+- No fish, seafood, eggplant, zucchini, beetroot or bananas.
 - No pork mince or thick pork cuts. Bacon and chorizo are allowed.
 - Mince is always 100 % beef or turkey. Refried beans must be lard-free.
 - Greek yoghurt replaces mayonnaise and sour cream on regular days. Saturday dinner is a cheat night.
@@ -44,7 +44,7 @@ Each meal is planned for two and split between Person 1 and Person 2. Where poss
 
 Each pick also weighs:
 
-- **Food waste.** The rotation tracks which perishable packs are opened in each shopping week (Monday to Sunday) and prefers recipes, juices and snacks that use up what is already open. Two morning juices are picked per week and alternated, so herbs and beetroot get used.
+- **Food waste.** The rotation tracks which perishable packs are opened in each shopping week (Monday to Sunday) and prefers recipes, juices and snacks that use up what is already open. Two morning juices are picked per week and alternated, so fresh herbs and part-used packs get used.
 - **Cook once, eat twice.** Dinners marked for it are cooked as a double batch and become the next day's lunch. Swapping either meal undoes the pairing.
 - **Season.** Soups and stews lean toward November–March, grill dishes toward May–August.
 - **Weekday budget.** Monday to Thursday dinners lean slightly toward cheaper recipes.
@@ -61,7 +61,7 @@ src/pricing.js        recipe costs, cheapest pack mix and leftover advice
 src/engine.js         rotation engine and daily protein/calorie calculation
 src/app.html          page layout, styles and UI code
 build.py              computes the plan to 2032, inlines src/*.js into src/app.html, writes both pages
-tools/check-year.js   runs a year of the plan and reports protein, snacks and repeat violations
+tools/check-year.js   runs a year of the plan; reports protein, repeat violations and any banned ingredient
 tools/check-prices.js reports missing prices, remaining estimates, stale prices and cost levels
 tools/check-waste.js  estimates weekly food waste across a year of plans
 tools/test-ui.py      browser test of zoom, touch gestures, taps, keyboard and links (needs Playwright)
