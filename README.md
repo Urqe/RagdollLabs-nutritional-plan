@@ -16,6 +16,7 @@ Open `index.html` in a browser, or use the GitHub Pages site. It is a single sel
 - Tap a month name for the month's food cost and daily average.
 - Food cost is shown for the household per recipe, day, week and month.
 - Any single meal can be swapped. Swaps are saved in the browser on that device only.
+- Light, dark or automatic theme (follows the device), switched with the button in the header and remembered on the device.
 
 ## Portions
 
