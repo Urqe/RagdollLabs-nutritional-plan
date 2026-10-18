@@ -39,31 +39,35 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 
 ## Current focus
 
-1. v0.2 Prices
+1. v0.2 Prices and pack guidance
 2. v0.3 Calendar zoom and touch
-3. v0.4 Recipe library to 80
+3. v0.4 Recipe library to 80 and waste-aware rotation
 
 Everything after v0.4 is later work and can be reordered.
 
 ---
 
-## v0.2: Prices
+## v0.2: Prices and pack guidance
 
-Goal: every recipe, day and weekly shopping list shows an estimated cost, based on K-Ruoka prices.
+Goal: every recipe, day and month shows an estimated cost from K-Ruoka prices, and each week's shopping list says which pack sizes to buy.
 
 How prices are collected
 - K-Ruoka blocks automated fetching, so prices cannot be scraped. They come from a browser session on K-Ruoka (signed in, reference store selected) or are entered by hand.
 - Prices live in their own file, `src/prices.js`, separate from nutrition data, so a price refresh only touches one file.
-- Start with estimates marked `estimate`, then replace them with checked prices store by store. The page shows which prices are still estimates.
+- Start with estimates marked `estimate`, then replace them with checked prices. The page shows which prices are still estimates.
+- Reference store: a K-chain market. a second K-chain store is the second store, used when the first store doesn't stock an item and as a sanity check on a sample basket.
+- Costs are shown for the household, never split per person: per day and per month.
 
 Scope
-- [ ] `src/prices.js`: one row per catalogue ingredient with product name, pack size, pack price, unit price (€/kg, €/l or €/pc), status (`estimate` or `checked`) and date checked.
-- [ ] Choose one reference store on K-Ruoka so the numbers are comparable.
+- [ ] `src/prices.js`: one row per catalogue ingredient with product name, store, the pack sizes on sale (with price for each), unit price (€/kg, €/l or €/pc), status (`estimate` or `checked`) and date checked.
+- [ ] Shelf life per ingredient: how many days it keeps once opened or bought fresh, and whether it freezes well. Used by the pack guidance below and the waste-aware rotation in v0.4.
 - [ ] Fill estimates for all non-pantry ingredients (about 110), preferring everyday K-Menu and Pirkka-level products.
 - [ ] Replace estimates with checked prices from the reference store.
-- [ ] Recipe cost: total for two and per person, on the recipe view.
-- [ ] Day cost on the day view; weekly cost and daily average in the weekly summary.
+- [ ] Recipe cost for the household, on the recipe view.
+- [ ] Cost per day on the day view. Cost per month (and the daily average) on a month summary; the weekly summary shows the week's cost.
 - [ ] Shopping list: rounds up to whole packs and shows the expected checkout total. Pantry items listed without price.
+- [ ] Pack guidance in the weekly shopping list: which pack size to buy for each item ("chicken breast: 1 × 1 kg, uses 860 g, 140 g left"), choosing the cheapest combination of packs that covers the week.
+- [ ] Leftover warnings: items where the chosen pack leaves more than about 20 % unused, with a note on whether the rest freezes, keeps until next week, or will be wasted.
 - [ ] Swap menu shows the cost difference of each alternative.
 - [ ] `tools/check-prices.js`: lists missing prices, remaining estimates and prices older than 90 days.
 - [ ] Page note: "Prices estimated from K-Ruoka, last checked <date>".
@@ -72,9 +76,9 @@ Checks
 - Every non-pantry ingredient has a price.
 - A sample week's shopping total matches a real K-Ruoka basket within about 10 %.
 
-Open questions
-- Which K-Ruoka store to use as the reference.
-- Headline number: cost per day for two, or per person.
+Decided
+- Reference store a K-chain market, with a second K-chain store as the second store.
+- Costs shown per day and per month for the household, no per-person split.
 
 ---
 
@@ -105,15 +109,17 @@ Checks
 
 ---
 
-## v0.4: Recipe library to 80
+## v0.4: Recipe library to 80 and waste-aware rotation
 
-Goal: more variety, with dishes from new Come Conmigo plans folded in.
+Goal: more variety, with dishes from new Come Conmigo plans folded in, and weekly plans that use up what you buy.
 
 Scope
 - [ ] Add 30 recipes: 6 breakfasts, 12 lunches, 9 dinners, 3 cheat dinners.
 - [ ] Every new recipe has prices in `src/prices.js` (depends on v0.2).
 - [ ] Routine for new plan PDFs: give the links, adapt dishes to the food rules and Finnish ingredients, add them as recipes, run the year check.
 - [ ] Cook once, eat twice: mark dinners that make enough for the next day's lunch and let the rotation pair them.
+- [ ] Waste-aware weekly rotation: when a week's plan opens a pack that won't keep (fresh coriander, a 400 g tub of cottage cheese, a 1 kg pack of chicken), the rotation prefers other recipes that week that use up the rest before it spoils. Uses the shelf-life data from v0.2.
+- [ ] Weekly waste score in the weekly summary: estimated euros of food left unused at the end of the week, with the items listed.
 - [ ] Seasonal tags (grill season, soup season) and a light seasonal preference in the rotation.
 - [ ] Longer repeat gaps to match the bigger library: lunch 14 days, dinner 18 days.
 - [ ] Optional: a budget preference so the rotation leans toward cheaper dinners on weekdays.
@@ -122,6 +128,7 @@ Checks
 - No recipe appears more than 20 times a year.
 - Weekly protein averages still at or above both targets.
 - Weekly cost stays within the range set in v0.2 (no week more than 25 % above the average).
+- Estimated weekly waste lower than in v0.2, measured on the same year of weeks.
 
 ---
 
@@ -162,7 +169,7 @@ Checks
 
 ## Ideas not yet scheduled
 
-- Leftover tracker: mark a meal as eaten from leftovers and adjust the shopping list.
+- Leftover tracker: mark what is actually left in the fridge and let the next week use it first.
 - Batch-cooking day: a Sunday prep list for the week's lunches.
 - Seasonal pricing alerts when a staple (chicken, avocado) is on offer.
 - Recipe photos.
