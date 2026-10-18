@@ -1,16 +1,25 @@
 // ---- Rotation engine -----------------------------------------------------
 // Deterministic: the same date always gets the same meals (before swaps).
+// Each pick scores candidates on: time since last use (with hard repeat gaps),
+// variety of main protein, the day's protein balance, season, weekday budget,
+// and food waste (prefer using packs opened earlier in the same shopping week).
 var Engine = (function () {
   var D = (typeof module !== "undefined") ? require("./data.js") : null;
   var CATX = D ? D.CAT : CAT, RX = D ? D.RECIPES : RECIPES, S1 = D ? D.SNACKS1 : SNACKS1, S2 = D ? D.SNACKS2 : SNACKS2, JX = D ? D.JUICES : JUICES,
       PX = D ? D.PEOPLE : PEOPLE, SHARE = D ? D.DEFAULT_SHARE : DEFAULT_SHARE;
-
   var PR = (typeof module !== "undefined") ? require("./pricing.js") : (typeof Pricing !== "undefined" ? Pricing : null);
+  var PRICEX = (typeof module !== "undefined") ? require("./prices.js").PRICES : (typeof PRICES !== "undefined" ? PRICES : {});
+
   var EPOCH = Date.UTC(2025, 0, 6); // a Monday
   var DAY = 86400000;
+  // Minimum days between repeats.
+  var RULES = { breakfast: 7, weekendBreakfast: 10, lunch: 14, dinner: 18, cheat: 35 };
   // Protein the three meals should give two people together: both targets minus snack 1 each.
-  var RULES = { breakfast: 5, lunch: 9, dinner: 12, cheat: 3 }; // min days between repeats
   var MEAL_GOAL = PX.p1.protein + PX.p2.protein - 2 * 23;
+  // Season months (0 = January): summer May–August, winter November–March.
+  var SEASON = { summer: [4, 5, 6, 7], winter: [10, 11, 0, 1, 2] };
+  var W = { useLeftover: 3, newLeftover: 2, season: 8, offSeason: 15, budget: 0.6, protein: 0.4, variety: 8 };
+
   var byId = {}; RX.forEach(function (r) { byId[r.id] = r; });
 
   function grams(it) {
@@ -41,63 +50,164 @@ var Engine = (function () {
   var pools = {
     wkBreakfast: RX.filter(function (r) { return r.meal === "breakfast" && !r.weekend; }),
     allBreakfast: RX.filter(function (r) { return r.meal === "breakfast"; }),
-    wkndBreakfast: RX.filter(function (r) { return r.meal === "breakfast" && r.weekend; }),
     lunch: RX.filter(function (r) { return r.meal === "lunch"; }),
     dinner: RX.filter(function (r) { return r.meal === "dinner" && !r.cheat; }),
     cheat: RX.filter(function (r) { return r.cheat; })
   };
+  var avgDinnerC = pools.dinner.reduce(function (s, r) { return s + r.C; }, 0) / pools.dinner.length;
 
-  var plan = [], last = {}, rand = rng(20261018);
+  // Batch-cooked dinner (double portion) and the leftover lunch it becomes.
+  var batchCache = {}, leftCache = {};
+  function batchOf(r) {
+    if (!batchCache[r.id]) { var o = Object.create(r); o.batch = 2; o.C = r.C * 2; batchCache[r.id] = o; }
+    return batchCache[r.id];
+  }
+  function leftoverOf(r) {
+    if (!leftCache[r.id]) { var o = Object.create(r); o.leftover = true; o.batch = 0; o.C = 0; o.meal = "lunch"; o.time = 5; leftCache[r.id] = o; }
+    return leftCache[r.id];
+  }
 
-  function pick(pool, idx, gap, avoidMain, extra) {
+  // ---- Waste tracking within a shopping week (Monday to Sunday) ----------
+  var open = {}; // ingredient id -> amount left in opened packs, in the unit it is sold in
+  function perishable(id) { var p = PRICEX[id]; return p && !CATX[id].pantry && !PR.isStock(id) && !p.freezes; }
+  function wasteScore(ing, mult) {
+    if (!PR || !mult) return 0;
+    var s = 0;
+    ing.forEach(function (it) {
+      var id = it[0]; if (!perishable(id)) return;
+      var amt = PR.need(it) * mult; if (amt <= 0) return;
+      var have = open[id] || 0, use = Math.min(have, amt), rest = amt - use, up = PR.unitPrice(id);
+      s += use * up * W.useLeftover;
+      if (rest > 0) {
+        var res = PR.bestPacks(id, rest), keepF = PRICEX[id].keeps >= 10 ? 0.4 : 1;
+        if (!res.loose) s -= res.left * up * W.newLeftover * keepF;
+      }
+    });
+    return s;
+  }
+  function consume(ing, mult) {
+    if (!PR || !mult) return;
+    ing.forEach(function (it) {
+      var id = it[0]; if (!perishable(id)) return;
+      var amt = PR.need(it) * mult; if (amt <= 0) return;
+      var have = open[id] || 0;
+      if (have >= amt) { open[id] = have - amt; return; }
+      var res = PR.bestPacks(id, amt - have);
+      open[id] = res.loose ? 0 : res.left;
+    });
+  }
+
+  var plan = [], last = {}, rand = rng(20261018), weekJuices = null;
+
+  function pick(pool, idx, gap, opts) {
+    opts = opts || {};
     var best = null, bestScore = -Infinity;
     pool.forEach(function (r) {
       var since = last[r.id] == null ? 999 : idx - last[r.id];
       var score = Math.min(since, 60) + rand() * 6;
       if (since < gap) score -= 1000;
-      if (avoidMain && avoidMain.indexOf(r.main) >= 0) score -= 8;
-      if (extra) score += extra(r);
+      if (opts.avoidMain && opts.avoidMain.indexOf(r.main) >= 0) score -= W.variety;
+      if (r.season) score += SEASON[r.season].indexOf(opts.month) >= 0 ? W.season : -W.offSeason;
+      score += wasteScore(r.ing, (opts.mult ? opts.mult(r) : 1));
+      if (opts.extra) score += opts.extra(r);
       if (score > bestScore) { bestScore = score; best = r; }
     });
     last[best.id] = idx;
     return best;
   }
 
+  function pickExtra(pool, idx, tag, mult) {
+    var best = null, bestScore = -Infinity;
+    pool.forEach(function (s) {
+      var k = tag + s.id, since = last[k] == null ? 99 : idx - last[k];
+      var score = Math.min(since, 10) * 1.5 + rand() * 2 + wasteScore(s.ing, mult);
+      if (since < 2) score -= 100;
+      if (score > bestScore) { bestScore = score; best = s; }
+    });
+    last[tag + best.id] = idx;
+    return best;
+  }
+
   function extendTo(idx) {
     while (plan.length <= idx) {
-      var i = plan.length, dow = new Date(EPOCH + i * DAY).getUTCDay(); // 0 Sun..6 Sat
+      var i = plan.length, date = new Date(EPOCH + i * DAY), dow = date.getUTCDay(), month = date.getUTCMonth();
+      if (dow === 1) open = {}; // new shopping week
       var weekend = dow === 0 || dow === 6;
       var prev = plan[i - 1];
-      var b = weekend ? pick(pools.wkndBreakfast, i, 6) : pick(pools.wkBreakfast, i, RULES.breakfast);
-      var l = pick(pools.lunch, i, RULES.lunch, prev ? [prev.d.main] : null);
-      var d = dow === 6 ? pick(pools.cheat, i, RULES.cheat)
-                        : pick(pools.dinner, i, RULES.dinner, [l.main].concat(prev ? [prev.d.main] : []),
-                               function (r) { return -Math.abs(b.P + l.P + r.P - MEAL_GOAL) * 0.4; });
-      plan.push({ b: b, l: l, d: d });
+
+      var b = weekend
+        ? pick(pools.allBreakfast, i, RULES.weekendBreakfast, { month: month, extra: function (r) { return r.weekend ? 12 : 0; } })
+        : pick(pools.wkBreakfast, i, RULES.breakfast, { month: month });
+      consume(b.ing, 1);
+
+      // Yesterday's batch dinner becomes today's lunch.
+      var l, lAlt = null;
+      if (prev && prev.d.batch) {
+        l = leftoverOf(prev.dRaw);
+        lAlt = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: [prev.d.main] });
+      } else {
+        l = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: prev ? [prev.d.main] : null });
+        consume(l.ing, 1);
+      }
+
+      var d, dRaw;
+      if (dow === 6) { dRaw = d = pick(pools.cheat, i, RULES.cheat, { month: month }); consume(d.ing, 1); }
+      else {
+        // A batch dinner only when tomorrow is not Saturday (cheat day) and today's lunch was not already leftovers.
+        var canBatch = dow !== 5 && !l.leftover;
+        dRaw = pick(pools.dinner, i, RULES.dinner, {
+          month: month, avoidMain: [l.main].concat(prev ? [prev.d.main] : []),
+          mult: function (r) { return r.twice && canBatch ? 2 : 1; },
+          extra: function (r) {
+            var e = -Math.abs(b.P + l.P + r.P - MEAL_GOAL) * W.protein;
+            if (dow >= 1 && dow <= 4) e -= (r.C - avgDinnerC) * W.budget;
+            return e;
+          }
+        });
+        d = dRaw.twice && canBatch ? batchOf(dRaw) : dRaw;
+        consume(dRaw.ing, d.batch || 1);
+      }
+
+      // Two juices a week, alternating, so fresh herbs and beetroot get used up.
+      if (dow === 1 || !weekJuices) {
+        var ja = pickExtra(JX, i, "j:", 6), jb = pickExtra(JX.filter(function (j) { return j !== ja; }), i, "j:", 6);
+        weekJuices = [ja, jb];
+      }
+      var juice = weekJuices[i % 2];
+      consume(juice.ing, 2);
+      var s1 = pickExtra(S1, i, "s1:", 2); consume(s1.ing, 2);
+      var s2 = pickExtra(S2, i, "s2:", 2); consume(s2.ing, 2);
+
+      plan.push({ b: b, l: l, lAlt: lAlt, d: d, dRaw: dRaw, juice: juice, snacks: [s1, s2] });
     }
   }
 
   function idxOf(y, m, dd) { return Math.round((Date.UTC(y, m, dd) - EPOCH) / DAY); }
   function key(y, m, dd) { return y + "-" + String(m + 1).padStart(2, "0") + "-" + String(dd).padStart(2, "0"); }
-
-  // Two optional snacks a day, the same for both people: snack 1 from the protein
-  // pool (counted in daily totals), snack 2 from the fruit pool. Plus a morning juice.
-  function snacksFor(i) { return [S1[i % S1.length], S2[(i * 5 + 3) % S2.length]]; }
-  function juiceFor(i) { return JX[(i * 5) % JX.length]; }
+  function keyOfIdx(i) { var t = new Date(EPOCH + i * DAY); return key(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()); }
 
   // overrides: { "2026-10-18|b": "b03", ... }
   function day(y, m, dd, overrides) {
     var i = idxOf(y, m, dd);
     if (i < 0) return null;
-    extendTo(i);
+    extendTo(i + 1);
     var base = plan[i], k = key(y, m, dd), ov = overrides || {};
+    var prevK = i > 0 ? keyOfIdx(i - 1) : null, nextK = keyOfIdx(i + 1);
+
+    // Leftover lunch falls back to a normal lunch if yesterday's dinner was swapped.
+    var lunch = base.l;
+    if (base.l.leftover && prevK && ov[prevK + "|d"]) lunch = base.lAlt;
+    // Batch dinner goes back to a single batch if it was swapped or tomorrow's lunch was swapped.
+    var dinner = base.d;
+    if (base.d.batch && (ov[nextK + "|l"] || ov[k + "|d"])) dinner = base.dRaw;
+
     var meals = {
       b: byId[ov[k + "|b"]] || base.b,
-      l: byId[ov[k + "|l"]] || base.l,
-      d: byId[ov[k + "|d"]] || base.d
+      l: byId[ov[k + "|l"]] || lunch,
+      d: byId[ov[k + "|d"]] || dinner
     };
-    var sn = snacksFor(i);
-    var res = { key: k, meals: meals, base: base, snacks: sn, juice: juiceFor(i), people: {} };
+    var sn = base.snacks;
+    var res = { key: k, meals: meals, base: { b: base.b, l: lunch, d: base.dRaw }, snacks: sn, juice: base.juice, people: {} };
     ["p1", "p2"].forEach(function (p) {
       var mp = 0, mk = 0;
       ["b", "l", "d"].forEach(function (s) {

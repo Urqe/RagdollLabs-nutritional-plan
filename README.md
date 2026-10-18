@@ -31,15 +31,23 @@ Each meal is planned for two and split between Person 1 and Person 2. Where poss
 
 ## Rotation
 
-50 recipes: 12 breakfasts (4 weekend-only), 18 lunches, 15 dinners and 5 cheat dinners. The plan is generated deterministically, so a date always gets the same meals. Minimum days between repeats:
+82 recipes: 20 breakfasts (6 weekend-only), 30 lunches, 24 dinners and 8 cheat dinners. The plan is generated deterministically, so a date always gets the same meals. Minimum days between repeats:
 
 | Slot | Gap |
 |---|---|
-| Weekday breakfast | 5 |
-| Lunch | 9 |
-| Dinner | 12 |
+| Weekday breakfast | 7 |
+| Weekend breakfast | 10 |
+| Lunch | 14 |
+| Dinner | 18 |
+| Cheat dinner | 35 |
 
-Dinners also avoid repeating the main protein of the previous dinner or the same day's lunch where possible, and lean toward the dinner that brings the day's protein closest to target.
+Each pick also weighs:
+
+- **Food waste.** The rotation tracks which perishable packs are opened in each shopping week (Monday to Sunday) and prefers recipes, juices and snacks that use up what is already open. Two morning juices are picked per week and alternated, so herbs and beetroot get used.
+- **Cook once, eat twice.** Dinners marked for it are cooked as a double batch and become the next day's lunch. Swapping either meal undoes the pairing.
+- **Season.** Soups and stews lean toward November–March, grill dishes toward May–August.
+- **Weekday budget.** Monday to Thursday dinners lean slightly toward cheaper recipes.
+- **Variety and protein.** Dinners avoid repeating the main protein of the previous dinner or the same day's lunch, and lean toward the one that brings the day's protein closest to target.
 
 ## Project layout
 
@@ -53,12 +61,13 @@ src/app.html          page layout, styles and UI code
 build.py              inlines src/*.js into src/app.html and writes index.html
 tools/check-year.js   runs a year of the plan and reports protein, snacks and repeat violations
 tools/check-prices.js reports missing prices, remaining estimates, stale prices and cost levels
+tools/check-waste.js  estimates weekly food waste across a year of plans
 ```
 
 ## Changing things
 
 1. Edit files in `src/`. To add a recipe, add an entry to `RECIPES` in `src/data.js` using ingredient ids from `CAT`. Protein and calories are calculated from the ingredient weights.
-2. Run `node tools/check-year.js` to confirm targets are still met and no repeat rules are broken, and `node tools/check-prices.js` to confirm every ingredient has a price.
+2. Run `node tools/check-year.js` to confirm targets are still met and no repeat rules are broken, `node tools/check-prices.js` to confirm every ingredient has a price, and `node tools/check-waste.js` to see the waste estimate.
 3. Run `python3 build.py` to rebuild `index.html`.
 
 ## Prices

@@ -40,6 +40,8 @@ var PRICES = {
   tortC:      { product: "Corn tortillas, 10 pcs", packs: [[10,"pc",3.29]], keeps: 10, freezes: true },
   bun:        { product: "Burger buns, 4 pcs", packs: [[4,"pc",1.99]], keeps: 4, freezes: true },
   bread:      { product: "Wholegrain sliced bread", packs: [[14,"pc",2.29]], keeps: 6, freezes: true },
+  roll:       { product: "Bread rolls, 6 pcs", packs: [[6,"pc",1.99]], keeps: 3, freezes: true },
+  flour:      { product: "Wheat flour", packs: [[2000,"g",1.29]], keeps: 365, freezes: false },
   rye:        { product: "Rye bread, sliced", packs: [[14,"pc",1.69]], keeps: 7, freezes: true },
   ricecake:   { product: "Rice cakes", packs: [[12,"pc",1.29]], keeps: 30, freezes: false },
   oats:       { product: "Oat flakes", packs: [[500,"g",0.99],[1000,"g",1.49]], keeps: 180, freezes: false },
@@ -64,6 +66,8 @@ var PRICES = {
   beetroot:   { product: "Cooked beetroot", packs: [[500,"g",1.49]], keeps: 5, freezes: false },
 
   // Vegetables and fruit
+  potato:     { product: "Potatoes, 2 kg bag", packs: [[2000,"g",1.99]], keeps: 21, freezes: false },
+  cabbage:    { product: "White cabbage", loose: ["g",0.00129], keeps: 21, freezes: false },
   tomato:     { product: "Tomatoes", loose: ["pc",0.30], keeps: 7, freezes: false },
   onion:      { product: "Onions, 1 kg bag", packs: [[10,"pc",1.29]], keeps: 30, freezes: false },
   redonion:   { product: "Red onions", loose: ["pc",0.25], keeps: 21, freezes: false },
@@ -98,6 +102,7 @@ var PRICES = {
   berries:    { product: "Frozen mixed berries", packs: [[1000,"g",4.49]], keeps: 120, freezes: true },
   mango:      { product: "Frozen mango", packs: [[1000,"g",4.49]], keeps: 120, freezes: true },
   lingon:     { product: "Frozen lingonberries", packs: [[500,"g",2.49]], keeps: 120, freezes: true },
+  peas:       { product: "Frozen peas", packs: [[500,"g",1.29]], keeps: 120, freezes: true },
   fries:      { product: "Oven fries", packs: [[750,"g",2.49]], keeps: 120, freezes: true },
 
   // Other

@@ -516,7 +516,7 @@ var RECIPES = [
     "Warm the tortillas.",
     "Fill with chicken, crema, shredded lettuce, red onion and coriander."] },
 
-{ id: "l05", meal: "lunch", name: "Carne asada with charro beans and charred spring onions", time: 30, heat: 2, main: "beef", side: true,
+{ id: "l05", meal: "lunch", name: "Carne asada with charro beans and charred spring onions", time: 30, heat: 2, main: "beef", side: true, season: "summer",
   ing: [["sirloin",210,"g"],["blackbean",230,"g"],["bacon",30,"g"],["springon",6,"pc"],["avocado",0.5,"pc"],["tomato",2,"pc"],["onion",0.5,"pc"],["jalap",1,"pc"],["cilantro",0.25,"bunch"],["lime",2,"pc"],["garlic",1,"clove"],["tortC",4,"pc"]],
   steps: ["Season the steak with salt, pepper, garlic and lime juice.",
     "For the beans: fry the diced bacon, add half the onion and the beans with 150 ml water and simmer 10 minutes.",
@@ -550,7 +550,7 @@ var RECIPES = [
     "Bake the tortillas at 220 °C for 6–8 minutes until crisp.",
     "Top tostadas with tinga, lettuce, leipäjuusto and red onion."] },
 
-{ id: "l09", meal: "lunch", name: "Salpicón de res on tostadas", time: 100, heat: 2, main: "beef", prep: true,
+{ id: "l09", meal: "lunch", name: "Salpicón de res on tostadas", time: 100, heat: 2, main: "beef", prep: true, season: "summer",
   split: { p2: "5 tostadas", p1: "3 tostadas", share: 0.62 },
   ing: [["chuck",240,"g"],["onion",1,"pc"],["garlic",2,"clove"],["lettuce",150,"g"],["tomato",2,"pc"],["redonion",0.5,"pc"],["cilantro",0.5,"bunch"],["lime",2,"pc"],["avocado",0.5,"pc"],["tortC",8,"pc"],["jalap",1,"pc"]],
   steps: ["Simmer the beef with half the onion, garlic and salt in water for about 90 minutes, until it shreds easily. Cool and shred.",
@@ -785,7 +785,250 @@ var RECIPES = [
     "Mix passata with chipotle and oregano and spread thin.",
     "Top with mozzarella, sliced chorizo, red onion and jalapeños.",
     "Bake 8–10 minutes until blistered.",
-    "Drizzle with honey and, if you dare, thin slices of habanero. Cut each into 8."] }
+    "Drizzle with honey and, if you dare, thin slices of habanero. Cut each into 8."] },
+
+// BREAKFAST, v0.4 --------------------------------------------------------
+{ id: "b13", meal: "breakfast", name: "Huevos a la mexicana with beans", time: 12, heat: 2, main: "egg",
+  split: { p2: "3 eggs, 2 tortillas", p1: "2 eggs, 2 tortillas", share: 0.6 },
+  ing: [["egg",5,"pc"],["tomato",2,"pc"],["onion",0.5,"pc"],["jalap",1,"pc"],["blackbean",150,"g"],["tortC",4,"pc"],["cilantro",0.25,"bunch"],["oil",1,"tsp"]],
+  steps: ["Fry the diced onion and jalapeño in the oil for 2 minutes, add the diced tomato for 2 more.",
+    "Pour in the beaten eggs and stir until just set. Season with salt.",
+    "Warm the beans and the tortillas.",
+    "Serve the eggs with beans, tortillas and coriander."] },
+
+{ id: "b14", meal: "breakfast", name: "Chorizo and potato breakfast tacos", time: 25, heat: 2, main: "egg", weekend: true, side: true,
+  split: { p2: "5 tacos", p1: "3 tacos", share: 0.62 },
+  ing: [["potato",300,"g","small dice"],["chorizo",50,"g"],["egg",4,"pc"],["tortM",8,"pc"],["salsaverde",60,"g"],["cilantro",0.25,"bunch"],["oil",1,"tsp"]],
+  steps: ["Microwave the diced potato covered for 4 minutes.",
+    "Fry the chorizo until it releases its fat, add the potato and fry until golden.",
+    "Push to one side and scramble the eggs in the pan.",
+    "Fill warm tortillas with potato, chorizo and egg. Salsa verde and coriander on the side."] },
+
+{ id: "b15", meal: "breakfast", name: "Molletes with egg and pico de gallo", time: 15, heat: 2, main: "egg",
+  split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
+  ing: [["roll",4,"pc","halved"],["refried",200,"g"],["egg",3,"pc"],["mozz",40,"g"],["tomato",2,"pc"],["onion",0.25,"pc"],["jalap",1,"pc"],["cilantro",0.25,"bunch"],["lime",0.5,"pc"]],
+  steps: ["Heat the oven grill to 225 °C. Spread refried beans on the roll halves and top with mozzarella.",
+    "Grill 5 minutes until bubbling.",
+    "Scramble or fry the eggs meanwhile.",
+    "Top with egg and a pico of tomato, onion, jalapeño, coriander and lime."] },
+
+{ id: "b16", meal: "breakfast", name: "Migas with salsa verde", time: 12, heat: 2, main: "egg",
+  split: { p2: "3 eggs", p1: "2 eggs", share: 0.6 },
+  ing: [["egg",5,"pc"],["tortC",3,"pc","in strips"],["salsaverde",100,"g"],["leipa",30,"g"],["avocado",0.5,"pc"],["greek",80,"g"],["oil",1,"tsp"]],
+  steps: ["Fry the tortilla strips in the oil until crisp.",
+    "Pour in the beaten eggs and stir until just set.",
+    "Spoon over warm salsa verde and crumble the leipäjuusto on top.",
+    "Serve with avocado and yoghurt."] },
+
+{ id: "b17", meal: "breakfast", name: "Mango and chilli smoothie bowl", time: 5, heat: 1, main: "dairy",
+  ing: [["skyr",300,"g"],["whey",20,"g"],["mango",200,"g","frozen"],["banana",1,"pc"],["milk",100,"ml"],["granola",30,"g"],["chilisalt",1,"pinch"],["lime",0.5,"pc"]],
+  steps: ["Blend skyr, protein powder, frozen mango, banana and milk until thick.",
+    "Pour by the split and top with granola, a squeeze of lime and a pinch of chilli-lime salt."] },
+
+{ id: "b18", meal: "breakfast", name: "Cottage cheese pancakes with berries", time: 20, heat: 1, main: "dairy",
+  split: { p2: "5 pancakes", p1: "3 pancakes", share: 0.62 },
+  ing: [["cottage",250,"g"],["egg",3,"pc"],["oats",80,"g"],["bpowder",1,"tsp"],["cinnamon",1,"tsp"],["berries",150,"g"],["honey",1,"tbsp"],["oil",1,"tsp"]],
+  steps: ["Blend cottage cheese, eggs, oats, baking powder and cinnamon. Rest 5 minutes.",
+    "Cook 8 small pancakes in a lightly oiled pan, 2 minutes per side.",
+    "Warm the berries until saucy and serve on top with a little honey."] },
+
+{ id: "b19", meal: "breakfast", name: "Egg bites with spinach, halloumi and bacon", time: 40, heat: 1, main: "egg", weekend: true, side: true,
+  split: { p2: "7 egg bites", p1: "5 egg bites", share: 0.58 },
+  ing: [["egg",6,"pc"],["cottage",100,"g"],["spinach",50,"g","chopped"],["halloumi",50,"g","diced"],["bacon",30,"g","cooked and chopped"],["salsa",60,"g"],["oil",1,"tsp"]],
+  steps: ["Heat oven to 180 °C and oil a 12-hole muffin tin.",
+    "Blend eggs and cottage cheese with salt and pepper.",
+    "Divide spinach, halloumi and bacon between the holes and pour over the egg mixture to three-quarters full.",
+    "Bake in a water bath 25–30 minutes until set. Rest a few minutes before turning out. Salsa on the side."] },
+
+{ id: "b20", meal: "breakfast", name: "Banana and peanut butter mug cakes", time: 5, heat: 1, main: "dairy",
+  split: { p2: "the larger mug", p1: "the smaller mug", share: 0.6 },
+  ing: [["banana",1,"pc"],["oats",70,"g","blended to flour"],["egg",2,"pc"],["whey",30,"g"],["milk",100,"ml"],["cinnamon",1,"tsp"],["bpowder",0.5,"tsp"],["pb",1,"tbsp"]],
+  steps: ["Mash most of the banana and mix with oat flour, eggs, protein powder, milk, cinnamon and baking powder.",
+    "Divide 60/40 between two mugs and microwave each 1½–2 minutes.",
+    "Top with peanut butter and the rest of the banana, sliced."] },
+
+// LUNCH, v0.4 ------------------------------------------------------------
+{ id: "l19", meal: "lunch", name: "Turkey picadillo lettuce cups with rice", time: 25, heat: 2, main: "turkey", prep: true,
+  ing: [["turkeymince",280,"g"],["rice",80,"g"],["carrot",100,"g","small dice"],["peas",80,"g"],["tomato",2,"pc"],["onion",1,"pc"],["garlic",1,"clove"],["cumin",1,"tsp"],["lettuce",150,"g"],["lime",1,"pc"],["salsa",80,"g"],["oil",1,"tsp"]],
+  steps: ["Cook the rice.",
+    "Brown the turkey with onion and garlic in the oil. Add carrot, cumin and chopped tomato and cook 8 minutes.",
+    "Stir in the peas for the last 2 minutes and season with lime and salt.",
+    "Spoon rice and picadillo into lettuce leaves. Salsa on the side."] },
+
+{ id: "l20", meal: "lunch", name: "Chicken and chickpea pozole-style soup", time: 40, heat: 2, main: "chicken", prep: true, season: "winter", side: true,
+  ing: [["chk",260,"g"],["chickpea",240,"g"],["guajillo",3,"pc"],["onion",1,"pc"],["garlic",2,"clove"],["oregano",1,"tsp"],["stock",1,"pc"],["cabbage",150,"g","shredded"],["redonion",0.5,"pc"],["lime",2,"pc"],["tortC",4,"pc","baked as tostadas"]],
+  steps: ["Toast the guajillos in a dry pan, soak 10 minutes, then blend with half the onion, garlic and 200 ml soaking water.",
+    "Simmer the chicken in 1.2 l water with the stock cube and the rest of the onion for 15 minutes. Lift out and shred.",
+    "Strain the chilli paste into the broth, add the chickpeas and oregano and simmer 10 minutes. Return the chicken.",
+    "Serve with shredded cabbage, red onion and lime on the side, and baked tortillas."] },
+
+{ id: "l21", meal: "lunch", name: "Beef and black bean bowl with salsa verde rice", time: 25, heat: 2, main: "beef", prep: true,
+  ing: [["beef5",250,"g"],["rice",100,"g"],["salsaverde",100,"g"],["blackbean",230,"g"],["corn",100,"g"],["lettuce",100,"g"],["cumin",1,"tsp"],["paprika",1,"tsp"],["lime",1,"pc"],["oil",1,"tsp"]],
+  steps: ["Cook the rice and stir half the salsa verde through it.",
+    "Brown the beef with cumin, paprika and salt.",
+    "Warm the beans and corn.",
+    "Build bowls with rice, beef, beans, corn and lettuce. The rest of the salsa verde and lime on top."] },
+
+{ id: "l22", meal: "lunch", name: "Grilled chicken and corn salad with chipotle yoghurt", time: 25, heat: 2, main: "chicken", season: "summer",
+  ing: [["chk",250,"g"],["corn",200,"g"],["greek",100,"g"],["chipotle",1,"tbsp"],["lettuce",150,"g"],["tomato",2,"pc"],["avocado",0.5,"pc"],["redonion",0.5,"pc"],["lime",1,"pc"],["oil",1,"tsp"]],
+  steps: ["Season the chicken and grill or pan-fry 5–6 minutes per side. Rest and slice.",
+    "Char the corn in a dry, very hot pan.",
+    "Whisk yoghurt with chipotle, lime and salt.",
+    "Toss lettuce, tomato, red onion, corn and avocado. Top with chicken and the chipotle yoghurt."] },
+
+{ id: "l23", meal: "lunch", name: "Sopa de tortilla with chicken", time: 35, heat: 2, main: "chicken", season: "winter", side: true,
+  ing: [["chk",250,"g"],["crushed",400,"g"],["onion",1,"pc"],["garlic",2,"clove"],["ancho",1,"pc"],["stock",1,"pc"],["tortC",4,"pc","in strips"],["avocado",0.5,"pc"],["leipa",40,"g"],["greek",60,"g"],["lime",1,"pc"],["oil",1,"tsp"]],
+  steps: ["Soak the ancho in hot water 10 minutes. Blend with the tomatoes, half the onion and garlic.",
+    "Fry the rest of the onion in the oil, add the tomato mixture, the stock cube and 800 ml water.",
+    "Add the chicken and simmer 15 minutes. Shred it back into the soup.",
+    "Bake the tortilla strips at 220 °C for 8 minutes.",
+    "Serve with tortilla strips, avocado, leipäjuusto, yoghurt and lime."] },
+
+{ id: "l24", meal: "lunch", name: "Steak fajita rice bowl", time: 20, heat: 2, main: "beef", season: "summer", side: true,
+  ing: [["strips",250,"g"],["pepper",2,"pc"],["redonion",1,"pc"],["rice",100,"g"],["greek",80,"g"],["lime",1,"pc"],["paprika",1,"tsp"],["cumin",1,"tsp"],["salsa",80,"g"],["oil",1,"tbsp"]],
+  steps: ["Cook the rice.",
+    "Toss beef strips with paprika, cumin and salt. Sear in a very hot pan in batches, then set aside.",
+    "Fry sliced peppers and onion in the same pan until charred at the edges.",
+    "Serve over rice with yoghurt and lime. Salsa on the side."] },
+
+{ id: "l25", meal: "lunch", name: "Turkey and black bean chili", time: 40, heat: 3, main: "turkey", prep: true, season: "winter",
+  ing: [["turkeymince",300,"g"],["blackbean",230,"g"],["crushed",400,"g"],["onion",1,"pc"],["pepper",1,"pc"],["garlic",2,"clove"],["chipotle",1,"tbsp"],["cumin",1,"tsp"],["cocoa",5,"g"],["rice",80,"g"],["oil",1,"tsp"]],
+  steps: ["Brown the turkey with onion and pepper in the oil.",
+    "Add garlic, cumin and cocoa for 1 minute, then tomatoes, chipotle and beans.",
+    "Simmer 25 minutes.",
+    "Serve over rice. Keeps 3 days."] },
+
+{ id: "l26", meal: "lunch", name: "Chicken tinga quesadillas", time: 30, heat: 3, main: "chicken", side: true,
+  split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
+  ing: [["chk",220,"g"],["tortL",4,"pc"],["mozz",60,"g"],["tomato",2,"pc"],["chipotle",1,"tbsp"],["onion",1,"pc"],["garlic",1,"clove"],["salsaverde",80,"g"],["oil",1,"tsp"]],
+  steps: ["Simmer the chicken 15 minutes in salted water and shred.",
+    "Blend tomatoes, chipotle, garlic and a quarter of the onion. Fry the rest of the onion, add the sauce and the chicken and cook until dry.",
+    "Fill half of each tortilla with tinga and mozzarella and fold.",
+    "Toast 2 minutes per side. Cut in half. Salsa verde on the side."] },
+
+{ id: "l27", meal: "lunch", name: "Pollo asado with rice, beans and pickled onions", time: 35, heat: 2, main: "chicken", prep: true,
+  ing: [["thigh",300,"g"],["orange",1,"pc","juiced"],["lime",1,"pc"],["garlic",2,"clove"],["oregano",1,"tsp"],["paprika",1,"tsp"],["rice",100,"g"],["blackbean",150,"g"],["redonion",1,"pc"],["vinegar",2,"tbsp"],["salsa",80,"g"]],
+  steps: ["Slice the red onion thin and cover with vinegar, a pinch of salt and sugar.",
+    "Marinate the chicken in orange and lime juice, garlic, oregano, paprika and salt for 15 minutes.",
+    "Cook the rice. Roast the chicken at 220 °C for 20 minutes.",
+    "Serve with rice, warm beans, pickled onions and salsa."] },
+
+{ id: "l28", meal: "lunch", name: "Chicken and chickpea salad with lime and chilli", time: 20, heat: 2, main: "chicken", season: "summer",
+  ing: [["chk",220,"g"],["chickpea",240,"g"],["cucumber",200,"g"],["tomato",2,"pc"],["redonion",0.5,"pc"],["leipa",40,"g"],["cilantro",0.25,"bunch"],["lime",2,"pc"],["chilipw",0.5,"tsp"],["oil",1,"tbsp"]],
+  steps: ["Season the chicken with chilli and salt, fry in a little of the oil and dice.",
+    "Toss chickpeas, cucumber, tomato and red onion with lime juice, the rest of the oil and salt.",
+    "Top with chicken, crumbled leipäjuusto and coriander."] },
+
+{ id: "l29", meal: "lunch", name: "Beef picadillo stuffed sweet potatoes", time: 45, heat: 2, main: "beef", prep: true,
+  split: { p2: "the larger sweet potato", p1: "the smaller one", share: 0.6 },
+  ing: [["sweetpot",600,"g","2 large"],["beef5",250,"g"],["tomato",2,"pc"],["onion",1,"pc"],["peas",80,"g"],["cumin",1,"tsp"],["greek",80,"g"],["cilantro",0.25,"bunch"],["oil",1,"tsp"]],
+  steps: ["Prick the sweet potatoes and bake at 200 °C for 40 minutes (or microwave 10–12 minutes).",
+    "Brown the beef with onion and cumin, add chopped tomato and peas and cook 8 minutes.",
+    "Split the sweet potatoes open and fill with picadillo.",
+    "Top with yoghurt and coriander."] },
+
+{ id: "l30", meal: "lunch", name: "Chicken enfrijoladas", time: 30, heat: 2, main: "chicken",
+  split: { p2: "3½ enfrijoladas", p1: "2½ enfrijoladas", share: 0.58 },
+  ing: [["chk",180,"g"],["blackbean",230,"g"],["chipotle",1,"tsp"],["onion",0.5,"pc"],["garlic",1,"clove"],["stock",0.5,"pc"],["tortC",6,"pc"],["leipa",40,"g"],["greek",60,"g"],["redonion",0.5,"pc"],["oil",1,"tsp"]],
+  steps: ["Simmer the chicken 15 minutes and shred.",
+    "Blend beans with onion, garlic, chipotle, half a stock cube and 200 ml water. Heat in the oiled pan until it coats a spoon.",
+    "Dip each tortilla in the bean sauce, fill with chicken and fold.",
+    "Pour over the rest of the sauce. Top with leipäjuusto, yoghurt and red onion."] },
+
+// DINNER, v0.4 -----------------------------------------------------------
+{ id: "d16", meal: "dinner", name: "Mole chicken with rice", time: 45, heat: 2, main: "chicken", twice: true, season: "winter",
+  ing: [["thigh",280,"g"],["ancho",2,"pc"],["chipotle",1,"tbsp"],["crushed",400,"g"],["pb",1.5,"tbsp"],["cocoa",10,"g"],["onion",1,"pc"],["garlic",2,"clove"],["cinnamon",0.5,"tsp"],["cumin",1,"tsp"],["stock",1,"pc"],["rice",80,"g"],["oil",1,"tsp"]],
+  steps: ["Soak the anchos 10 minutes. Fry onion and garlic in the oil.",
+    "Blend with anchos, chipotle, tomatoes, peanut butter, cocoa, cinnamon, cumin, stock cube and 150 ml water.",
+    "Brown the chicken, pour over the mole and simmer covered 20 minutes.",
+    "Serve over rice."] },
+
+{ id: "d17", meal: "dinner", name: "Beef barbacoa tacos", time: 150, heat: 3, main: "beef", twice: true, season: "winter", side: true,
+  split: { p2: "5 tacos", p1: "3 tacos", share: 0.62 },
+  ing: [["chuck",300,"g"],["chipotle",2,"tbsp"],["ancho",1,"pc"],["garlic",2,"clove"],["cumin",1,"tsp"],["oregano",1,"tsp"],["bay",2,"pc"],["vinegar",1,"tbsp"],["lime",1,"pc"],["tortC",8,"pc"],["redonion",1,"pc","pickled"],["cilantro",0.25,"bunch"],["salsa",80,"g"]],
+  steps: ["Blend chipotle, soaked ancho, garlic, cumin, oregano, vinegar, lime juice and 200 ml water.",
+    "Cover the beef with the sauce and bay leaves and cook at 160 °C for 2 hours until it falls apart.",
+    "Pickle sliced red onion in vinegar with salt and a pinch of sugar.",
+    "Shred the beef in its juices and serve in warm tortillas with pickled onion and coriander. Salsa on the side."] },
+
+{ id: "d18", meal: "dinner", name: "Chicken and sweet potato tray bake with salsa verde", time: 40, heat: 2, main: "chicken", twice: true, side: true,
+  ing: [["thigh",260,"g"],["sweetpot",500,"g","cubed"],["pepper",2,"pc"],["redonion",1,"pc"],["paprika",1,"tsp"],["cumin",1,"tsp"],["salsaverde",150,"g"],["greek",80,"g"],["oil",1,"tbsp"]],
+  steps: ["Heat oven to 220 °C.",
+    "Toss sweet potato, peppers, red onion and chicken with oil, paprika, cumin and salt on a tray.",
+    "Roast 30–35 minutes, turning once, until the chicken is cooked and the sweet potato caramelised.",
+    "Serve with yoghurt, salsa verde on the side."] },
+
+{ id: "d19", meal: "dinner", name: "Turkey taco stuffed peppers", time: 45, heat: 2, main: "turkey", twice: true,
+  split: { p2: "5 halves", p1: "3 halves", share: 0.62 },
+  ing: [["turkeymince",280,"g"],["pepper",4,"pc"],["rice",60,"g"],["blackbean",120,"g"],["crushed",200,"g"],["onion",1,"pc"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["mozz",40,"g"],["oil",1,"tsp"]],
+  steps: ["Heat oven to 200 °C. Cook the rice.",
+    "Brown turkey with onion, cumin and chilli. Add tomatoes and beans and simmer 5 minutes. Stir in the rice.",
+    "Halve and seed the peppers, fill with the turkey mixture.",
+    "Cover with foil and bake 25 minutes, then uncover, add mozzarella and bake 10 more."] },
+
+{ id: "d20", meal: "dinner", name: "Chilli-lime chicken skewers with charred corn", time: 30, heat: 2, main: "chicken", season: "summer", side: true,
+  split: { p2: "3 skewers, 4 tortillas", p1: "2 skewers, 2 tortillas", share: 0.6 },
+  ing: [["chk",240,"g","cubed"],["pepper",1,"pc"],["redonion",1,"pc"],["lime",2,"pc"],["chilipw",1,"tsp"],["garlic",1,"clove"],["corn",200,"g"],["greek",80,"g"],["tortM",6,"pc"],["salsa",80,"g"],["oil",1,"tsp"]],
+  steps: ["Marinate the chicken in lime juice, chilli, garlic, oil and salt for 15 minutes.",
+    "Thread onto 5 skewers with pepper and red onion. Grill or pan-fry 10–12 minutes, turning.",
+    "Char the corn in a dry, very hot pan and mix with yoghurt, lime and chilli.",
+    "Serve with warm tortillas. Salsa on the side."] },
+
+{ id: "d21", meal: "dinner", name: "Huevos divorciados with refried beans", time: 15, heat: 2, main: "egg",
+  split: { p2: "4 eggs", p1: "3 eggs", share: 0.57 },
+  ing: [["egg",7,"pc"],["salsa",100,"g"],["salsaverde",100,"g"],["tortC",4,"pc"],["refried",200,"g"],["leipa",30,"g"],["cilantro",0.25,"bunch"],["oil",1,"tsp"]],
+  steps: ["Warm both salsas in small pans and the refried beans in a third.",
+    "Fry the eggs in the oil.",
+    "Lay eggs over warm tortillas, red salsa over half and green over the other half.",
+    "Spoon the beans between them and top with leipäjuusto and coriander."] },
+
+{ id: "d22", meal: "dinner", name: "Sopa de fideo with chicken", time: 30, heat: 1, main: "chicken", season: "winter",
+  ing: [["chk",220,"g"],["pasta",100,"g","broken into short pieces"],["crushed",400,"g"],["onion",0.5,"pc"],["garlic",2,"clove"],["stock",1,"pc"],["leipa",30,"g"],["avocado",0.5,"pc"],["lime",1,"pc"],["oil",1,"tsp"]],
+  steps: ["Toast the pasta in the oil until golden.",
+    "Blend tomatoes, onion and garlic and add to the pan with the stock cube and 900 ml water.",
+    "Add the chicken and simmer 15 minutes. Shred it back into the soup.",
+    "Serve with leipäjuusto, avocado and lime."] },
+
+{ id: "d23", meal: "dinner", name: "Steak tostadas with guacamole", time: 25, heat: 2, main: "beef", season: "summer",
+  split: { p2: "4 tostadas", p1: "2 tostadas with extra salad", share: 0.6 },
+  ing: [["sirloin",220,"g"],["tortC",6,"pc"],["avocado",1,"pc"],["lime",1,"pc"],["tomato",1,"pc"],["onion",0.25,"pc"],["refried",150,"g"],["lettuce",100,"g"],["pickjal",30,"g"],["oil",1,"tsp"]],
+  steps: ["Bake the tortillas at 220 °C for 6–8 minutes until crisp.",
+    "Season the steak and sear in the oil 3 minutes per side. Rest and slice thin.",
+    "Mash avocado with lime, chopped tomato, onion and salt.",
+    "Spread tostadas with refried beans, then guacamole, lettuce, steak and jalapeños."] },
+
+{ id: "d24", meal: "dinner", name: "Turkey albóndigas in salsa verde", time: 35, heat: 2, main: "turkey", twice: true,
+  split: { p2: "12 meatballs", p1: "8 meatballs", share: 0.6 },
+  ing: [["turkeymince",300,"g"],["oats",25,"g"],["egg",1,"pc"],["garlic",2,"clove"],["cumin",1,"tsp"],["salsaverde",300,"g"],["onion",0.5,"pc"],["rice",80,"g"],["cilantro",0.25,"bunch"],["oil",1,"tsp"]],
+  steps: ["Mix turkey, oats, egg, garlic, cumin and salt. Roll 20 meatballs.",
+    "Brown in the oil, then remove. Fry the onion in the same pan.",
+    "Add salsa verde and 100 ml water, return the meatballs, cover and simmer 15 minutes.",
+    "Serve over rice with coriander."] },
+
+// CHEAT DINNERS, v0.4 ----------------------------------------------------
+{ id: "c06", meal: "dinner", cheat: true, name: "Gringas al pastor", time: 40, heat: 3, main: "chicken", side: true,
+  split: { p2: "3½ gringas", p1: "2½ gringas", share: 0.58 },
+  ing: [["thigh",300,"g"],["ancho",2,"pc"],["chipotle",1,"tbsp"],["orange",1,"pc","juiced"],["vinegar",1,"tbsp"],["garlic",1,"clove"],["oregano",1,"tsp"],["pineapple",150,"g"],["tortL",6,"pc"],["mozz",120,"g"],["onion",0.5,"pc"],["cilantro",0.25,"bunch"],["salsa",100,"g"]],
+  steps: ["Blend soaked anchos with chipotle, orange juice, vinegar, garlic, oregano and salt. Marinate the chicken 20 minutes.",
+    "Fry the chicken over high heat until charred, then chop. Sear the pineapple.",
+    "Lay a tortilla in a dry pan, cover with mozzarella, chicken and pineapple, top with a second tortilla and toast both sides.",
+    "Cut into wedges. Onion, coriander and salsa on the side."] },
+
+{ id: "c07", meal: "dinner", cheat: true, name: "Loaded beef and cheese fries", time: 35, heat: 3, main: "beef",
+  ing: [["fries",750,"g"],["beef10",300,"g"],["cheddar",100,"g"],["cumin",1,"tsp"],["chilipw",1,"tsp"],["pickjal",50,"g"],["greek",100,"g"],["avocado",1,"pc"],["tomato",1,"pc"],["lime",1,"pc"],["cilantro",0.25,"bunch"]],
+  steps: ["Bake the fries as the pack says.",
+    "Brown the beef with cumin, chilli and salt.",
+    "Pile the fries on the tray, cover with beef and cheddar and return to the oven 3 minutes.",
+    "Top with jalapeños, yoghurt, diced avocado and tomato, lime and coriander. Divide by the split."] },
+
+{ id: "c08", meal: "dinner", cheat: true, name: "Crispy chicken tacos with chipotle mayo", time: 35, heat: 2, main: "chicken",
+  split: { p2: "5 tacos", p1: "3 tacos", share: 0.62 },
+  ing: [["chk",300,"g","in strips"],["flour",60,"g"],["egg",1,"pc"],["paprika",1,"tsp"],["oil",4,"tbsp"],["tortS",8,"pc"],["mayo",3,"tbsp"],["chipotle",1,"tbsp"],["cabbage",150,"g","shredded"],["lime",1,"pc"],["pickjal",30,"g"]],
+  steps: ["Season the flour with paprika and salt. Dip chicken strips in beaten egg, then flour.",
+    "Shallow-fry in the oil 3–4 minutes per side until crisp. Drain on paper.",
+    "Mix mayo with chipotle. Toss cabbage with lime and salt.",
+    "Fill warm tortillas with chicken, cabbage, chipotle mayo and jalapeños."] },
+
 ];
 
 // ---- Optional snacks and morning juice -----------------------------------
@@ -864,6 +1107,8 @@ var PRICES = {
   tortC:      { product: "Corn tortillas, 10 pcs", packs: [[10,"pc",3.29]], keeps: 10, freezes: true },
   bun:        { product: "Burger buns, 4 pcs", packs: [[4,"pc",1.99]], keeps: 4, freezes: true },
   bread:      { product: "Wholegrain sliced bread", packs: [[14,"pc",2.29]], keeps: 6, freezes: true },
+  roll:       { product: "Bread rolls, 6 pcs", packs: [[6,"pc",1.99]], keeps: 3, freezes: true },
+  flour:      { product: "Wheat flour", packs: [[2000,"g",1.29]], keeps: 365, freezes: false },
   rye:        { product: "Rye bread, sliced", packs: [[14,"pc",1.69]], keeps: 7, freezes: true },
   ricecake:   { product: "Rice cakes", packs: [[12,"pc",1.29]], keeps: 30, freezes: false },
   oats:       { product: "Oat flakes", packs: [[500,"g",0.99],[1000,"g",1.49]], keeps: 180, freezes: false },
@@ -888,6 +1133,8 @@ var PRICES = {
   beetroot:   { product: "Cooked beetroot", packs: [[500,"g",1.49]], keeps: 5, freezes: false },
 
   // Vegetables and fruit
+  potato:     { product: "Potatoes, 2 kg bag", packs: [[2000,"g",1.99]], keeps: 21, freezes: false },
+  cabbage:    { product: "White cabbage", loose: ["g",0.00129], keeps: 21, freezes: false },
   tomato:     { product: "Tomatoes", loose: ["pc",0.30], keeps: 7, freezes: false },
   onion:      { product: "Onions, 1 kg bag", packs: [[10,"pc",1.29]], keeps: 30, freezes: false },
   redonion:   { product: "Red onions", loose: ["pc",0.25], keeps: 21, freezes: false },
@@ -922,6 +1169,7 @@ var PRICES = {
   berries:    { product: "Frozen mixed berries", packs: [[1000,"g",4.49]], keeps: 120, freezes: true },
   mango:      { product: "Frozen mango", packs: [[1000,"g",4.49]], keeps: 120, freezes: true },
   lingon:     { product: "Frozen lingonberries", packs: [[500,"g",2.49]], keeps: 120, freezes: true },
+  peas:       { product: "Frozen peas", packs: [[500,"g",1.29]], keeps: 120, freezes: true },
   fries:      { product: "Oven fries", packs: [[750,"g",2.49]], keeps: 120, freezes: true },
 
   // Other
@@ -1017,17 +1265,26 @@ if (typeof module !== "undefined") module.exports = Pricing;
 <script>
 // ---- Rotation engine -----------------------------------------------------
 // Deterministic: the same date always gets the same meals (before swaps).
+// Each pick scores candidates on: time since last use (with hard repeat gaps),
+// variety of main protein, the day's protein balance, season, weekday budget,
+// and food waste (prefer using packs opened earlier in the same shopping week).
 var Engine = (function () {
   var D = (typeof module !== "undefined") ? require("./data.js") : null;
   var CATX = D ? D.CAT : CAT, RX = D ? D.RECIPES : RECIPES, S1 = D ? D.SNACKS1 : SNACKS1, S2 = D ? D.SNACKS2 : SNACKS2, JX = D ? D.JUICES : JUICES,
       PX = D ? D.PEOPLE : PEOPLE, SHARE = D ? D.DEFAULT_SHARE : DEFAULT_SHARE;
-
   var PR = (typeof module !== "undefined") ? require("./pricing.js") : (typeof Pricing !== "undefined" ? Pricing : null);
+  var PRICEX = (typeof module !== "undefined") ? require("./prices.js").PRICES : (typeof PRICES !== "undefined" ? PRICES : {});
+
   var EPOCH = Date.UTC(2025, 0, 6); // a Monday
   var DAY = 86400000;
+  // Minimum days between repeats.
+  var RULES = { breakfast: 7, weekendBreakfast: 10, lunch: 14, dinner: 18, cheat: 35 };
   // Protein the three meals should give two people together: both targets minus snack 1 each.
-  var RULES = { breakfast: 5, lunch: 9, dinner: 12, cheat: 3 }; // min days between repeats
   var MEAL_GOAL = PX.p1.protein + PX.p2.protein - 2 * 23;
+  // Season months (0 = January): summer May–August, winter November–March.
+  var SEASON = { summer: [4, 5, 6, 7], winter: [10, 11, 0, 1, 2] };
+  var W = { useLeftover: 3, newLeftover: 2, season: 8, offSeason: 15, budget: 0.6, protein: 0.4, variety: 8 };
+
   var byId = {}; RX.forEach(function (r) { byId[r.id] = r; });
 
   function grams(it) {
@@ -1058,63 +1315,164 @@ var Engine = (function () {
   var pools = {
     wkBreakfast: RX.filter(function (r) { return r.meal === "breakfast" && !r.weekend; }),
     allBreakfast: RX.filter(function (r) { return r.meal === "breakfast"; }),
-    wkndBreakfast: RX.filter(function (r) { return r.meal === "breakfast" && r.weekend; }),
     lunch: RX.filter(function (r) { return r.meal === "lunch"; }),
     dinner: RX.filter(function (r) { return r.meal === "dinner" && !r.cheat; }),
     cheat: RX.filter(function (r) { return r.cheat; })
   };
+  var avgDinnerC = pools.dinner.reduce(function (s, r) { return s + r.C; }, 0) / pools.dinner.length;
 
-  var plan = [], last = {}, rand = rng(20261018);
+  // Batch-cooked dinner (double portion) and the leftover lunch it becomes.
+  var batchCache = {}, leftCache = {};
+  function batchOf(r) {
+    if (!batchCache[r.id]) { var o = Object.create(r); o.batch = 2; o.C = r.C * 2; batchCache[r.id] = o; }
+    return batchCache[r.id];
+  }
+  function leftoverOf(r) {
+    if (!leftCache[r.id]) { var o = Object.create(r); o.leftover = true; o.batch = 0; o.C = 0; o.meal = "lunch"; o.time = 5; leftCache[r.id] = o; }
+    return leftCache[r.id];
+  }
 
-  function pick(pool, idx, gap, avoidMain, extra) {
+  // ---- Waste tracking within a shopping week (Monday to Sunday) ----------
+  var open = {}; // ingredient id -> amount left in opened packs, in the unit it is sold in
+  function perishable(id) { var p = PRICEX[id]; return p && !CATX[id].pantry && !PR.isStock(id) && !p.freezes; }
+  function wasteScore(ing, mult) {
+    if (!PR || !mult) return 0;
+    var s = 0;
+    ing.forEach(function (it) {
+      var id = it[0]; if (!perishable(id)) return;
+      var amt = PR.need(it) * mult; if (amt <= 0) return;
+      var have = open[id] || 0, use = Math.min(have, amt), rest = amt - use, up = PR.unitPrice(id);
+      s += use * up * W.useLeftover;
+      if (rest > 0) {
+        var res = PR.bestPacks(id, rest), keepF = PRICEX[id].keeps >= 10 ? 0.4 : 1;
+        if (!res.loose) s -= res.left * up * W.newLeftover * keepF;
+      }
+    });
+    return s;
+  }
+  function consume(ing, mult) {
+    if (!PR || !mult) return;
+    ing.forEach(function (it) {
+      var id = it[0]; if (!perishable(id)) return;
+      var amt = PR.need(it) * mult; if (amt <= 0) return;
+      var have = open[id] || 0;
+      if (have >= amt) { open[id] = have - amt; return; }
+      var res = PR.bestPacks(id, amt - have);
+      open[id] = res.loose ? 0 : res.left;
+    });
+  }
+
+  var plan = [], last = {}, rand = rng(20261018), weekJuices = null;
+
+  function pick(pool, idx, gap, opts) {
+    opts = opts || {};
     var best = null, bestScore = -Infinity;
     pool.forEach(function (r) {
       var since = last[r.id] == null ? 999 : idx - last[r.id];
       var score = Math.min(since, 60) + rand() * 6;
       if (since < gap) score -= 1000;
-      if (avoidMain && avoidMain.indexOf(r.main) >= 0) score -= 8;
-      if (extra) score += extra(r);
+      if (opts.avoidMain && opts.avoidMain.indexOf(r.main) >= 0) score -= W.variety;
+      if (r.season) score += SEASON[r.season].indexOf(opts.month) >= 0 ? W.season : -W.offSeason;
+      score += wasteScore(r.ing, (opts.mult ? opts.mult(r) : 1));
+      if (opts.extra) score += opts.extra(r);
       if (score > bestScore) { bestScore = score; best = r; }
     });
     last[best.id] = idx;
     return best;
   }
 
+  function pickExtra(pool, idx, tag, mult) {
+    var best = null, bestScore = -Infinity;
+    pool.forEach(function (s) {
+      var k = tag + s.id, since = last[k] == null ? 99 : idx - last[k];
+      var score = Math.min(since, 10) * 1.5 + rand() * 2 + wasteScore(s.ing, mult);
+      if (since < 2) score -= 100;
+      if (score > bestScore) { bestScore = score; best = s; }
+    });
+    last[tag + best.id] = idx;
+    return best;
+  }
+
   function extendTo(idx) {
     while (plan.length <= idx) {
-      var i = plan.length, dow = new Date(EPOCH + i * DAY).getUTCDay(); // 0 Sun..6 Sat
+      var i = plan.length, date = new Date(EPOCH + i * DAY), dow = date.getUTCDay(), month = date.getUTCMonth();
+      if (dow === 1) open = {}; // new shopping week
       var weekend = dow === 0 || dow === 6;
       var prev = plan[i - 1];
-      var b = weekend ? pick(pools.wkndBreakfast, i, 6) : pick(pools.wkBreakfast, i, RULES.breakfast);
-      var l = pick(pools.lunch, i, RULES.lunch, prev ? [prev.d.main] : null);
-      var d = dow === 6 ? pick(pools.cheat, i, RULES.cheat)
-                        : pick(pools.dinner, i, RULES.dinner, [l.main].concat(prev ? [prev.d.main] : []),
-                               function (r) { return -Math.abs(b.P + l.P + r.P - MEAL_GOAL) * 0.4; });
-      plan.push({ b: b, l: l, d: d });
+
+      var b = weekend
+        ? pick(pools.allBreakfast, i, RULES.weekendBreakfast, { month: month, extra: function (r) { return r.weekend ? 12 : 0; } })
+        : pick(pools.wkBreakfast, i, RULES.breakfast, { month: month });
+      consume(b.ing, 1);
+
+      // Yesterday's batch dinner becomes today's lunch.
+      var l, lAlt = null;
+      if (prev && prev.d.batch) {
+        l = leftoverOf(prev.dRaw);
+        lAlt = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: [prev.d.main] });
+      } else {
+        l = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: prev ? [prev.d.main] : null });
+        consume(l.ing, 1);
+      }
+
+      var d, dRaw;
+      if (dow === 6) { dRaw = d = pick(pools.cheat, i, RULES.cheat, { month: month }); consume(d.ing, 1); }
+      else {
+        // A batch dinner only when tomorrow is not Saturday (cheat day) and today's lunch was not already leftovers.
+        var canBatch = dow !== 5 && !l.leftover;
+        dRaw = pick(pools.dinner, i, RULES.dinner, {
+          month: month, avoidMain: [l.main].concat(prev ? [prev.d.main] : []),
+          mult: function (r) { return r.twice && canBatch ? 2 : 1; },
+          extra: function (r) {
+            var e = -Math.abs(b.P + l.P + r.P - MEAL_GOAL) * W.protein;
+            if (dow >= 1 && dow <= 4) e -= (r.C - avgDinnerC) * W.budget;
+            return e;
+          }
+        });
+        d = dRaw.twice && canBatch ? batchOf(dRaw) : dRaw;
+        consume(dRaw.ing, d.batch || 1);
+      }
+
+      // Two juices a week, alternating, so fresh herbs and beetroot get used up.
+      if (dow === 1 || !weekJuices) {
+        var ja = pickExtra(JX, i, "j:", 6), jb = pickExtra(JX.filter(function (j) { return j !== ja; }), i, "j:", 6);
+        weekJuices = [ja, jb];
+      }
+      var juice = weekJuices[i % 2];
+      consume(juice.ing, 2);
+      var s1 = pickExtra(S1, i, "s1:", 2); consume(s1.ing, 2);
+      var s2 = pickExtra(S2, i, "s2:", 2); consume(s2.ing, 2);
+
+      plan.push({ b: b, l: l, lAlt: lAlt, d: d, dRaw: dRaw, juice: juice, snacks: [s1, s2] });
     }
   }
 
   function idxOf(y, m, dd) { return Math.round((Date.UTC(y, m, dd) - EPOCH) / DAY); }
   function key(y, m, dd) { return y + "-" + String(m + 1).padStart(2, "0") + "-" + String(dd).padStart(2, "0"); }
-
-  // Two optional snacks a day, the same for both people: snack 1 from the protein
-  // pool (counted in daily totals), snack 2 from the fruit pool. Plus a morning juice.
-  function snacksFor(i) { return [S1[i % S1.length], S2[(i * 5 + 3) % S2.length]]; }
-  function juiceFor(i) { return JX[(i * 5) % JX.length]; }
+  function keyOfIdx(i) { var t = new Date(EPOCH + i * DAY); return key(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()); }
 
   // overrides: { "2026-10-18|b": "b03", ... }
   function day(y, m, dd, overrides) {
     var i = idxOf(y, m, dd);
     if (i < 0) return null;
-    extendTo(i);
+    extendTo(i + 1);
     var base = plan[i], k = key(y, m, dd), ov = overrides || {};
+    var prevK = i > 0 ? keyOfIdx(i - 1) : null, nextK = keyOfIdx(i + 1);
+
+    // Leftover lunch falls back to a normal lunch if yesterday's dinner was swapped.
+    var lunch = base.l;
+    if (base.l.leftover && prevK && ov[prevK + "|d"]) lunch = base.lAlt;
+    // Batch dinner goes back to a single batch if it was swapped or tomorrow's lunch was swapped.
+    var dinner = base.d;
+    if (base.d.batch && (ov[nextK + "|l"] || ov[k + "|d"])) dinner = base.dRaw;
+
     var meals = {
       b: byId[ov[k + "|b"]] || base.b,
-      l: byId[ov[k + "|l"]] || base.l,
-      d: byId[ov[k + "|d"]] || base.d
+      l: byId[ov[k + "|l"]] || lunch,
+      d: byId[ov[k + "|d"]] || dinner
     };
-    var sn = snacksFor(i);
-    var res = { key: k, meals: meals, base: base, snacks: sn, juice: juiceFor(i), people: {} };
+    var sn = base.snacks;
+    var res = { key: k, meals: meals, base: { b: base.b, l: lunch, d: base.dRaw }, snacks: sn, juice: base.juice, people: {} };
     ["p1", "p2"].forEach(function (p) {
       var mp = 0, mk = 0;
       ["b", "l", "d"].forEach(function (s) {
@@ -1170,6 +1528,17 @@ if (typeof module !== "undefined") module.exports = Engine;
   function same(a, b) { return a && b && a.y === b.y && a.m === b.m && a.d === b.d; }
   function before(a, b) { return Date.UTC(a.y, a.m, a.d) < Date.UTC(b.y, b.m, b.d); }
   function dayPlan(o) { return Engine.day(o.y, o.m, o.d, ov); }
+  function mealName(r) { return (r.leftover ? "Leftovers: " : "") + r.name; }
+  function mealTags(r) {
+    return (r.cheat ? '<span class="tag cheat">Cheat night</span>' : "") +
+      (r.leftover ? '<span class="tag swap">Leftovers</span>' : "") +
+      (r.batch === 2 ? '<span class="tag swap">Double batch</span>' : "");
+  }
+  function mealNote(r) {
+    if (r.leftover) return "Leftovers from yesterday's dinner, cooked as a double batch. Reheat and portion by the split.";
+    if (r.batch === 2) return "Cook a double batch: double every amount below. Half goes in the fridge for tomorrow's lunch. The cost shown covers both meals.";
+    return "";
+  }
   function eur(x, dec) { return (dec === 0 ? String(Math.round(x)) : x.toFixed(2).replace(".", ",")) + " €"; }
   function priceNote() { return '<p class="kcal price-note">Prices are estimates for ' + esc(PRICE_META.store) + ", not yet checked in the store. Updated " + esc(PRICE_META.updated) + ".</p>"; }
   function monthPlans(y, m) {
@@ -1273,7 +1642,7 @@ if (typeof module !== "undefined") module.exports = Engine;
         html += '<button class="' + cls + '" data-day="' + y + "," + m + "," + dd + '" aria-label="' + DOWS[dow(o)] + " " + dd + " " + MONTHS[m] + '">' +
           '<span class="dn">' + dd + (pl.cheat ? '<span class="ct" aria-label="Cheat night"></span>' : "") + "</span>" +
           '<span class="ml"><i>B</i>' + esc(pl.meals.b.name) + "</span>" +
-          '<span class="ml"><i>L</i>' + esc(pl.meals.l.name) + "</span>" +
+          '<span class="ml"><i>L</i>' + esc(mealName(pl.meals.l)) + "</span>" +
           '<span class="ml"><i>D</i>' + esc(pl.meals.d.name) + "</span>" +
           '<span class="dp">' + r0(pl.people.p1.p) + " · " + r0(pl.people.p2.p) + " g</span></button>";
       }
@@ -1287,7 +1656,7 @@ if (typeof module !== "undefined") module.exports = Engine;
       if (same(o, state.sel)) cls += " sel";
       if (before(o, TODAY)) cls += " past";
       list += '<button class="' + cls + '" data-day="' + o.y + "," + o.m + "," + o.d + '"><span class="ag-d"><b>' + o.d + "</b>" + DOWS[dow(o)].slice(0, 3) + (pl.cheat ? '<span class="ct" aria-label="Cheat night"></span>' : "") + "</span>" +
-        '<span class="ag-m"><span>' + esc(pl.meals.b.name) + "</span><span>" + esc(pl.meals.l.name) + "</span><span>" + esc(pl.meals.d.name) + "</span></span>" +
+        '<span class="ag-m"><span>' + esc(pl.meals.b.name) + "</span><span>" + esc(mealName(pl.meals.l)) + "</span><span>" + esc(pl.meals.d.name) + "</span></span>" +
         '<span class="ag-p">' + r0(pl.people.p1.p) + "<br>" + r0(pl.people.p2.p) + " g</span></button>";
     });
     $("months").className = "";
@@ -1302,8 +1671,8 @@ if (typeof module !== "undefined") module.exports = Engine;
     h += '<div class="costline"><span>Food cost today</span><b>≈ ' + eur(plan.cost) + "</b></div>";
     ["b", "l", "d"].forEach(function (s) {
       var r = plan.meals[s], sp = r.split || { p2: "about " + Math.round(r.share * 100) + " % of the pan", p1: "about " + Math.round((1 - r.share) * 100) + " % of the pan" };
-      h += '<article class="dmeal"><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + " · " + r.time + " min · ≈ " + eur(r.C) + "</div>" +
-        "<h3>" + esc(r.name) + "</h3>" +
+      h += '<article class="dmeal"><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + (r.leftover ? " · Leftovers" : "") + (r.batch === 2 ? " · Double batch" : "") + " · " + r.time + " min · ≈ " + eur(r.C) + "</div>" +
+        "<h3>" + esc(mealName(r)) + "</h3>" + (mealNote(r) ? '<div class="kcal">' + esc(mealNote(r)) + "</div>" : "") +
         '<div class="kcal">' + PEOPLE.p2.label + ": " + esc(sp.p2) + " (" + r0(r.P * r.share) + " g) · " + PEOPLE.p1.label + ": " + esc(sp.p1) + " (" + r0(r.P * (1 - r.share)) + " g) · " + heat(r.heat) + "</div>" +
         "<details><summary>Ingredients and directions</summary><ul class=\"ing\">" + r.ing.map(fmtIng).join("") + '</ul><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>" +
         '<div class="row"><button class="btn" data-recipe="' + s + '">Open recipe and swap</button></div></article>';
@@ -1392,8 +1761,8 @@ if (typeof module !== "undefined") module.exports = Engine;
     h += '<div class="meals">';
     ["b", "l", "d"].forEach(function (s) {
       var r = plan.meals[s], swapped = !!ov[plan.key + "|" + s];
-      h += '<button class="meal" data-recipe="' + s + '"><span class="slot">' + SLOT[s] + (r.cheat ? '<span class="tag cheat">Cheat night</span>' : "") + (swapped ? '<span class="tag swap">Swapped</span>' : "") + "</span>" +
-        '<span class="name">' + esc(r.name) + '</span><span class="go" aria-hidden="true">›</span>' +
+      h += '<button class="meal" data-recipe="' + s + '"><span class="slot">' + SLOT[s] + mealTags(r) + (swapped ? '<span class="tag swap">Swapped</span>' : "") + "</span>" +
+        '<span class="name">' + esc(mealName(r)) + '</span><span class="go" aria-hidden="true">›</span>' +
         '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P2 " + r0(r.P * r.share) + " g · P1 " + r0(r.P * (1 - r.share)) + " g · ≈ " + eur(r.C) + "</span></button>";
     });
     h += "</div>";
@@ -1424,8 +1793,9 @@ if (typeof module !== "undefined") module.exports = Engine;
     h += '<div class="split">' +
       '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>" + esc(sp.p2) + '</b><div class="kcal">' + r0(r.P * r.share) + " g protein · ≈ " + r0(r.K * r.share) + " kcal</div></div>" +
       '<div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>" + esc(sp.p1) + '</b><div class="kcal">' + r0(r.P * (1 - r.share)) + " g protein · ≈ " + r0(r.K * (1 - r.share)) + " kcal</div></div></div>";
+    if (mealNote(r)) h += '<div class="note-box">' + esc(mealNote(r)) + "</div>";
     h += '<div class="note-box">Heat ' + heat(r.heat) + " · " + (r.side ? "Serve the salsa or chilli on the side." : "Heat is cooked in; adjust the chilli to taste.") + (r.prep ? " Good for cooking ahead." : "") + "</div>";
-    h += '<div class="sec"><h3>Ingredients for two</h3><ul class="ing">' + r.ing.map(fmtIng).join("") + "</ul></div>";
+    h += '<div class="sec"><h3>Ingredients for two' + (r.batch === 2 ? ", one batch" : "") + '</h3><ul class="ing">' + r.ing.map(fmtIng).join("") + "</ul></div>";
     h += '<div class="sec"><h3>Directions</h3><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></div>";
     var alts = Engine.alternatives(s, o.y, o.m, o.d);
     h += '<div class="sec"><h3>Swap this meal</h3><div class="swap-row"><select id="swap-sel" aria-label="Choose another recipe">' +
@@ -1462,7 +1832,7 @@ if (typeof module !== "undefined") module.exports = Engine;
       need[it[0]] = (need[it[0]] || 0) + Pricing.need(it) * mult;
     }
     plans.forEach(function (pl) {
-      ["b", "l", "d"].forEach(function (s) { pl.meals[s].ing.forEach(function (it) { add(it, 1); }); });
+      ["b", "l", "d"].forEach(function (s) { var r = pl.meals[s], mult = r.leftover ? 0 : (r.batch || 1); if (mult) r.ing.forEach(function (it) { add(it, mult); }); });
       pl.snacks.forEach(function (sn) { sn.ing.forEach(function (it) { add(it, 2); }); }); // both snacks, for two
       pl.juice.ing.forEach(function (it) { add(it, 2); });
     });
