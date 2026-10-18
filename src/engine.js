@@ -137,7 +137,28 @@ var Engine = (function () {
     return best;
   }
 
+  // ---- Precomputed plan (built by build.py) --------------------------------
+  // One row per day: b|l|lAlt|d|batch|juice|s1|s2, with "~id" for a leftover lunch.
+  var TABLE = (typeof module === "undefined" && typeof PLAN_TABLE !== "undefined") ? PLAN_TABLE.split(";") : null;
+  var exById = {}; S1.concat(S2, JX).forEach(function (s) { exById[s.id] = s; });
+  function fromRow(row) {
+    var f = row.split("|"), dRaw = byId[f[3]];
+    var l = f[1].charAt(0) === "~" ? leftoverOf(byId[f[1].slice(1)]) : byId[f[1]];
+    return { b: byId[f[0]], l: l, lAlt: f[2] ? byId[f[2]] : null, d: f[4] === "1" ? batchOf(dRaw) : dRaw, dRaw: dRaw,
+      juice: exById[f[5]], snacks: [exById[f[6]], exById[f[7]]] };
+  }
+  function exportTable(n) {
+    extendTo(n);
+    return plan.slice(0, n + 1).map(function (p) {
+      return [p.b.id, p.l.leftover ? "~" + p.dRawPrev : p.l.id, p.lAlt ? p.lAlt.id : "", p.dRaw.id, p.d.batch ? 1 : 0, p.juice.id, p.snacks[0].id, p.snacks[1].id].join("|");
+    }).join(";");
+  }
+
   function extendTo(idx) {
+    if (TABLE) {
+      while (plan.length <= idx && plan.length < TABLE.length) plan.push(fromRow(TABLE[plan.length]));
+      return;
+    }
     while (plan.length <= idx) {
       var i = plan.length, date = new Date(EPOCH + i * DAY), dow = date.getUTCDay(), month = date.getUTCMonth();
       if (dow === 1) open = {}; // new shopping week
@@ -187,7 +208,7 @@ var Engine = (function () {
       var s1 = pickExtra(S1, i, "s1:", 2); consume(s1.ing, 2);
       var s2 = pickExtra(S2, i, "s2:", 2); consume(s2.ing, 2);
 
-      plan.push({ b: b, l: l, lAlt: lAlt, d: d, dRaw: dRaw, juice: juice, snacks: [s1, s2] });
+      plan.push({ b: b, l: l, lAlt: lAlt, d: d, dRaw: dRaw, dRawPrev: l.leftover ? prev.dRaw.id : null, juice: juice, snacks: [s1, s2] });
     }
   }
 
@@ -200,6 +221,7 @@ var Engine = (function () {
     var i = idxOf(y, m, dd);
     if (i < 0 || i > MAX_DAYS) return null;
     extendTo(i + 1);
+    if (!plan[i]) return null;
     var base = plan[i], k = key(y, m, dd), ov = overrides || {};
     var prevK = i > 0 ? keyOfIdx(i - 1) : null, nextK = keyOfIdx(i + 1);
 
@@ -239,6 +261,6 @@ var Engine = (function () {
 
   function inRange(y, m, dd) { var i = idxOf(y, m, dd); return i >= 0 && i <= MAX_DAYS; }
 
-  return { inRange: inRange, MAX_DAYS: MAX_DAYS, day: day, byId: byId, grams: grams, nutrOf: nutrOf, alternatives: alternatives, idxOf: idxOf, key: key, RULES: RULES, EPOCH: EPOCH };
+  return { exportTable: exportTable, inRange: inRange, MAX_DAYS: MAX_DAYS, day: day, byId: byId, grams: grams, nutrOf: nutrOf, alternatives: alternatives, idxOf: idxOf, key: key, RULES: RULES, EPOCH: EPOCH };
 })();
 if (typeof module !== "undefined") module.exports = Engine;
