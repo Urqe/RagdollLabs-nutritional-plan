@@ -72,7 +72,7 @@ button { font: inherit; color: inherit; }
 
 .wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; max-width: 1600px; margin: 0 auto;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
-@media (min-width: 1100px) { .wrap { grid-template-columns: minmax(0, 1fr) 420px; } }
+@media (min-width: 1100px) { .wrap { grid-template-columns: minmax(0, 1fr) 420px; } .wrap.wide { grid-template-columns: minmax(0, 1fr) min(620px, 48vw); } }
 
 .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .8rem; color: var(--muted); margin-bottom: 12px; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -324,6 +324,31 @@ button, .d, .dc, .ag, .meal { -webkit-tap-highlight-color: transparent; touch-ac
 .adv.waste { color: var(--chile); font-weight: 600; }
 .adv.freeze, .adv.keeps { color: var(--good); }
 .price-note { margin: 0; }
+.device { margin: 8px auto 24px; max-width: 640px; padding: 16px; border: 1px solid var(--line-soft); border-radius: var(--r); background: var(--surface); font-size: .88rem; }
+.device h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
+.device p { margin: 0 0 10px; }
+.device .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.device .btn { min-height: 44px; }
+.shopbtn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: .85rem; }
+.shopbtn svg { width: 18px; height: 18px; flex: none; }
+.zoom-btns .btn.shopbtn { width: auto; padding: 6px 12px; font-size: .85rem; white-space: nowrap; }
+.crumbs .short { display: none; }
+@media (max-width: 640px) { .crumbs .short { display: inline; } .crumbs .long { display: none; } }
+@media (max-width: 640px) { .shopbtn span { display: none; } .zoom-btns .btn.shopbtn { width: 40px; padding: 6px 0; justify-content: center; } }
+/* Touch screens: buttons at least 44 px tall (40 px wide for the round icon buttons). */
+@media (pointer: coarse) {
+  .zoom-btns .btn, .nav .btn { min-height: 44px; }
+  .zoom-btns .btn:not(.shopbtn), .nav .btn.icon, #prev, #next { min-width: 40px; }
+  .sheet-close { width: 44px; height: 44px; }
+  .xopen, .have-btn { min-height: 40px; }
+  .grid, .mgrid { grid-template-columns: 30px repeat(7, minmax(0, 1fr)); }
+  .wk { font-size: .74rem; min-height: 32px; }
+}
+@media (pointer: coarse) and (max-width: 400px) {
+  .brand .logo { width: 32px; height: 28px; }
+  .nav { gap: 4px; }
+  .nav .btn { padding-inline: 10px; }
+}
 </style>
 
 <header class="top">
@@ -344,6 +369,7 @@ button, .d, .dc, .ag, .meal { -webkit-tap-highlight-color: transparent; touch-ac
     <div class="zoombar">
       <nav class="crumbs" id="crumbs" aria-label="Calendar level"></nav>
       <div class="zoom-btns">
+        <button class="btn shopbtn" id="shop" aria-label="This week's shopping list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.2"/><circle cx="9" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></svg><span>This week</span></button>
         <button class="btn" id="zout" aria-label="Zoom out">−</button>
         <button class="btn" id="zin" aria-label="Zoom in">+</button>
       </div>
@@ -398,9 +424,15 @@ button, .d, .dc, .ag, .meal { -webkit-tap-highlight-color: transparent; touch-ac
   <!-- whiskers -->
   <path d="M58 62 L36 59 M58 64.5 L37 66 M78 62 L100 59 M78 64.5 L99 66" stroke="#fffdf8" stroke-width="1" stroke-linecap="round" opacity=".85"/>
 </g></svg><p><b>RagdollLabs</b>Mesa para dos · meal plan for two</p></footer>
+    <section class="device" aria-labelledby="dev-h">
+      <h2 id="dev-h">This device</h2>
+      <p>Swaps, ticked extras and shopping lists (first trip, ticks, "Have it") are saved in this browser only. To carry them to another phone, tablet or computer, export a file here and import it there. The file holds only those three things; importing replaces them on the other device.</p>
+      <div class="row"><button class="btn" id="export">Export plan</button><button class="btn" id="import">Import plan</button><input type="file" id="import-file" accept=".json,application/json" hidden></div>
+      <p class="kcal" id="dev-msg" role="status"></p>
+    </section>
   </main>
   <div class="backdrop" id="backdrop" hidden></div>
-  <aside class="panel" id="panel" aria-live="polite"></aside>
+  <aside class="panel" id="panel" aria-label="Details"></aside>
 </div>
 
 <script>
@@ -1872,19 +1904,45 @@ if (typeof module !== "undefined") module.exports = Engine;
   function todayObj() { var n = new Date(); return { y: n.getFullYear(), m: n.getMonth(), d: n.getDate() }; }
   var TODAY = todayObj();
   var state = { offset: 0, sel: { y: TODAY.y, m: TODAY.m, d: TODAY.d }, view: "day", prevView: "day", recipe: null, week: null, level: "year", focus: { y: TODAY.y, m: TODAY.m } };
-  var ov = {}, inc = { juice: true, s1: true, s2: true }, saveFailed = false;
-  try { ov = JSON.parse(localStorage.getItem("mpd-swaps") || "{}") || {}; } catch (e) { ov = {}; }
-  // Swaps: only "YYYY-MM-DD|b|l|d" keys with a known recipe id are kept.
-  Object.keys(ov).forEach(function (k) { if (!/^\d{4}-\d{2}-\d{2}\|[bld]$/.test(k) || typeof ov[k] !== "string" || !Engine.byId[ov[k]]) delete ov[k]; });
-  try { var ix = JSON.parse(localStorage.getItem("mpd-extras") || "null"); if (ix && typeof ix === "object") ["juice", "s1", "s2"].forEach(function (k) { if (typeof ix[k] === "boolean") inc[k] = ix[k]; }); } catch (e) {}
+  // Device state: swaps, ticked extras, shopping. Everything read from storage or from an
+  // imported file goes through the same checks; anything unexpected is dropped.
+  var ov = {}, inc = { juice: true, s1: true, s2: true }, shop = {}, saveFailed = false;
+  function obj(x) { return x && typeof x === "object" && !Array.isArray(x) ? x : null; }
+  function cleanSwaps(x) {
+    var out = {}; x = obj(x) || {};
+    Object.keys(x).forEach(function (k) { if (/^\d{4}-\d{2}-\d{2}\|[bld]$/.test(k) && typeof x[k] === "string" && Engine.byId[x[k]]) out[k] = x[k]; });
+    return out;
+  }
+  function cleanExtras(x) {
+    var out = { juice: true, s1: true, s2: true }; x = obj(x) || {};
+    ["juice", "s1", "s2"].forEach(function (k) { if (typeof x[k] === "boolean") out[k] = x[k]; });
+    return out;
+  }
+  function cleanShop(x) {
+    var out = {}; x = obj(x) || {};
+    Object.keys(x).forEach(function (wk) {
+      var w = obj(x[wk]); if (!/^\d{4}-\d{2}-\d{2}$/.test(wk) || !w) return;
+      var c = { start: [0, 1, 2].indexOf(w.start) >= 0 ? w.start : 0, tick: {}, have: {}, open: null };
+      ["tick", "have"].forEach(function (f) {
+        var m = obj(w[f]) || {};
+        Object.keys(m).forEach(function (ti) {
+          var ids = obj(m[ti]); if (!/^[012]$/.test(ti) || !ids) return;
+          Object.keys(ids).forEach(function (id) { if (CAT[id] && ids[id]) (c[f][ti] = c[f][ti] || {})[id] = 1; });
+        });
+      });
+      if (Array.isArray(w.open)) c.open = w.open.filter(function (n) { return n === 0 || n === 1 || n === 2; });
+      out[wk] = c;
+    });
+    return out;
+  }
+  function readStored(key) { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; } }
+  function loadState() { ov = cleanSwaps(readStored("mpd-swaps")); inc = cleanExtras(readStored("mpd-extras")); shop = cleanShop(readStored("mpd-shop")); }
+  loadState();
   function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); saveFailed = false; } catch (e) { saveFailed = true; } }
   function saveOv() { store("mpd-swaps", ov); planChanged(); }
   function saveInc() { store("mpd-extras", inc); planChanged(); }
   // Shopping state per week (Monday key): first trip made, ticked items, items already at home,
   // which trips are open. Kept for the last 10 weeks on this device.
-  var shop = {};
-  try { shop = JSON.parse(localStorage.getItem("mpd-shop") || "{}") || {}; } catch (e) { shop = {}; }
-  if (typeof shop !== "object" || Array.isArray(shop)) shop = {};
   function shopWeek(k) {
     var w = shop[k] = (shop[k] && typeof shop[k] === "object") ? shop[k] : {};
     w.start = [0, 1, 2].indexOf(w.start) >= 0 ? w.start : 0;
@@ -2013,7 +2071,12 @@ if (typeof module !== "undefined") module.exports = Engine;
   function renderMonths() {
     dropPrepared();
     var r = htmlFor(null), mEl = $("months");
+    // Keep keyboard focus on the same day, week or meal button when the calendar is redrawn.
+    var act = document.activeElement, sel = null;
+    if (mEl.contains(act)) ["data-day", "data-wk", "data-month", "data-recipe", "data-extra-open", "data-extra"].some(function (a) {
+      if (act.hasAttribute(a)) { sel = "[" + a + '="' + act.getAttribute(a) + '"]'; return true; } return false; });
     mEl.className = r.cls; mEl.innerHTML = r.html;
+    if (sel) { var el = mEl.querySelector(sel); if (el) { try { el.focus({ preventScroll: true }); } catch (e) {} } }
     renderChrome();
     prefetchNeighbours();
   }
@@ -2021,7 +2084,7 @@ if (typeof module !== "undefined") module.exports = Engine;
     $("cal").setAttribute("data-at", state.level);
     $("legend").innerHTML = LEGEND[state.level];
     var f = state.focus, s = state.sel, c = '<button data-level="year"' + (state.level === "year" ? ' aria-current="page"' : "") + ">Year</button>";
-    if (state.level !== "year") c += '<span class="sep">›</span><button data-level="month"' + (state.level === "month" ? ' aria-current="page"' : "") + ">" + MONTHS[f.m] + " " + f.y + "</button>";
+    if (state.level !== "year") c += '<span class="sep">›</span><button data-level="month"' + (state.level === "month" ? ' aria-current="page"' : "") + "><span class=\"long\">" + MONTHS[f.m] + '</span><span class="short">' + MONTHS[f.m].slice(0, 3) + "</span> " + f.y + "</button>";
     if (state.level === "day") c += '<span class="sep">›</span><button data-level="day" aria-current="page">' + DOWS[dow(s)].slice(0, 3) + " " + s.d + "</button>";
     $("crumbs").innerHTML = c;
     $("zout").disabled = state.level === "year"; $("zin").disabled = state.level === "day";
@@ -2085,7 +2148,7 @@ if (typeof module !== "undefined") module.exports = Engine;
       var r = plan.meals[s], sp = r.split || { p2: "about " + Math.round(r.share * 100) + " % of the pan", p1: "about " + Math.round((1 - r.share) * 100) + " % of the pan" };
       h += '<article class="dmeal"><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + (r.leftover ? " · Leftovers" : "") + (r.batch === 2 ? " · Double batch" : "") + " · " + r.time + " min · ≈ " + eur(r.C) + "</div>" +
         "<h3>" + esc(mealName(r)) + "</h3>" + (mealNote(r) ? '<div class="kcal">' + esc(mealNote(r)) + "</div>" : "") +
-        '<div class="kcal">' + PEOPLE.p2.label + ": " + esc(sp.p2) + " (" + r0(r.P * r.share) + " g) · " + PEOPLE.p1.label + ": " + esc(sp.p1) + " (" + r0(r.P * (1 - r.share)) + " g) · " + heat(r.heat) + "</div>" +
+        '<div class="kcal">' + PEOPLE.p1.label + ": " + esc(sp.p1) + " (" + r0(r.P * (1 - r.share)) + " g) · " + PEOPLE.p2.label + ": " + esc(sp.p2) + " (" + r0(r.P * r.share) + " g) · " + heat(r.heat) + "</div>" +
         (r.leftover
           ? '<details><summary>Reheat and serve</summary><ol class="steps">' + REHEAT.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>"
           : "<details><summary>Ingredients" + (r.batch === 2 ? " (double batch)" : "") + " and directions</summary><ul class=\"ing\">" + r.ing.map(function (it) { return fmtIng(it, r.batch || 1); }).join("") + '</ul><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>") +
@@ -2106,22 +2169,21 @@ if (typeof module !== "undefined") module.exports = Engine;
   function saveLevel() {
     var tok = state.level === "year" ? "year" : state.level === "month" ? "m" + state.focus.y + "-" + (state.focus.m + 1) : "d" + Engine.key(state.sel.y, state.sel.m, state.sel.d);
     try { history.replaceState(null, "", "#" + tok); } catch (e) {}
-    try { localStorage.setItem("mpd-level", tok); } catch (e) {}
   }
   function validDay(y, m, d) {
     if (m < 0 || m > 11 || d < 1 || d > new Date(Date.UTC(y, m + 1, 0)).getUTCDate()) return false;
     return Engine.inRange(y, m, d);
   }
   function readLevel() {
-    // A link (#m2026-10, #d2026-10-18) opens exactly that month or day. Without one,
-    // the level you last used is restored, but on today's month or day.
-    var tok = (location.hash || "").slice(1), fromLink = !!tok;
-    if (!tok) { try { tok = localStorage.getItem("mpd-level") || ""; } catch (e) {} }
+    // A link (#year, #m2026-10, #d2026-10-18) opens exactly that level. Without one, or
+    // with an invalid date, the app opens on today; an invalid month link opens today's month.
+    var tok = (location.hash || "").slice(1);
     var mm = /^m(\d{4})-(\d{1,2})$/.exec(tok), dm = /^d(\d{4})-(\d{2})-(\d{2})$/.exec(tok);
-    if (mm && fromLink && validDay(+mm[1], +mm[2] - 1, 1)) { state.level = "month"; state.focus = { y: +mm[1], m: +mm[2] - 1 }; }
-    else if (dm && fromLink && validDay(+dm[1], +dm[2] - 1, +dm[3])) { state.level = "day"; state.sel = { y: +dm[1], m: +dm[2] - 1, d: +dm[3] }; state.focus = { y: state.sel.y, m: state.sel.m }; }
-    else if (mm) state.level = "month";
-    else if (dm) state.level = "day";
+    state.level = "day";
+    if (tok === "year") state.level = "year";
+    else if (mm && validDay(+mm[1], +mm[2] - 1, 1)) { state.level = "month"; state.focus = { y: +mm[1], m: +mm[2] - 1 }; }
+    else if (dm && validDay(+dm[1], +dm[2] - 1, +dm[3])) { state.sel = { y: +dm[1], m: +dm[2] - 1, d: +dm[3] }; state.focus = { y: state.sel.y, m: state.sel.m }; }
+    else if (mm || /^m/.test(tok)) state.level = "month";
   }
   // ---- Views as layers ------------------------------------------------------
   // #months is the live view. Neighbouring pages and the level a pinch is heading to
@@ -2400,7 +2462,7 @@ if (typeof module !== "undefined") module.exports = Engine;
       var r = plan.meals[s], swapped = !!ov[plan.key + "|" + s];
       h += '<button class="meal" data-recipe="' + s + '"><span class="slot">' + SLOT[s] + mealTags(r) + (swapped ? '<span class="tag swap">Swapped</span>' : "") + "</span>" +
         '<span class="name">' + esc(mealName(r)) + '</span><span class="go" aria-hidden="true">›</span>' +
-        '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P2 " + r0(r.P * r.share) + " g · P1 " + r0(r.P * (1 - r.share)) + " g · ≈ " + eur(r.C) + "</span></button>";
+        '<span class="meta">' + r.time + " min · " + heat(r.heat) + " · P1 " + r0(r.P * (1 - r.share)) + " g · P2 " + r0(r.P * r.share) + " g · ≈ " + eur(r.C) + "</span></button>";
     });
     h += "</div>";
     h += extrasBlock(plan, "snacks");
@@ -2433,12 +2495,12 @@ if (typeof module !== "undefined") module.exports = Engine;
 
   function viewRecipe() {
     var o = state.sel, plan = dayPlan(o), s = state.recipe, r = plan.meals[s], k = plan.key + "|" + s;
-    var sp = r.split || { p2: "Larger portion, about " + Math.round(r.share * 100) + " % of the pan", p1: "About " + Math.round((1 - r.share) * 100) + " % of the pan" };
+    var sp = r.split || { p1: "About " + Math.round((1 - r.share) * 100) + " % of the pan", p2: "Larger portion, about " + Math.round(r.share * 100) + " % of the pan" };
     var h = '<div class="p-in"><div class="p-head"><button class="back" data-back>‹ ' + (state.prevView === "week" ? "Week " + isoWeek(o.y, o.m, o.d) : dateTitle(o)) + '</button><button class="sheet-close" data-close aria-label="Close">×</button></div>';
     h += '<div><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + (r.leftover ? " · Leftovers · 5 min · bought yesterday" : (r.batch === 2 ? " · Double batch" : "") + " · " + r.time + " min · serves 2 · ≈ " + eur(r.C)) + "</div><h2 class=\"p-title\">" + esc(mealName(r)) + "</h2></div>";
     h += '<div class="split">' +
-      '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>" + esc(sp.p2) + '</b><div class="kcal">' + r0(r.P * r.share) + " g protein · ≈ " + r0(r.K * r.share) + " kcal</div></div>" +
-      '<div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>" + esc(sp.p1) + '</b><div class="kcal">' + r0(r.P * (1 - r.share)) + " g protein · ≈ " + r0(r.K * (1 - r.share)) + " kcal</div></div></div>";
+      '<div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>" + esc(sp.p1) + '</b><div class="kcal">' + r0(r.P * (1 - r.share)) + " g protein · ≈ " + r0(r.K * (1 - r.share)) + " kcal</div></div>" +
+      '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>" + esc(sp.p2) + '</b><div class="kcal">' + r0(r.P * r.share) + " g protein · ≈ " + r0(r.K * r.share) + " kcal</div></div></div>";
     if (mealNote(r)) h += '<div class="note-box">' + esc(mealNote(r)) + "</div>";
     h += '<div class="note-box">Heat ' + heat(r.heat) + " · " + (r.side ? "Serve the salsa or chilli on the side." : "Heat is cooked in; adjust the chilli to taste.") + (r.prep ? " Good for cooking ahead." : "") + "</div>";
     var ingHtml = '<ul class="ing">' + r.ing.map(function (it) { return fmtIng(it, r.leftover ? 2 : (r.batch || 1)); }).join("") + "</ul>";
@@ -2610,8 +2672,14 @@ if (typeof module !== "undefined") module.exports = Engine;
     panelDirty = false;
     var p = $("panel");
     var keep = force === "keep" ? p.scrollTop : 0;
+    // Week and month summaries (tables, shopping) get a wider side panel on desktop.
+    var wide = mq.matches && (state.view === "week" || state.view === "month"), wrap = document.querySelector(".wrap");
+    if (wrap.classList.contains("wide") !== wide) { wrap.classList.toggle("wide", wide); dropPager(); dropPrepared(); }
+    // Keep keyboard focus in the panel when its content is replaced.
+    var act = document.activeElement, hadFocus = p.contains(act), fid = hadFocus && act.id;
     p.innerHTML = state.view === "recipe" ? viewRecipe() : state.view === "extra" ? viewExtra() : state.view === "week" ? viewWeek() : state.view === "month" ? viewMonth() : viewDay();
     p.scrollTop = keep;
+    if (hadFocus) focusIn(p, fid);
     var sel = $("swap-sel");
     if (sel) sel.addEventListener("change", function () {
       var o = state.sel, k = Engine.key(o.y, o.m, o.d) + "|" + state.recipe, base = dayPlan(o).base[state.recipe].id;
@@ -2629,15 +2697,65 @@ if (typeof module !== "undefined") module.exports = Engine;
 
   var mq = window.matchMedia("(min-width: 1100px)");
   function onBreakpoint() { if (state.level === "month") renderMonths(); }
+  // Crossing the desktop width (iPad rotation, Split View, window resize): the sheet becomes
+  // the side panel or the other way round. Reset the sheet, its screen-reader state and any
+  // pages laid out for the old width, then draw what belongs on the panel now.
+  function onLayout() {
+    var p = $("panel"), bd = $("backdrop");
+    p.classList.remove("open"); bd.hidden = true; clearTimeout(bdTimer);
+    if (mq.matches && state.level === "day" && state.view === "day") { state.view = "week"; state.week = mondayOf(state.sel); }
+    if (!mq.matches) document.querySelector(".wrap").classList.remove("wide");
+    sheetA11y(false);
+    dropPager(); dropPrepared(); renderMonths();
+    if (mq.matches) renderPanel(true); else panelDirty = true;
+  }
+  if (mq.addEventListener) mq.addEventListener("change", onLayout); else if (mq.addListener) mq.addListener(onLayout);
+  var lastW = window.innerWidth, resizeTimer = 0;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { if (window.innerWidth !== lastW) { lastW = window.innerWidth; dropPager(); dropPrepared(); } }, 150);
+  });
   if (window.matchMedia("(max-width: 640px)").addEventListener) window.matchMedia("(max-width: 640px)").addEventListener("change", onBreakpoint);
   var bdTimer = 0;
+  // Focus: the element with the given id, else the panel's back button or title.
+  function focusIn(p, id) {
+    var el = (id && document.getElementById(id)) || p.querySelector("[data-back]") || p.querySelector(".p-title, h2, h3");
+    if (!el) return;
+    if (!el.matches("button, select, input, a, [tabindex]")) el.setAttribute("tabindex", "-1");
+    try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+  }
+  // On phones and tablets the panel is a modal sheet: a dialog for screen readers, the page
+  // behind it inert while it is open, hidden while it is closed. On desktop it is a side panel.
+  var returnFocus = null;
+  function sheetA11y(open) {
+    var p = $("panel"), bg = [document.querySelector(".top"), document.querySelector("main")];
+    p.setAttribute("aria-label", "Details");
+    if (mq.matches) {
+      p.setAttribute("role", "region"); p.removeAttribute("aria-modal"); p.removeAttribute("aria-hidden"); p.inert = false;
+      bg.forEach(function (el) { el.inert = false; el.removeAttribute("aria-hidden"); });
+      return;
+    }
+    p.setAttribute("role", "dialog"); p.setAttribute("aria-modal", "true");
+    p.inert = !open; if (open) p.removeAttribute("aria-hidden"); else p.setAttribute("aria-hidden", "true");
+    bg.forEach(function (el) { el.inert = open; if (open) el.setAttribute("aria-hidden", "true"); else el.removeAttribute("aria-hidden"); });
+  }
   function openSheet(v) {
     if (mq.matches) return;
     var p = $("panel"), bd = $("backdrop");
     if (v && panelDirty) renderPanel(true);
     if (v === p.classList.contains("open")) return;
     clearTimeout(bdTimer);
+    if (v) returnFocus = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
     p.classList.toggle("open", v);
+    sheetA11y(v);
+    if (v) focusIn(p);
+    else {
+      // Back to where the sheet was opened from, or the selected day.
+      var s = state.sel, back = returnFocus && document.contains(returnFocus) && !p.contains(returnFocus) ? returnFocus
+        : document.querySelector('#months [data-day="' + s.y + "," + s.m + "," + s.d + '"]');
+      returnFocus = null;
+      if (back) { try { back.focus({ preventScroll: true }); } catch (e) {} }
+    }
     if (v) { bd.hidden = false; bd.style.opacity = "0"; void bd.offsetWidth; bd.style.opacity = ""; }
     else { bd.style.opacity = "0"; bdTimer = setTimeout(function () { bd.hidden = true; bd.style.opacity = ""; }, 300); }
   }
@@ -2761,6 +2879,49 @@ if (typeof module !== "undefined") module.exports = Engine;
   $("prev").addEventListener("click", function () { step(-1); });
   $("next").addEventListener("click", function () { step(1); });
   $("zin").addEventListener("click", function () { zoomIn(null); });
+  // ---- Moving the plan between devices -------------------------------------------
+  function devMsg(s) { $("dev-msg").textContent = s; }
+  $("export").addEventListener("click", function () {
+    var data = { app: "mesa-para-dos", kind: "device-plan", version: 1, exported: new Date().toISOString(), swaps: ov, extras: inc, shopping: shop };
+    var name = "mesa-para-dos-plan-" + Engine.key(TODAY.y, TODAY.m, TODAY.d) + ".json";
+    var blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
+    var file = null; try { file = new File([blob], name, { type: "application/json" }); } catch (e) {}
+    // Phones and tablets: the share sheet (AirDrop, Messages, Files). Elsewhere: a download.
+    if (file && navigator.canShare && navigator.canShare({ files: [file] }) && window.matchMedia("(pointer: coarse)").matches) {
+      navigator.share({ files: [file], title: "Mesa para dos plan" }).then(function () { devMsg("Plan shared."); }, function () {});
+      return;
+    }
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    devMsg("Saved " + name + ".");
+  });
+  $("import").addEventListener("click", function () { $("import-file").click(); });
+  $("import-file").addEventListener("change", function () {
+    var f = this.files && this.files[0], input = this; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var d = null; try { d = JSON.parse(rd.result); } catch (e) {}
+      input.value = "";
+      if (!d || d.app !== "mesa-para-dos" || d.kind !== "device-plan") { devMsg("That file is not a Mesa para dos plan export. Nothing was changed."); return; }
+      ov = cleanSwaps(d.swaps); inc = cleanExtras(d.extras); shop = cleanShop(d.shopping);
+      store("mpd-swaps", ov); store("mpd-extras", inc); store("mpd-shop", shop);
+      planChanged();
+      var n = Object.keys(ov).length, w = Object.keys(shop).length;
+      devMsg(saveFailed ? "Imported, but this browser is not saving: the plan lasts until the page is reloaded." : "Imported " + n + (n === 1 ? " swap" : " swaps") + ", the extras setting and shopping lists for " + w + (w === 1 ? " week." : " weeks."));
+    };
+    rd.readAsText(f);
+  });
+  // Another tab of the app on this device changed something: follow it.
+  window.addEventListener("storage", function (e) {
+    if (["mpd-swaps", "mpd-extras", "mpd-shop"].indexOf(e.key) < 0) return;
+    loadState(); planChanged();
+  });
+
+  // This week's shopping: the week panel for today's week, from any level.
+  $("shop").addEventListener("click", function () {
+    var now = todayObj(); state.week = mondayOf(now); state.view = "week";
+    panelDirty = true; if (mq.matches) renderPanel(); openSheet(true);
+  });
   $("zout").addEventListener("click", function () { zoomOut(); });
   $("today").addEventListener("click", function () {
     state.offset = 0; state.sel = { y: TODAY.y, m: TODAY.m, d: TODAY.d }; state.focus = { y: TODAY.y, m: TODAY.m };
@@ -2884,6 +3045,8 @@ if (typeof module !== "undefined") module.exports = Engine;
   document.addEventListener("keydown", function (e) {
     var tag = (e.target.tagName || "").toLowerCase();
     if (busy || tag === "select" || tag === "input" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) return;
+    // Calendar shortcuts only act on the calendar: not while the sheet is open or focus is in the panel.
+    if ($("panel").contains(e.target) || (!mq.matches && $("panel").classList.contains("open"))) return;
     if (e.key === "+" || e.key === "=") { e.preventDefault(); zoomIn(null); }
     else if (e.key === "-" || e.key === "_") { e.preventDefault(); zoomOut(); }
     else if (e.key === "ArrowLeft" && state.level !== "year") { e.preventDefault(); step(-1); }
@@ -2928,7 +3091,8 @@ if (typeof module !== "undefined") module.exports = Engine;
   setInterval(checkDate, 60000);
 
   readLevel();
-  if (location.hash || state.level !== "year") saveLevel(); // correct an invalid link in the address bar
+  saveLevel(); // show the level in the address bar, and correct an invalid link
+  sheetA11y(false);
   if (state.level === "day" && mq.matches) { state.view = "week"; state.week = mondayOf(state.sel); }
   renderMonths(); renderPanel();
   if (state.level === "year") requestAnimationFrame(centerNow);
