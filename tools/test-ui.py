@@ -304,6 +304,64 @@ async def plan_suite(browser):
     await page.close()
 
 
+async def cook_shop_suite(browser):
+    """v0.10: extras recipes, batch amounts, leftovers, shopping ticks, have-it, first trip, copy."""
+    ctx = await browser.new_context(viewport={"width": 1400, "height": 900}, permissions=["clipboard-read", "clipboard-write"])
+    page = await ctx.new_page()
+    errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    await open_page(page, "#d2026-10-19")
+    await page.evaluate("['mpd-swaps','mpd-extras','mpd-shop'].forEach(k => localStorage.removeItem(k))")
+    await open_page(page, "#d2026-10-19")
+    await page.wait_for_timeout(400)
+    num = "s => parseFloat(s.replace(/[^0-9,.]/g, '').replace(',', '.'))"
+
+    # Juice recipe opens with ingredients for two and directions.
+    await page.click('.dbig [data-extra-open="juice"]'); await page.wait_for_timeout(300)
+    ex = await page.evaluate("[document.querySelector('#panel .p-title').textContent, document.querySelectorAll('#panel .ing li').length, document.querySelectorAll('#panel .steps li').length]")
+    check("cook: juice opens with ingredients and directions", ex[1] >= 2 and ex[2] >= 1, str(ex))
+
+    # Double-batch dinner shows doubled amounts (chicken thighs 280 g per batch -> 560 g).
+    await page.click('.dbig [data-recipe="d"]'); await page.wait_for_timeout(300)
+    batch = await page.evaluate("[...document.querySelectorAll('#panel .sec h3')].map(h => h.textContent).join(' | ') + ' || ' + document.querySelector('#panel .ing li').textContent")
+    check("cook: double-batch dinner lists doubled amounts", "double batch" in batch and "560 g" in batch, batch[:160])
+
+    # Leftover lunch leads with reheating; yesterday's recipe is folded below.
+    await page.keyboard.press("ArrowRight"); await page.wait_for_timeout(600)
+    await page.click('.dbig [data-recipe="l"]'); await page.wait_for_timeout(300)
+    first = await page.evaluate("document.querySelector('#panel .sec h3').textContent")
+    folded = await page.evaluate("!!document.querySelector('#panel details.orig:not([open])')")
+    check("cook: leftover lunch starts with reheat and serve", first == "Reheat and serve" and folded, first)
+
+    # Shopping: tick, have it, first trip, copy.
+    await open_page(page, "#d2026-10-19"); await page.reload(); await page.wait_for_timeout(500)
+    total = lambda: page.evaluate("(" + num + ")(document.querySelector('#panel .shop .costline b').textContent)")
+    t0 = await total()
+    box = '#panel details.trip[open] [data-tick]'
+    await page.click(box); await page.wait_for_timeout(150)
+    cnt = await page.evaluate("document.querySelector('#panel details.trip[open] [data-count]').textContent")
+    stored = await page.evaluate("JSON.stringify(JSON.parse(localStorage.getItem('mpd-shop'))['2026-10-19'].tick)")
+    check("shop: ticking an item counts it and saves it", cnt.startswith("1 of") and stored != "{}", f"{cnt} {stored}")
+    price = await page.evaluate("(" + num + ")(document.querySelector('#panel details.trip[open] li.item .buy').childNodes[2].textContent)")
+    await page.click('#panel details.trip[open] [data-have]'); await page.wait_for_timeout(300)
+    t1 = await total()
+    home = await page.evaluate("document.querySelector('#panel details.trip[open] li.item').classList.contains('home')")
+    check("shop: 'Have it' takes the item off the trip and the total", home and abs((t0 - t1) - price) < 0.02, f"{t0} -> {t1}, item {price}")
+    await page.click('#panel details.trip[open] [data-copy]'); await page.wait_for_timeout(200)
+    clip = await page.evaluate("navigator.clipboard.readText()")
+    check("shop: copied trip has Finnish names and a check-at-home list", "CHECK AT HOME" in clip and " (" in clip.split("\n")[2] and "- Chicken breast fillets (" not in clip, clip[:200].replace("\n", " / "))
+    await page.select_option('#panel [data-shop-start]', "1"); await page.wait_for_timeout(300)
+    skipped = await page.evaluate("[document.querySelectorAll('#panel .trip.skipped').length, document.querySelectorAll('#panel details.trip').length]")
+    t2 = await total()
+    check("shop: starting on Wednesday skips trip 1", skipped == [1, 2] and t2 < t1, f"{skipped}, {t1} -> {t2}")
+    await page.reload(); await page.wait_for_timeout(500)
+    kept = await page.evaluate("document.querySelector('#panel [data-shop-start]').value")
+    check("shop: first trip is remembered for the week", kept == "1", kept)
+    await page.evaluate("['mpd-swaps','mpd-extras','mpd-shop'].forEach(k => localStorage.removeItem(k))")
+    check("cook/shop: no script errors", not errors, "; ".join(errors[:2]))
+    await ctx.close()
+
+
 async def main():
     build_suite()
     async with async_playwright() as p:
@@ -312,6 +370,7 @@ async def main():
             await touch_suite(browser, name, w, h)
         await desktop_suite(browser)
         await plan_suite(browser)
+        await cook_shop_suite(browser)
         await link_suite(browser)
         await perf_suite(browser, 1, 17)
         await perf_suite(browser, 2, 34)

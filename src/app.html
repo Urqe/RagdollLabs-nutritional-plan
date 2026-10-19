@@ -155,6 +155,10 @@ button { font: inherit; color: inherit; }
 .snacks ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
 .xtra { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; padding: 4px 0; }
 .xtra input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--cobalt); }
+.xrow { display: flex; gap: 8px; align-items: flex-start; }
+.xrow .xtra { flex: 1; min-width: 0; }
+.xopen { flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--cobalt); border-radius: 999px; padding: 8px 12px; font: inherit; font-size: .8rem; cursor: pointer; min-height: 36px; }
+details.orig > summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
 
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .split .person b { display: block; font-size: .95rem; }
@@ -296,6 +300,21 @@ button, .d, .dc, .ag, .meal { -webkit-tap-highlight-color: transparent; touch-ac
 .trip-body { padding: 0 14px 12px; }
 .trip-tools { display: flex; justify-content: flex-end; }
 .shop .have { font-size: .8rem; color: var(--muted); margin: 8px 0 0; }
+.shop li.item { align-items: flex-start; gap: 10px; }
+.shop .tick { flex: none; padding-top: 2px; }
+.shop .tick input { width: 22px; height: 22px; margin: 0; accent-color: var(--good); }
+.shop .nm { display: block; }
+.shop .fi { display: block; font-size: .74rem; color: var(--muted); font-style: italic; }
+.shop li.got .nm, .shop li.home .nm { text-decoration: line-through; color: var(--muted); }
+.shop li.home { opacity: .7; }
+.shop .have-btn { display: block; margin: 6px 0 0 auto; font-family: var(--f-body); font-size: .74rem; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 10px; min-height: 32px; cursor: pointer; }
+.shop .have-btn[aria-pressed="true"] { color: var(--cobalt); border-color: var(--cobalt); }
+.trip-tools { align-items: center; gap: 10px; }
+.trip-tools .t-count { flex: 1; font-size: .8rem; color: var(--muted); }
+.trip.skipped { display: flex; justify-content: space-between; padding: 12px 14px; opacity: .6; font-size: .9rem; }
+.shop .start { font-size: .8rem; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.shop .start select { font: inherit; font-size: .8rem; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.costline small { display: block; font-size: .72rem; color: var(--muted); font-weight: 400; }
 .shop .have.freeze ul { margin: 4px 0 0; }
 .shop .have.freeze li { display: block; border: 0; padding: 2px 0; font-size: .8rem; }
 .shop .have.freeze li > span { font-family: inherit; font-size: inherit; white-space: normal; }
@@ -421,6 +440,19 @@ performance.mark && performance.mark("app-start");
   function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); saveFailed = false; } catch (e) { saveFailed = true; } }
   function saveOv() { store("mpd-swaps", ov); planChanged(); }
   function saveInc() { store("mpd-extras", inc); planChanged(); }
+  // Shopping state per week (Monday key): first trip made, ticked items, items already at home,
+  // which trips are open. Kept for the last 10 weeks on this device.
+  var shop = {};
+  try { shop = JSON.parse(localStorage.getItem("mpd-shop") || "{}") || {}; } catch (e) { shop = {}; }
+  if (typeof shop !== "object" || Array.isArray(shop)) shop = {};
+  function shopWeek(k) {
+    var w = shop[k] = (shop[k] && typeof shop[k] === "object") ? shop[k] : {};
+    w.start = [0, 1, 2].indexOf(w.start) >= 0 ? w.start : 0;
+    ["tick", "have"].forEach(function (f) { if (!w[f] || typeof w[f] !== "object") w[f] = {}; });
+    if (!Array.isArray(w.open)) w.open = null;
+    return w;
+  }
+  function saveShop() { var ks = Object.keys(shop).sort(); while (ks.length > 10) delete shop[ks.shift()]; store("mpd-shop", shop); }
   // Anything that changes the plan: drop cached days, prepared neighbour pages and zoom
   // layers, then redraw what is on screen.
   function planChanged() { planCache = {}; dropPager(); renderMonths(); renderPanel(); }
@@ -457,10 +489,14 @@ performance.mark && performance.mark("app-start");
       (r.batch === 2 ? '<span class="tag swap">Double batch</span>' : "");
   }
   function mealNote(r) {
-    if (r.leftover) return "Leftovers from yesterday's dinner, cooked as a double batch. Reheat and portion by the split.";
-    if (r.batch === 2) return "Cook a double batch: double every amount below. Half goes in the fridge for tomorrow's lunch. The cost shown covers both meals.";
+    if (r.leftover) return "Leftovers from yesterday's dinner, cooked as a double batch.";
+    if (r.batch === 2) return "Double batch: the amounts below cover tonight and tomorrow's lunch. Eat half tonight, split as shown. Cool the other half and put it in the fridge within 2 hours. The cost covers both meals.";
     return "";
   }
+  var REHEAT = ["Take yesterday's second half out of the fridge.",
+    "Reheat in a covered pan over medium heat with a splash of water, or in the microwave, stirring halfway, until piping hot all the way through (3–5 minutes).",
+    "Make any fresh toppings now (salsa, herbs, lime, yoghurt) and split by the portions above.",
+    "Eat within 2 days of cooking. Don't reheat the same portion twice."];
   function eur(x, dec) { return (dec === 0 ? String(Math.round(x)) : x.toFixed(2).replace(".", ",")) + " €"; }
   function priceNote() { return '<p class="kcal price-note">Prices are estimates based on ' + esc(PRICE_META.basis) + ". Updated " + esc(PRICE_META.updated) + ".</p>"; }
   function monthPlans(y, m) {
@@ -609,7 +645,9 @@ performance.mark && performance.mark("app-start");
       h += '<article class="dmeal"><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + (r.leftover ? " · Leftovers" : "") + (r.batch === 2 ? " · Double batch" : "") + " · " + r.time + " min · ≈ " + eur(r.C) + "</div>" +
         "<h3>" + esc(mealName(r)) + "</h3>" + (mealNote(r) ? '<div class="kcal">' + esc(mealNote(r)) + "</div>" : "") +
         '<div class="kcal">' + PEOPLE.p2.label + ": " + esc(sp.p2) + " (" + r0(r.P * r.share) + " g) · " + PEOPLE.p1.label + ": " + esc(sp.p1) + " (" + r0(r.P * (1 - r.share)) + " g) · " + heat(r.heat) + "</div>" +
-        "<details><summary>Ingredients and directions</summary><ul class=\"ing\">" + r.ing.map(fmtIng).join("") + '</ul><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>" +
+        (r.leftover
+          ? '<details><summary>Reheat and serve</summary><ol class="steps">' + REHEAT.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>"
+          : "<details><summary>Ingredients" + (r.batch === 2 ? " (double batch)" : "") + " and directions</summary><ul class=\"ing\">" + r.ing.map(function (it) { return fmtIng(it, r.batch || 1); }).join("") + '</ul><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>") +
         '<div class="row"><button class="btn" data-recipe="' + s + '">Open recipe and swap</button></div></article>';
     });
     h += extrasBlock(plan, "dmeal snacks") +
@@ -900,11 +938,12 @@ performance.mark && performance.mark("app-start");
   }
   function dateTitle(o) { return DOWS[dow(o)] + " " + o.d + " " + MONTHS[o.m]; }
   function extrasBlock(plan, cls) {
-    var items = [["juice", "Morning juice", plan.juice, "Blend with ½ cup water and ice"], ["s1", "Optional snack 1", plan.snacks[0]], ["s2", "Optional snack 2", plan.snacks[1]]];
+    var items = [["juice", "Morning juice", plan.juice], ["s1", "Optional snack 1", plan.snacks[0]], ["s2", "Optional snack 2", plan.snacks[1]]];
     return '<div class="' + cls + '"><h3>Optional extras</h3><ul class="xtras">' + items.map(function (x) {
-      var it = x[2], desc = x[3] || it.desc;
-      return '<li><label class="xtra"><input type="checkbox" data-extra="' + x[0] + '"' + (inc[x[0]] ? " checked" : "") + '><span><b>' + x[1] + "</b> · " + esc(it.name) +
-        ' <span class="kcal">' + (desc ? esc(desc) + " · " : "") + it.p + " g protein, ≈ " + it.k + " kcal each · ≈ " + eur(it.C) + " for two</span></span></label></li>";
+      var it = x[2];
+      return '<li class="xrow"><label class="xtra"><input type="checkbox" data-extra="' + x[0] + '"' + (inc[x[0]] ? " checked" : "") + '><span><b>' + x[1] + "</b> · " + esc(it.name) +
+        ' <span class="kcal">' + it.p + " g protein, ≈ " + it.k + " kcal each · ≈ " + eur(it.C) + " for two</span></span></label>" +
+        '<button class="xopen" data-extra-open="' + x[0] + '" aria-label="' + x[1] + ' recipe">Recipe ›</button></li>';
     }).join("") + '</ul><p class="kcal">Ticked extras count in protein, calories, cost and the shopping list on every day. Saved on this device.</p></div>';
   }
 
@@ -928,8 +967,9 @@ performance.mark && performance.mark("app-start");
     return h + priceNote() + "</div>";
   }
 
-  function fmtIng(it) {
-    var c = CAT[it[0]], a = it[1], u = it[2], amt;
+  function fmtIng(it, mult) {
+    var c = CAT[it[0]], a = it[1] * (mult || 1), u = it[2], amt;
+    if (u === "g" || u === "ml") a = Math.round(a);
     if (u === "g" || u === "ml") amt = a >= 1000 ? (a / 1000).toString().replace(".", ",") + (u === "g" ? " kg" : " l") : a + " " + u;
     else if (u === "pc") amt = frac(a);
     else if (u === "clove") amt = frac(a) + (a > 1 ? " cloves" : " clove");
@@ -938,18 +978,37 @@ performance.mark && performance.mark("app-start");
     return '<li><span class="amt">' + amt + "</span><span>" + esc(c.n) + (it[3] ? ' <span class="note">· ' + esc(it[3]) + "</span>" : "") + '<br><span class="fi">' + esc(c.fi) + "</span></span></li>";
   }
 
+  function viewExtra() {
+    var o = state.sel, plan = dayPlan(o), k = state.extra;
+    var x = k === "juice" ? plan.juice : plan.snacks[k === "s1" ? 0 : 1], label = k === "juice" ? "Morning juice" : k === "s1" ? "Optional snack 1" : "Optional snack 2";
+    var h = '<div class="p-in"><div class="p-head"><button class="back" data-back>‹ ' + (state.prevView === "week" ? "Week " + isoWeek(o.y, o.m, o.d) : dateTitle(o)) + '</button><button class="sheet-close" data-close aria-label="Close">×</button></div>';
+    h += '<div><div class="eyebrow">' + label + " · " + (inc[k] ? "counted in the plan" : "not counted (unticked)") + " · ≈ " + eur(x.C) + " for two</div><h2 class=\"p-title\">" + esc(x.name) + "</h2></div>";
+    h += '<div class="split"><div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>One serving</b><div class=\"kcal\">" + x.p + " g protein · ≈ " + x.k + " kcal</div></div>" +
+      '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>One serving</b><div class=\"kcal\">" + x.p + " g protein · ≈ " + x.k + " kcal</div></div></div>";
+    h += '<div class="sec"><h3>Ingredients for two</h3><ul class="ing">' + x.ing.map(function (it) { return fmtIng(it, 2); }).join("") + "</ul></div>";
+    h += '<div class="sec"><h3>Directions</h3><ol class="steps">' + x.steps.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + '</ol><p class="kcal">Amounts in the directions are for one serving; make two.</p></div>';
+    return h + "</div>";
+  }
+
   function viewRecipe() {
     var o = state.sel, plan = dayPlan(o), s = state.recipe, r = plan.meals[s], k = plan.key + "|" + s;
     var sp = r.split || { p2: "Larger portion, about " + Math.round(r.share * 100) + " % of the pan", p1: "About " + Math.round((1 - r.share) * 100) + " % of the pan" };
     var h = '<div class="p-in"><div class="p-head"><button class="back" data-back>‹ ' + (state.prevView === "week" ? "Week " + isoWeek(o.y, o.m, o.d) : dateTitle(o)) + '</button><button class="sheet-close" data-close aria-label="Close">×</button></div>';
-    h += '<div><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + " · " + r.time + " min · serves 2 · ≈ " + eur(r.C) + "</div><h2 class=\"p-title\">" + esc(r.name) + "</h2></div>";
+    h += '<div><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + (r.leftover ? " · Leftovers · 5 min · bought yesterday" : (r.batch === 2 ? " · Double batch" : "") + " · " + r.time + " min · serves 2 · ≈ " + eur(r.C)) + "</div><h2 class=\"p-title\">" + esc(mealName(r)) + "</h2></div>";
     h += '<div class="split">' +
       '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>" + esc(sp.p2) + '</b><div class="kcal">' + r0(r.P * r.share) + " g protein · ≈ " + r0(r.K * r.share) + " kcal</div></div>" +
       '<div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>" + esc(sp.p1) + '</b><div class="kcal">' + r0(r.P * (1 - r.share)) + " g protein · ≈ " + r0(r.K * (1 - r.share)) + " kcal</div></div></div>";
     if (mealNote(r)) h += '<div class="note-box">' + esc(mealNote(r)) + "</div>";
     h += '<div class="note-box">Heat ' + heat(r.heat) + " · " + (r.side ? "Serve the salsa or chilli on the side." : "Heat is cooked in; adjust the chilli to taste.") + (r.prep ? " Good for cooking ahead." : "") + "</div>";
-    h += '<div class="sec"><h3>Ingredients for two' + (r.batch === 2 ? ", one batch" : "") + '</h3><ul class="ing">' + r.ing.map(fmtIng).join("") + "</ul></div>";
-    h += '<div class="sec"><h3>Directions</h3><ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></div>";
+    var ingHtml = '<ul class="ing">' + r.ing.map(function (it) { return fmtIng(it, r.leftover ? 2 : (r.batch || 1)); }).join("") + "</ul>";
+    var stepsHtml = '<ol class="steps">' + r.steps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol>";
+    if (r.leftover) {
+      h += '<div class="sec"><h3>Reheat and serve</h3><ol class="steps">' + REHEAT.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></div>";
+      h += '<details class="sec orig"><summary>Yesterday\'s recipe (double batch)</summary><h3>Ingredients</h3>' + ingHtml + "<h3>Directions</h3>" + stepsHtml + "</details>";
+    } else {
+      h += '<div class="sec"><h3>Ingredients for two' + (r.batch === 2 ? ", double batch (tonight and tomorrow's lunch)" : "") + "</h3>" + ingHtml + "</div>";
+      h += '<div class="sec"><h3>Directions</h3>' + stepsHtml + "</div>";
+    }
     var alts = Engine.alternatives(s, o.y, o.m, o.d), base = plan.base[s], opts = [];
     // A leftover lunch is not in the lunch list, so it gets its own entry at the top.
     if (base.leftover) opts.push('<option value="' + base.id + '"' + (r === base ? " selected" : "") + ">" + esc(mealName(base)) + " (plan)</option>");
@@ -988,52 +1047,73 @@ performance.mark && performance.mark("app-start");
     h += '<p class="kcal">Targets: ' + PEOPLE.p1.label + " " + PEOPLE.p1.protein + " g, " + PEOPLE.p2.label + " " + PEOPLE.p2.protein + " g protein a day. Calories are estimates from the recipe weights.</p>";
 
     // shopping list, split into three trips: Mon–Tue, Wed–Thu, Fri–Sun
-    var plan = Pricing.shoppingWeek(days.map(dayPlan)), stockNeed = plan.stockNeed;
+    var wkKey = Engine.key(mon.y, mon.m, mon.d), sw = shopWeek(wkKey);
+    var plan = Pricing.shoppingWeek(days.map(dayPlan), sw.start), stockNeed = plan.stockNeed;
     var order = ["Meat", "Dairy & eggs", "Vegetables & fruit", "Bread & grains", "Tins & jars", "Frozen", "Other"];
-    var total = plan.total;
-    var today = new Date(), tk = Engine.key(today.getFullYear(), today.getMonth(), today.getDate()), openTrip = 0, TRIPS = Pricing.TRIPS;
-    plan.trips.forEach(function (tr, ti) { var last = days[tr.days[tr.days.length - 1]]; if (Engine.key(last.y, last.m, last.d) < tk) openTrip = Math.min(ti + 1, TRIPS.length - 1); });
+    var today = new Date(), tk = Engine.key(today.getFullYear(), today.getMonth(), today.getDate()), openTrip = sw.start, TRIPS = Pricing.TRIPS;
+    plan.trips.forEach(function (tr, ti) { var last = days[tr.days[tr.days.length - 1]]; if (ti >= sw.start && Engine.key(last.y, last.m, last.d) < tk) openTrip = Math.min(ti + 1, TRIPS.length - 1); });
+    var openSet = sw.open || [openTrip];
     function dlabel(o) { return DOWS[dow(o)].slice(0, 3) + " " + o.d; }
     function packText(res, u) { return res.loose ? fmtQty(res.buy, u) : res.packs.map(function (pk) { return pk[0] + " × " + fmtPack(pk[1][0], pk[1][1]); }).join(" + "); }
+    function isOn(map, ti, id) { return !!(map[ti] && map[ti][id]); }
     var wk = "Week " + isoWeek(mon.y, mon.m, mon.d);
     state.shopTexts = [];
-    h += '<div class="sec shop"><div class="p-head"><h3>Shopping list</h3></div>';
-    h += '<div class="costline"><span>Expected checkout, three trips</span><b>≈ ' + eur(total) + "</b></div>";
-    h += '<p class="kcal">Each trip buys what its days need. Items that keep for ' + Pricing.LONG_KEEP + "+ days are bought once, on the first trip that needs them. Leftovers from an earlier trip are used first.</p>";
+    var total = 0, tripHtml = "";
     plan.trips.forEach(function (tr, ti) {
-      var d0 = days[tr.days[0]], d1 = days[tr.days[tr.days.length - 1]];
-      var range = dlabel(d0) + " – " + dlabel(d1), buys = tr.lines.filter(function (l) { return l.buy; }), have = tr.lines.filter(function (l) { return !l.buy; });
+      var d0 = days[tr.days[0]], d1 = days[tr.days[tr.days.length - 1]], range = dlabel(d0) + " – " + dlabel(d1);
+      if (tr.skipped) { tripHtml += '<div class="trip skipped"><span class="t-name"><b>Trip ' + (ti + 1) + "</b> · " + range + '</span><span class="t-sum">skipped</span></div>'; return; }
+      var buys = tr.lines.filter(function (l) { return l.buy; }), covered = tr.lines.filter(function (l) { return !l.buy; });
+      var toBuy = buys.filter(function (l) { return !isOn(sw.have, ti, l.id); });
+      var cost = toBuy.reduce(function (s, l) { return s + l.buy.cost; }, 0), got = toBuy.filter(function (l) { return isOn(sw.tick, ti, l.id); }).length;
+      total += cost;
       var text = [wk + " · Trip " + (ti + 1) + " · " + range];
-      h += '<details class="trip"' + (ti === openTrip ? " open" : "") + ' data-trip="' + ti + '"><summary><span class="t-name"><b>Trip ' + (ti + 1) + "</b> · " + range + '</span><span class="t-sum">' + buys.length + " items · ≈ " + eur(tr.cost) + "</span></summary>";
-      h += '<div class="trip-body"><div class="trip-tools"><button class="btn" data-copy="' + ti + '">Copy trip ' + (ti + 1) + "</button></div>";
-      if (!buys.length) h += '<p class="kcal">Nothing new to buy.</p>';
+      var body = '<div class="trip-tools"><span class="t-count" data-count="' + ti + '">' + got + " of " + toBuy.length + ' in the basket</span><button class="btn" data-copy="' + ti + '">Copy trip ' + (ti + 1) + "</button></div>";
+      if (!buys.length) body += '<p class="kcal">Nothing new to buy.</p>';
       var bySec = {};
       buys.forEach(function (l) { (bySec[CAT[l.id].s] = bySec[CAT[l.id].s] || []).push(l); });
       order.forEach(function (sec) {
         var list = bySec[sec]; if (!list) return;
         list.sort(function (a, b) { return CAT[a.id].n.localeCompare(CAT[b.id].n); });
-        h += "<h4>" + sec + "</h4><ul>"; text.push(sec.toUpperCase());
+        body += "<h4>" + sec + "</h4><ul>";
+        var secText = [];
         list.forEach(function (l) {
-          var u = Pricing.packUnit(l.id), buy = packText(l.buy, u), detail = "uses " + fmtQty(l.need, u);
+          var c = CAT[l.id], u = Pricing.packUnit(l.id), buy = packText(l.buy, u), detail = "uses " + fmtQty(l.need, u);
+          var home = isOn(sw.have, ti, l.id), tick = isOn(sw.tick, ti, l.id), ref = ti + "|" + l.id;
           if (l.fromEarlier > 0.001) detail += " (" + fmtQty(l.fromEarlier, u) + " from earlier)";
           if (l.forLater > 0.001) detail += ' · <span class="adv keeps">covers later trips too</span>';
-          h += '<li><span class="it"><span>' + esc(CAT[l.id].n) + '</span><span class="det">' + detail + '</span></span><span class="buy">' + buy + "<br>" + eur(l.buy.cost) + "</span></li>";
-          text.push("- " + CAT[l.id].n + ": " + buy + " (" + eur(l.buy.cost) + ")");
+          body += '<li class="item' + (tick ? " got" : "") + (home ? " home" : "") + '">' +
+            '<label class="tick"><input type="checkbox" data-tick="' + ref + '"' + (tick ? " checked" : "") + (home ? " disabled" : "") + ' aria-label="' + esc(c.n) + ' in the basket"></label>' +
+            '<span class="it"><span class="nm">' + esc(c.n) + '</span><span class="fi">' + esc(c.fi) + '</span><span class="det">' + (home ? "at home, not bought" : detail) + "</span></span>" +
+            '<span class="buy">' + buy + "<br>" + (home ? "–" : eur(l.buy.cost)) + '<button class="have-btn" data-have="' + ref + '" aria-pressed="' + home + '">' + (home ? "Buy it" : "Have it") + "</button></span></li>";
+          if (!home) secText.push("- " + c.n + " (" + c.fi + "): " + buy);
         });
-        h += "</ul>";
+        body += "</ul>";
+        if (secText.length) text.push(sec.toUpperCase(), secText.join("\n"));
       });
       if (tr.freeze.length) {
-        h += '<div class="have freeze"><b>Freezer</b><ul>' + tr.freeze.map(function (f) { return "<li>" + esc(CAT[f.id].n) + ': <span class="adv freeze">' + esc(f.text) + "</span></li>"; }).join("") + "</ul></div>";
-        tr.freeze.forEach(function (f) { text.push("Freeze: " + CAT[f.id].n + ", " + f.text); });
+        body += '<div class="have freeze"><b>Freezer</b><ul>' + tr.freeze.map(function (f) { return "<li>" + esc(CAT[f.id].n) + ': <span class="adv freeze">' + esc(f.text) + "</span></li>"; }).join("") + "</ul></div>";
       }
-      if (have.length) {
-        have.sort(function (a, b) { return CAT[a.id].n.localeCompare(CAT[b.id].n); });
-        h += '<p class="have"><b>Already bought:</b> ' + have.map(function (l) { return esc(CAT[l.id].n); }).join(", ") + "</p>";
+      if (covered.length) {
+        covered.sort(function (a, b) { return CAT[a.id].n.localeCompare(CAT[b.id].n); });
+        body += '<p class="have"><b>Already bought:</b> ' + covered.map(function (l) { return esc(CAT[l.id].n); }).join(", ") + "</p>";
       }
-      text.push("Trip " + (ti + 1) + " ≈ " + eur(tr.cost));
+      var st = Object.keys(tr.stock).sort(function (a, b) { return CAT[a].n.localeCompare(CAT[b].n); });
+      var pa = tr.pantry.map(function (id) { return CAT[id].n; }).sort();
+      if (st.length || pa.length) {
+        body += '<p class="have"><b>Check at home:</b> ' + st.map(function (id) { return esc(CAT[id].n) + " (" + fmtQty(tr.stock[id], Pricing.packUnit(id)) + ")"; }).concat(pa.map(esc)).join(", ") + "</p>";
+        text.push("CHECK AT HOME", st.map(function (id) { return "- " + CAT[id].n + " (" + CAT[id].fi + "): " + fmtQty(tr.stock[id], Pricing.packUnit(id)); }).concat(pa.length ? ["- Pantry: " + pa.join(", ")] : []).join("\n"));
+      }
+      tr.freeze.forEach(function (f) { text.push("Freeze: " + CAT[f.id].n + ", " + f.text); });
+      text.push("Trip " + (ti + 1) + " ≈ " + eur(cost) + " (long-life restocking not included)");
       state.shopTexts[ti] = text.join("\n");
-      h += "</div></details>";
+      tripHtml += '<details class="trip"' + (openSet.indexOf(ti) >= 0 ? " open" : "") + ' data-trip="' + ti + '"><summary><span class="t-name"><b>Trip ' + (ti + 1) + "</b> · " + range + '</span><span class="t-sum">' + toBuy.length + " items · ≈ " + eur(cost) + "</span></summary>" +
+        '<div class="trip-body">' + body + "</div></details>";
     });
+    h += '<div class="sec shop"><div class="p-head"><h3>Shopping list</h3><label class="start">First trip <select data-shop-start aria-label="First shopping trip this week">' +
+      ["Mon", "Wed", "Fri"].map(function (dname, i) { return '<option value="' + i + '"' + (sw.start === i ? " selected" : "") + ">Trip " + (i + 1) + " (" + dname + ")</option>"; }).join("") + "</select></label></div>";
+    h += '<div class="costline"><span>Expected checkout' + (sw.start ? ", from trip " + (sw.start + 1) : ", three trips") + '<small>Long-life restocking not included (see below)</small></span><b>≈ ' + eur(total) + "</b></div>";
+    h += '<p class="kcal">Each trip buys what its days need. Items that keep for ' + Pricing.LONG_KEEP + "+ days are bought once, on the first trip that needs them. Tick items as they go in the basket; \"Have it\" takes an item off the trip. Both are saved on this device.</p>";
+    h += tripHtml;
     var stock = Object.keys(stockNeed).filter(function (id) { return stockNeed[id] > 0; }), stockUsed = 0;
     if (stock.length) {
       stock.sort(function (a, b) { return CAT[a].n.localeCompare(CAT[b].n); });
@@ -1088,8 +1168,9 @@ performance.mark && performance.mark("app-start");
     if (!force && !sheetOpen()) { panelDirty = true; return; }
     panelDirty = false;
     var p = $("panel");
-    p.innerHTML = state.view === "recipe" ? viewRecipe() : state.view === "week" ? viewWeek() : state.view === "month" ? viewMonth() : viewDay();
-    p.scrollTop = 0;
+    var keep = force === "keep" ? p.scrollTop : 0;
+    p.innerHTML = state.view === "recipe" ? viewRecipe() : state.view === "extra" ? viewExtra() : state.view === "week" ? viewWeek() : state.view === "month" ? viewMonth() : viewDay();
+    p.scrollTop = keep;
     var sel = $("swap-sel");
     if (sel) sel.addEventListener("change", function () {
       var o = state.sel, k = Engine.key(o.y, o.m, o.d) + "|" + state.recipe, base = dayPlan(o).base[state.recipe].id;
@@ -1176,7 +1257,7 @@ performance.mark && performance.mark("app-start");
   })();
 
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-day],[data-wk],[data-month],[data-recipe],[data-back],[data-close],[data-reset],[data-level],#backdrop");
+    var t = e.target.closest("[data-day],[data-wk],[data-month],[data-recipe],[data-extra-open],[data-back],[data-close],[data-reset],[data-level],#backdrop");
     if (!t) return;
     if (t.hasAttribute("data-level")) {
       var lv = t.getAttribute("data-level"); if (lv === state.level) return;
@@ -1187,10 +1268,43 @@ performance.mark && performance.mark("app-start");
     if (t.hasAttribute("data-day")) { var a = t.getAttribute("data-day").split(",").map(Number); state.sel = { y: a[0], m: a[1], d: a[2] }; state.view = "day"; }
     else if (t.hasAttribute("data-wk")) { var w = t.getAttribute("data-wk").split(",").map(Number); state.week = { y: w[0], m: w[1], d: w[2] }; state.view = "week"; }
     else if (t.hasAttribute("data-month")) { var mm = t.getAttribute("data-month").split(",").map(Number); state.month = { y: mm[0], m: mm[1] }; state.view = "month"; }
-    else if (t.hasAttribute("data-recipe")) { if (state.view !== "recipe") state.prevView = state.view; state.recipe = t.getAttribute("data-recipe"); state.view = "recipe"; }
+    else if (t.hasAttribute("data-recipe")) { if (state.view !== "recipe" && state.view !== "extra") state.prevView = state.view; state.recipe = t.getAttribute("data-recipe"); state.view = "recipe"; }
+    else if (t.hasAttribute("data-extra-open")) { if (state.view !== "recipe" && state.view !== "extra") state.prevView = state.view; state.extra = t.getAttribute("data-extra-open"); state.view = "extra"; }
     else if (t.hasAttribute("data-back")) { state.view = state.prevView === "week" ? "week" : "day"; }
     else if (t.hasAttribute("data-reset")) { var o = state.sel; delete ov[Engine.key(o.y, o.m, o.d) + "|" + state.recipe]; saveOv(); }
     renderMonths(); panelDirty = true; if (mq.matches) renderPanel(); openSheet(true);
+  });
+  // Shopping list: ticks update in place; "Have it" and the first trip change totals, so the
+  // panel is redrawn at the same scroll position.
+  function shopRef(el, attr) { var v = el.getAttribute(attr).split("|"); return { ti: v[0], id: v[1], w: shopWeek(Engine.key(state.week.y, state.week.m, state.week.d)) }; }
+  document.addEventListener("change", function (e) {
+    var x = e.target.closest && e.target.closest("[data-tick],[data-shop-start]"); if (!x || !state.week) return;
+    if (x.hasAttribute("data-shop-start")) {
+      var w = shopWeek(Engine.key(state.week.y, state.week.m, state.week.d)); w.start = +x.value; w.open = [w.start]; saveShop(); renderPanel("keep"); return;
+    }
+    var r = shopRef(x, "data-tick"), m = r.w.tick[r.ti] = r.w.tick[r.ti] || {};
+    if (x.checked) m[r.id] = 1; else delete m[r.id];
+    saveShop();
+    x.closest("li").classList.toggle("got", x.checked);
+    var trip = x.closest(".trip-body"), boxes = trip.querySelectorAll("[data-tick]:not([disabled])"), n = 0;
+    Array.prototype.forEach.call(boxes, function (b) { if (b.checked) n++; });
+    var cnt = trip.querySelector("[data-count]"); if (cnt) cnt.textContent = n + " of " + boxes.length + " in the basket";
+  });
+  document.addEventListener("click", function (e) {
+    var x = e.target.closest && e.target.closest("[data-have]"); if (!x || !state.week) return;
+    var r = shopRef(x, "data-have"), m = r.w.have[r.ti] = r.w.have[r.ti] || {};
+    if (m[r.id]) delete m[r.id]; else { m[r.id] = 1; if (r.w.tick[r.ti]) delete r.w.tick[r.ti][r.id]; }
+    r.w.open = r.w.open || [+r.ti]; if (r.w.open.indexOf(+r.ti) < 0) r.w.open.push(+r.ti);
+    saveShop(); renderPanel("keep");
+  });
+  // Remember which trips are open, but only when the user opens or closes one.
+  document.addEventListener("click", function (e) {
+    var s = e.target.closest && e.target.closest("details.trip > summary"); if (!s || !state.week) return;
+    setTimeout(function () {
+      var w = shopWeek(Engine.key(state.week.y, state.week.m, state.week.d));
+      w.open = Array.prototype.map.call(document.querySelectorAll("#panel details.trip[open]"), function (x) { return +x.getAttribute("data-trip"); });
+      saveShop();
+    }, 0);
   });
   // Extras toggles (day view, day sheet): one setting for every day.
   document.addEventListener("change", function (e) {

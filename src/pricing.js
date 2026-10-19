@@ -190,21 +190,38 @@ var Pricing = (function () {
   // The week's shopping from 7 day plans (Mon..Sun, null for days outside the plan).
   // Uses exactly the food the day plan counts: meals (batch dinners doubled, leftover
   // lunches free) and the extras in plan.extras, each for two people.
+  // start: index of the first trip actually made this week (0-2). Days before it are
+  // left out, so nothing is assumed bought on a skipped trip.
   var TRIPS = [[0, 1], [2, 3], [4, 5, 6]];
-  function shoppingWeek(plans) {
-    var dayNeeds = [], stockNeed = {}, pantry = {};
+  function shoppingWeek(plans, start) {
+    start = start || 0;
+    var first = TRIPS[start][0];
+    var dayNeeds = [], dayStock = [], dayPantry = [], stockNeed = {}, pantry = {};
     plans.forEach(function (pl, di) {
-      var nd = dayNeeds[di] = {}; if (!pl) return;
+      var nd = dayNeeds[di] = {}, ds = dayStock[di] = {}, dp = dayPantry[di] = {};
+      if (!pl || di < first) return;
       function add(it, mult) {
         var id = it[0], c = CATX[id]; if (!c) return;
-        if (c.pantry || !PX[id]) { pantry[c.n] = 1; return; }
+        if (c.pantry || !PX[id]) { pantry[c.n] = 1; dp[id] = 1; return; }
         var amt = need(it) * mult;
-        if (isStock(id)) stockNeed[id] = (stockNeed[id] || 0) + amt; else nd[id] = (nd[id] || 0) + amt;
+        if (isStock(id)) { stockNeed[id] = (stockNeed[id] || 0) + amt; ds[id] = (ds[id] || 0) + amt; }
+        else nd[id] = (nd[id] || 0) + amt;
       }
       ["b", "l", "d"].forEach(function (s) { var r = pl.meals[s], mult = r.leftover ? 0 : (r.batch || 1); if (mult) r.ing.forEach(function (it) { add(it, mult); }); });
       (pl.extras || []).forEach(function (x) { x.ing.forEach(function (it) { add(it, 2); }); });
     });
     var plan = planTrips(dayNeeds, TRIPS);
+    // Long-life and pantry items each trip's days use: check them at home before the trip.
+    plan.trips.forEach(function (tr, ti) {
+      var st = {}, pa = {};
+      tr.days.forEach(function (d) {
+        Object.keys(dayStock[d]).forEach(function (id) { st[id] = (st[id] || 0) + dayStock[d][id]; });
+        Object.keys(dayPantry[d]).forEach(function (id) { pa[id] = 1; });
+      });
+      tr.stock = st; tr.pantry = Object.keys(pa);
+      tr.skipped = ti < start;
+    });
+    plan.start = start;
     plan.dayNeeds = dayNeeds; plan.stockNeed = stockNeed; plan.pantry = Object.keys(pantry).sort();
     plan.total = plan.trips.reduce(function (s, tr) { return s + tr.cost; }, 0);
     return plan;

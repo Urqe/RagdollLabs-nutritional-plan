@@ -45,8 +45,7 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 
 Order agreed after the 2026-10-19 review (see "Review 2026-10-19" below):
 
-1. v0.10: Cook and shop from the app
-2. v0.11: Today first, phone and iPad
+1. v0.11: Today first, phone and iPad
 
 ---
 
@@ -284,17 +283,18 @@ Results: waste estimate 2.96 € a week (was 4.04 € with the old one-shop mode
 
 ---
 
-## v0.10: Cook and shop from the app
+## v0.10: Cook and shop from the app (shipped)
 
 Goal: everything on the day's plan can be made and bought using only the app.
 
-- [ ] Juices and snacks open like meals: ingredients with amounts, for two, and short directions.
-- [ ] Double-batch dinners show the doubled amounts, and "eat tonight" vs "keep for tomorrow". Leftover lunches lead with reheating and serving, with the original recipe below.
-- [ ] Weekday cooking time: Monday to Thursday dinners stay under a time limit (default 60 minutes, changeable in settings). Longer dishes move to weekends or become batch dinners.
-- [ ] Full shopping export: the trip's items, plus "check you have" for long-life items and pantry items, with Finnish product names.
-- [ ] Tick items off while shopping, saved per trip on the device.
-- [ ] "Already have" toggle per item, and starting mid-week, so the list doesn't assume earlier trips happened.
-- [ ] Checkout total says plainly that long-life restocking is not included.
+- [x] Juices and snacks open like meals: ingredients for two, directions, protein and calories per serving. Juice names now list every ingredient.
+- [x] Double-batch dinners show the doubled amounts and say to eat half tonight and keep half for tomorrow. Leftover lunches lead with reheating and serving, with yesterday's recipe folded below.
+- [x] Weekday cooking time: Monday to Thursday dinners and weekday lunches take at most 60 minutes. A fixed rule in the engine rather than a device setting, so every device shows the same meals. The 150-minute stew now lands on Fridays and Sundays; `tools/check-year.js` fails if a weekday meal goes over.
+- [x] Copy trip: items with Finnish names, a "check at home" list (long-life items with amounts, pantry items), freezer steps and the trip total.
+- [x] Tick items off while shopping, saved per trip and week on the device, with a count in each trip.
+- [x] "Have it" per item takes it off the trip and the totals. "First trip" picker for starting mid-week: earlier trips are skipped and nothing is assumed bought on them.
+- [x] Checkout total says plainly that long-life restocking is not included.
+- [x] Browser tests for all of the above.
 
 ---
 
@@ -406,3 +406,4 @@ Not taken:
 | v0.7 | 2026-10-18 | Shopping list grouped into three trips per week (Mon–Tue, Wed–Thu, Fri–Sun), with per-trip copy. |
 | v0.8 | 2026-10-19 | Store names removed; prices described as based on a K-chain market. Git history rewritten afterwards to remove them from old commits. |
 | v0.9 | 2026-10-19 | Shelf life per pack by eating day, freezing for later days, extras tick boxes driving all totals, swap refresh and leftover swap fixes, failing checks. History rewritten to remove store names. |
+| v0.10 | 2026-10-19 | Juice and snack recipes, doubled batch amounts, reheat-first leftovers, 60-minute weekday meals, shopping ticks, "Have it", mid-week start, fuller copy text. |

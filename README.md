@@ -11,8 +11,9 @@ Open `index.html` in a browser, or use the GitHub Pages site. It is a single sel
 - At month level each day shows its three meals and both people's protein. Phones get a list of days instead of a grid so the meal names stay readable.
 - The current level is kept in the page address (for example `#m2026-10` or `#d2026-10-18`), so a bookmark opens straight to a month or a day. Opening the app without a link returns to the level you last used, on today's date. The plan covers 6 January 2025 to 4 January 2033; the calendar shows January 2025 to December 2032.
 - Tap a day for breakfast, lunch, dinner and optional snacks, with protein and calories per person. On phones and tablets the day opens as a sheet: swipe it down (or tap outside it) to close it.
-- Tap a meal for ingredients for two, directions and how to split the portions.
-- Tap a week number for daily totals, weekly cost and a shopping list split into three trips (Monday–Tuesday, Wednesday–Thursday, Friday–Sunday). Each trip says which pack sizes to buy and can be copied on its own; the week ends with what will be left over and what is likely to go to waste.
+- Tap a meal for ingredients for two, directions and how to split the portions. Double-batch dinners list the doubled amounts (tonight plus tomorrow's lunch); leftover lunches start with how to reheat and serve, with yesterday's recipe folded below.
+- The juice and both snacks open the same way, with ingredients for two and directions.
+- Tap a week number for daily totals, weekly cost and a shopping list split into three trips (Monday–Tuesday, Wednesday–Thursday, Friday–Sunday). Each trip says which pack sizes to buy, with Finnish product names, and what to check at home (long-life and pantry items). Tick items off as they go in the basket, mark "Have it" for things already at home, and pick which trip you start with if you begin mid-week; all of this is saved per week on the device. Each trip can be copied on its own. The week ends with what will be left over and what is likely to go to waste.
 - Tap a month name for the month's food cost and daily average.
 - Food cost is shown for the household per recipe, day, week and month.
 - Any single meal can be swapped. Swaps are saved in the browser on that device only. Swapping a double-batch dinner or the next day's leftover lunch updates both days.
@@ -42,6 +43,8 @@ Each meal is planned for two and split between Person 1 and Person 2. Where poss
 | Dinner | 18 |
 | Cheat dinner | 35 |
 
+Weekday meals are kept quick: Monday to Thursday dinners and Monday to Friday lunches take at most 60 minutes. Longer dishes land on Friday or Sunday.
+
 Each pick also weighs:
 
 - **Food waste.** The rotation tracks which perishable packs are opened in each shopping week (Monday to Sunday) and prefers recipes, juices and snacks that use up what is already open. Two morning juices are picked per week and alternated, so fresh herbs and part-used packs get used.
@@ -61,10 +64,10 @@ src/pricing.js        recipe costs, cheapest pack mix, the week's shopping in tr
 src/engine.js         rotation engine and daily protein/calorie calculation
 src/app.html          page layout, styles and UI code
 build.py              computes the plan to 2032, inlines src/*.js into src/app.html, writes both pages
-tools/check-year.js   runs a year of the plan; fails on banned or unknown ingredients, repeat violations or weekly protein below target
+tools/check-year.js   runs the plan; fails on banned or unknown ingredients, repeat violations, weekday meals over the time limit or weekly protein below target
 tools/check-prices.js reports missing prices, remaining estimates, stale prices and cost levels
 tools/check-waste.js  runs the app's trip planner over a year: waste, checkout, and fixed shelf-life examples (fails if one breaks)
-tools/test-ui.py      browser test of zoom, touch gestures, taps, keyboard, links, swaps and extras (needs Playwright)
+tools/test-ui.py      browser test of zoom, touch gestures, taps, keyboard, links, swaps, extras, recipes and shopping (needs Playwright)
 ```
 
 ## Changing things

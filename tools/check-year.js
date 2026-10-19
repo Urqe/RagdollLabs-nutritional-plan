@@ -20,6 +20,9 @@ for(let i=0;i<365;i++){ const dt=new Date(Date.UTC(2026,0,1)+i*864e5); const d=E
 }
 for(const p of ['p1','p2']){ const a=s[p]; const avg=f=>(a.reduce((x,y)=>x+y[f],0)/a.length).toFixed(0);
  console.log(p,'avg protein',avg('p'),'meal protein',avg('mealP'),'avg kcal',avg('k'),'min p',Math.min(...a.map(x=>x.p)).toFixed(0),'max p',Math.max(...a.map(x=>x.p)).toFixed(0),'short',short[p],'over+25',over[p], 'kcal min/max',Math.min(...a.map(x=>x.k)).toFixed(0),Math.max(...a.map(x=>x.k)).toFixed(0));}
+{ let slow=0; for(let i=0;i<365*7;i++){ const dt=new Date(Date.UTC(2026,0,1)+i*864e5); const d=E.day(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate()); if(!d) break; const dw=dt.getUTCDay();
+  if(dw>=1&&dw<=4&&d.meals.d.time>E.RULES.weekdayDinnerTime) slow++; if(dw>=1&&dw<=5&&!d.meals.l.leftover&&d.meals.l.time>E.RULES.weekdayLunchTime) slow++; }
+  console.log('weekday meals over the time limit 2026-2032:',slow); if(slow) fails.push(slow+' weekday meals over the time limit'); }
 console.log('repeat violations',repeats); if(repeats.b+repeats.l+repeats.d) fails.push('repeat violations '+JSON.stringify(repeats));
 // usage count
 const use={}; for(let i=0;i<365;i++){const dt=new Date(Date.UTC(2026,0,1)+i*864e5); const d=E.day(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate()); for(const sl of ['b','l','d']) { if(d.meals[sl].leftover) continue; use[d.meals[sl].id]=(use[d.meals[sl].id]||0)+1; }}
