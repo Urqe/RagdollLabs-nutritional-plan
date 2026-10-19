@@ -34,10 +34,11 @@ var PRICES = {
   whey:       { product: "Whey protein powder", packs: [[500,"g",14.90],[1000,"g",24.90]], keeps: 180, freezes: false },
 
   // Bread and grains
-  tortM:      { product: "Mini tortillas, 12 pcs", packs: [[12,"pc",2.49]], keeps: 7, freezes: true },
-  tortS:      { product: "Small tortillas, 8 pcs", packs: [[8,"pc",1.79]], keeps: 7, freezes: true },
-  tortL:      { product: "Large tortillas, 8 pcs", packs: [[8,"pc",1.99]], keeps: 7, freezes: true },
-  tortC:      { product: "Corn tortillas, 10 pcs", packs: [[10,"pc",3.29]], keeps: 10, freezes: true },
+  tortM:      { product: "El Taco Truck mini wheat tortillas 15 cm, 12 pcs", packs: [[12,"pc",2.49]], keeps: 7, freezes: true },
+  tortS:      { product: "El Taco Truck wheat tortillas 20 cm, 8 pcs", packs: [[8,"pc",1.79]], keeps: 7, freezes: true },
+  tortL:      { product: "El Taco Truck wheat tortillas 25 cm, 8 pcs", packs: [[8,"pc",1.99]], keeps: 7, freezes: true },
+  tortC:      { product: "Don Tortilla corn tortillas 14 cm, 10 pcs", packs: [[10,"pc",3.29]], keeps: 10, freezes: true },
+  tortXL:     { product: "Antalya Dürüm wheat tortillas 30 cm, 6 pcs", packs: [[6,"pc",2.49]], keeps: 7, freezes: true },
   bun:        { product: "Burger buns, 4 pcs", packs: [[4,"pc",1.99]], keeps: 4, freezes: true },
   bread:      { product: "Wholegrain sliced bread", packs: [[14,"pc",2.29]], keeps: 6, freezes: true },
   roll:       { product: "Bread rolls, 6 pcs", packs: [[6,"pc",1.99]], keeps: 3, freezes: true },

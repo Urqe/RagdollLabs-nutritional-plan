@@ -134,6 +134,9 @@ button { font: inherit; color: inherit; }
 .bar i { display: block; height: 100%; background: var(--good); }
 .bar i.low { background: var(--chile); }
 .kcal { font-family: var(--f-mono); font-size: .75rem; color: var(--muted); margin-top: 4px; }
+.macros { font-size: .74rem; color: var(--muted); margin-top: 3px; }
+.week-macros { margin-top: 10px; }
+.nutri-note { margin: 6px 0 0; }
 
 .meals { display: flex; flex-direction: column; gap: 8px; }
 .meal { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; text-align: left; width: 100%; border: 1px solid var(--line-soft); background: var(--surface); box-shadow: var(--shadow);
@@ -705,7 +708,7 @@ performance.mark && performance.mark("app-start");
     var o = state.sel, plan = dayPlan(o);
     if (!plan) return { cls: "", html: '<p class="empty">No plan for this date. ' + RANGE_TEXT + "</p>" };
     var h = '<section class="dbig"><div class="dbig-head"><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + "</div><h2>" + dateTitle(o) + "</h2></div>";
-    h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
+    h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1, PEOPLE.p1.protein) + personCard(PEOPLE.p2.label, plan.people.p2, PEOPLE.p2.protein) + "</div>";
     h += '<div class="costline"><span>Food cost today</span><b>≈ ' + eur(plan.cost) + "</b></div>";
     ["b", "l", "d"].forEach(function (s) {
       var r = plan.meals[s], sp = r.split || { p2: "about " + Math.round(r.share * 100) + " % of the pan", p1: "about " + Math.round((1 - r.share) * 100) + " % of the pan" };
@@ -719,7 +722,7 @@ performance.mark && performance.mark("app-start");
     });
     h += extrasBlock(plan, "dmeal snacks") +
       '<div class="row"><button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " shopping list</button></div>";
-    return { cls: "", html: h + "</section>" };
+    return { cls: "", html: h + NUTRI_NOTE + "</section>" };
   }
 
   function monthDiff(a, b) { return (a.y - b.y) * 12 + (a.m - b.m); }
@@ -997,10 +1000,13 @@ performance.mark && performance.mark("app-start");
   }
 
   // ---- Panel views ---------------------------------------------------------
-  function personCard(label, have, target, kcal) {
-    var pct = Math.min(100, have / target * 100);
+  // Fat, carbohydrate and fibre in grams, one line.
+  function macros(f, c, fb) { return '<div class="macros">Fat ' + r0(f) + " g · Carbs " + r0(c) + " g · Fibre " + r0(fb) + " g</div>"; }
+  var NUTRI_NOTE = '<p class="kcal nutri-note">Nutrition values are typical-product estimates, not yet checked against Fineli or the labels.</p>';
+  function personCard(label, x, target) {
+    var have = x.p, pct = Math.min(100, have / target * 100);
     return '<div class="person"><div class="lbl">' + label + '</div><div class="num">' + r0(have) + ' <small>/ ' + target + " g protein</small></div>" +
-      '<div class="bar"><i class="' + (have < target - 5 ? "low" : "") + '" style="width:' + pct + '%"></i></div><div class="kcal">≈ ' + r0(kcal) + " kcal</div></div>";
+      '<div class="bar"><i class="' + (have < target - 5 ? "low" : "") + '" style="width:' + pct + '%"></i></div><div class="kcal">≈ ' + r0(x.k) + " kcal</div>" + macros(x.f, x.c, x.fb) + "</div>";
   }
   function dateTitle(o) { return DOWS[dow(o)] + " " + o.d + " " + MONTHS[o.m]; }
   function extrasBlock(plan, cls) {
@@ -1018,7 +1024,7 @@ performance.mark && performance.mark("app-start");
     if (!plan) return '<div class="p-in"><p class="empty">No plan for this date. ' + RANGE_TEXT + "</p></div>";
     var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">Week ' + isoWeek(o.y, o.m, o.d) + " · " + o.y + '</div><h2 class="p-title">' + dateTitle(o) + "</h2></div>" +
       '<button class="sheet-close" data-close aria-label="Close">×</button></div>';
-    h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1.p, PEOPLE.p1.protein, plan.people.p1.k) + personCard(PEOPLE.p2.label, plan.people.p2.p, PEOPLE.p2.protein, plan.people.p2.k) + "</div>";
+    h += '<div class="people">' + personCard(PEOPLE.p1.label, plan.people.p1, PEOPLE.p1.protein) + personCard(PEOPLE.p2.label, plan.people.p2, PEOPLE.p2.protein) + "</div>";
     h += '<div class="costline"><span>Food cost today</span><b>≈ ' + eur(plan.cost) + "</b></div>";
     h += '<div class="meals">';
     ["b", "l", "d"].forEach(function (s) {
@@ -1030,7 +1036,7 @@ performance.mark && performance.mark("app-start");
     h += "</div>";
     h += extrasBlock(plan, "snacks");
     h += '<button class="btn" data-wk="' + (function (m) { return m.y + "," + m.m + "," + m.d; })(mondayOf(o)) + '">Week ' + isoWeek(o.y, o.m, o.d) + " summary and shopping list</button>";
-    return h + priceNote() + "</div>";
+    return h + NUTRI_NOTE + priceNote() + "</div>";
   }
 
   function fmtIng(it, mult) {
@@ -1049,8 +1055,9 @@ performance.mark && performance.mark("app-start");
     var x = k === "juice" ? plan.juice : plan.snacks[k === "s1" ? 0 : 1], label = k === "juice" ? "Morning juice" : k === "s1" ? "Optional snack 1" : "Optional snack 2";
     var h = '<div class="p-in"><div class="p-head"><button class="back" data-back>‹ ' + (state.prevView === "week" ? "Week " + isoWeek(o.y, o.m, o.d) : dateTitle(o)) + '</button><button class="sheet-close" data-close aria-label="Close">×</button></div>';
     h += '<div><div class="eyebrow">' + label + " · " + (inc[k] ? "counted in the plan" : "not counted (unticked)") + " · ≈ " + eur(x.C) + " for two</div><h2 class=\"p-title\">" + esc(x.name) + "</h2></div>";
-    h += '<div class="split"><div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>One serving</b><div class=\"kcal\">" + x.p + " g protein · ≈ " + x.k + " kcal</div></div>" +
-      '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>One serving</b><div class=\"kcal\">" + x.p + " g protein · ≈ " + x.k + " kcal</div></div></div>";
+    var serving = '<b>One serving</b><div class="kcal">' + x.p + " g protein · ≈ " + x.k + " kcal</div>" + macros(x.fat, x.carb, x.fib);
+    h += '<div class="split"><div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div>" + serving + "</div>" +
+      '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div>" + serving + "</div></div>";
     h += '<div class="sec"><h3>Ingredients for two</h3><ul class="ing">' + x.ing.map(function (it) { return fmtIng(it, 2); }).join("") + "</ul></div>";
     h += '<div class="sec"><h3>Directions</h3><ol class="steps">' + x.steps.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + '</ol><p class="kcal">Amounts in the directions are for one serving; make two.</p></div>';
     return h + "</div>";
@@ -1062,8 +1069,8 @@ performance.mark && performance.mark("app-start");
     var h = '<div class="p-in"><div class="p-head"><button class="back" data-back>‹ ' + (state.prevView === "week" ? "Week " + isoWeek(o.y, o.m, o.d) : dateTitle(o)) + '</button><button class="sheet-close" data-close aria-label="Close">×</button></div>';
     h += '<div><div class="eyebrow">' + SLOT[s] + (r.cheat ? " · Cheat night" : "") + (r.leftover ? " · Leftovers · 5 min · bought yesterday" : (r.batch === 2 ? " · Double batch" : "") + " · " + r.time + " min · serves 2 · ≈ " + eur(r.C)) + "</div><h2 class=\"p-title\">" + esc(mealName(r)) + "</h2></div>";
     h += '<div class="split">' +
-      '<div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>" + esc(sp.p1) + '</b><div class="kcal">' + r0(r.P * (1 - r.share)) + " g protein · ≈ " + r0(r.K * (1 - r.share)) + " kcal</div></div>" +
-      '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>" + esc(sp.p2) + '</b><div class="kcal">' + r0(r.P * r.share) + " g protein · ≈ " + r0(r.K * r.share) + " kcal</div></div></div>";
+      '<div class="person"><div class="lbl">' + PEOPLE.p1.label + "</div><b>" + esc(sp.p1) + '</b><div class="kcal">' + r0(r.P * (1 - r.share)) + " g protein · ≈ " + r0(r.K * (1 - r.share)) + " kcal</div>" + macros(r.Fat * (1 - r.share), r.Carb * (1 - r.share), r.Fib * (1 - r.share)) + "</div>" +
+      '<div class="person"><div class="lbl">' + PEOPLE.p2.label + "</div><b>" + esc(sp.p2) + '</b><div class="kcal">' + r0(r.P * r.share) + " g protein · ≈ " + r0(r.K * r.share) + " kcal</div>" + macros(r.Fat * r.share, r.Carb * r.share, r.Fib * r.share) + "</div></div>";
     if (mealNote(r)) h += '<div class="note-box">' + esc(mealNote(r)) + "</div>";
     h += '<div class="note-box">Heat ' + heat(r.heat) + " · " + (r.side ? "Serve the salsa or chilli on the side." : "Heat is cooked in; adjust the chilli to taste.") + (r.prep ? " Good for cooking ahead." : "") + "</div>";
     var ingHtml = '<ul class="ing">' + r.ing.map(function (it) { return fmtIng(it, r.leftover ? 2 : (r.batch || 1)); }).join("") + "</ul>";
@@ -1100,17 +1107,19 @@ performance.mark && performance.mark("app-start");
     var plans = days.map(dayPlan).filter(Boolean);
     var h = '<div class="p-in"><div class="p-head"><div><div class="eyebrow">' + mon.d + " " + MONTHS[mon.m].slice(0, 3) + " – " + days[6].d + " " + MONTHS[days[6].m].slice(0, 3) + " " + days[6].y + '</div><h2 class="p-title">Week ' + isoWeek(mon.y, mon.m, mon.d) + '</h2></div><button class="sheet-close" data-close aria-label="Close">×</button></div>';
     if (!plans.length) return h + '<p class="empty">No plan for this week.</p></div>';
-    var sum = { p1p: 0, p1k: 0, p2p: 0, p2k: 0, c: 0 };
+    var sum = { p1p: 0, p1k: 0, p2p: 0, p2k: 0, c: 0, p1: { f: 0, c: 0, fb: 0 }, p2: { f: 0, c: 0, fb: 0 } };
     h += '<div class="tbl-wrap"><table><thead><tr><th>Day</th><th>P1 g</th><th>P1 kcal</th><th>P2 g</th><th>P2 kcal</th><th>Cost</th></tr></thead><tbody>';
     days.forEach(function (o) {
       var pl = dayPlan(o); if (!pl) return;
       sum.p1p += pl.people.p1.p; sum.p1k += pl.people.p1.k; sum.p2p += pl.people.p2.p; sum.p2k += pl.people.p2.k; sum.c += pl.cost;
+      ["p1", "p2"].forEach(function (q) { ["f", "c", "fb"].forEach(function (m) { sum[q][m] += pl.people[q][m]; }); });
       h += '<tr><td><button data-day="' + o.y + "," + o.m + "," + o.d + '">' + DOWS[dow(o)].slice(0, 3) + " " + o.d + "</button>" + (pl.cheat ? ' <span class="tag cheat">Cheat</span>' : "") + "</td><td>" + r0(pl.people.p1.p) + "</td><td>" + r0(pl.people.p1.k) + "</td><td>" + r0(pl.people.p2.p) + "</td><td>" + r0(pl.people.p2.k) + "</td><td>" + eur(pl.cost) + "</td></tr>";
     });
     var n = plans.length;
     h += '<tr class="avg"><td>Daily average</td><td>' + r0(sum.p1p / n) + "</td><td>" + r0(sum.p1k / n) + "</td><td>" + r0(sum.p2p / n) + "</td><td>" + r0(sum.p2k / n) + "</td><td>" + eur(sum.c / n) + "</td></tr></tbody></table></div>";
     h += '<div class="costline"><span>Food cost this week</span><b>≈ ' + eur(sum.c) + "</b></div>";
-    h += '<p class="kcal">Targets: ' + PEOPLE.p1.label + " " + PEOPLE.p1.protein + " g, " + PEOPLE.p2.label + " " + PEOPLE.p2.protein + " g protein a day. Calories are estimates from the recipe weights.</p>";
+    h += '<div class="people week-macros">' + ["p1", "p2"].map(function (q) { return '<div class="person"><div class="lbl">' + PEOPLE[q].label + ", daily average</div>" + macros(sum[q].f / n, sum[q].c / n, sum[q].fb / n) + "</div>"; }).join("") + "</div>";
+    h += '<p class="kcal">Targets: ' + PEOPLE.p1.label + " " + PEOPLE.p1.protein + " g, " + PEOPLE.p2.label + " " + PEOPLE.p2.protein + " g protein a day. Calories and nutrients are estimates from the recipe weights.</p>" + NUTRI_NOTE;
 
     // shopping list, split into three trips: Mon–Tue, Wed–Thu, Fri–Sun
     var wkKey = Engine.key(mon.y, mon.m, mon.d), sw = shopWeek(wkKey);

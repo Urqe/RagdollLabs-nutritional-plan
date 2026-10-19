@@ -5,9 +5,9 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 ## How a release ships
 
 1. Create a branch: `release/vX.Y`.
-2. Make the changes in `src/`, `tools/` or the docs. Never edit `index.html` by hand.
+2. If the release can change which meals are picked (recipes, prices, rules), first lock the plan through the current Sunday: `node tools/lock-plan.js YYYY-MM-DD`. Then make the changes in `src/`, `tools/` or the docs. Never edit `index.html` by hand.
 3. Run the checks:
-   - `node tools/check-year.js`: exits with an error if a guarantee breaks (banned or unknown ingredient, repeat violation, weekly protein below target).
+   - `node tools/check-year.js`: exits with an error if a guarantee breaks (banned or unknown ingredient, missing nutrient values, a locked day changed, repeat violation, weekday time limit, weekly protein below target).
    - `node tools/check-prices.js`: every ingredient priced, no unit mismatches.
    - `node tools/check-waste.js`: shelf-life examples pass; weekly waste estimate not clearly higher than the last release.
    - `python3 tools/test-ui.py`: all browser checks pass (zoom, touch, taps, sheet, theme, keyboard, links, frame timing).
@@ -43,7 +43,7 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 
 ## Current focus
 
-All releases from the 2026-10-19 review have shipped (see "Review 2026-10-19" below). Nothing scheduled. Next candidates are in Later; the real-device check from v0.11 is still open.
+All releases from the 2026-10-19 review have shipped (see "Review 2026-10-19" below). Next up when the chat is linked to the desktop app: "Check nutrition and prices" under Later. Next candidates are in Later; the real-device check from v0.11 is still open.
 
 ---
 
@@ -62,7 +62,7 @@ Scope
 - [x] `src/prices.js`: one row per catalogue ingredient with product name, store, the pack sizes on sale (with price for each), unit price (€/kg, €/l or €/pc), status (`estimate` or `checked`) and date checked.
 - [x] Shelf life per ingredient: how many days it keeps once opened or bought fresh, and whether it freezes well. Used by the pack guidance below and the waste-aware rotation in v0.4.
 - [x] Fill estimates for all non-pantry ingredients (about 110), preferring everyday K-Menu and Pirkka-level products.
-- [ ] Replace estimates with checked prices from the reference store. Moved to the backlog (Check prices in the store, under Later).
+- [ ] Replace estimates with checked prices from the reference store. Moved to the backlog (Check nutrition and prices, under Later).
 - [x] Recipe cost for the household, on the recipe view.
 - [x] Cost per day on the day view. Cost per month (and the daily average) on a month summary; the weekly summary shows the week's cost.
 - [x] Shopping list: rounds up to whole packs and shows the expected checkout total. Pantry items listed without price.
@@ -74,7 +74,7 @@ Scope
 
 Checks
 - [x] Every non-pantry ingredient has a price.
-- [ ] A sample week's shopping total matches a real K-Ruoka basket within about 10 %. Moved to the backlog (Check prices in the store, under Later).
+- [ ] A sample week's shopping total matches a real K-Ruoka basket within about 10 %. Moved to the backlog (Check nutrition and prices, under Later).
 
 Shipped notes
 - All 86 priced ingredients are estimates. K-Ruoka blocks automated reading, so checking needs a browser session or manual entry.
@@ -319,6 +319,20 @@ Goal: the everyday questions (what do we cook today, what do we buy next) are on
 
 ---
 
+## v0.12: Fat, carbs and fibre; tortilla products; plan lock (shipped)
+
+Goal: show the full nutrient picture and use the tortilla products we actually buy. Checking values against Fineli and labels, and prices in the stores, could not be done in this release (no browser on the user's computer, and both sites block automated reading); see "Check nutrition and prices" under Later.
+
+- [x] Fat, carbohydrate and fibre per 100 g for every ingredient with nutrition values; chillies and limes now count too. Each ingredient's kcal matches its nutrients within 25 % (checked by `tools/check-year.js`). All values are marked as estimates in the data and on the page.
+- [x] Day view: fat, carbs and fibre per person next to protein and kcal. Recipe view: per person's portion. Snacks and juices: per serving. Week view: daily averages per person.
+- [x] Tortillas: Don Tortilla 14 cm corn tortillas, El Taco Truck wheat tortillas (15, 20 and 25 cm), and a new Antalya Dürüm 30 cm wheat tortilla for burritos and chimichangas (chicken burritos, beef chimichangas). Breakfast burritos keep the 20 cm size. Pack sizes and prices for these are estimates.
+- [x] Tostadas: always corn tortillas baked at home ("Make the tostadas: brush lightly with oil, bake on a rack at 200 °C for 8–10 minutes, turning once"). `tools/check-year.js` fails if a tostada recipe uses anything else, or a burrito misses the 30 cm tortillas.
+- [x] Plan lock: the new values and products would have reshuffled the rotation, including this week. Days up to Sunday 25 October 2026 are now fixed in `src/plan-lock.js` exactly as they were shown; the rotation replays them and picks new meals only after. `tools/lock-plan.js` extends the lock; the shipping routine now says when to run it.
+
+Results: weekly protein averages unchanged in shape (Person 1 111–118 g, Person 2 150–162 g); waste estimate 2.79 € a week; checkout about 201 € a week.
+
+---
+
 ## Review 2026-10-19
 
 An outside code review was done on v0.7. Taken into the releases above:
@@ -355,17 +369,26 @@ Not taken:
 
 ## Later
 
-### Check prices in the store (was v0.2.1)
+### Check nutrition and prices (was v0.2.1)
 
-Goal: replace the estimated prices with checked ones. Done on request; the reference stores are named in that request and not written into the repo.
+Goal: replace the estimated nutrition values and prices with checked ones. Done on request, in a browser on the user's computer (this chat linked to the Claude desktop app), because Fineli and K-Ruoka both block automated reading. The reference stores are named in that request and never written into the repo, commits or docs.
 
-- [ ] Check all 90 priced ingredients on K-Ruoka with the first reference store selected, in a browser (needs the desktop app linked) or by hand: product, pack sizes, price, date. Use the second store for anything the first doesn't stock.
+Nutrition
+- [ ] For each catalogue ingredient: protein, kcal, fat, carbohydrate and fibre per 100 g from Fineli (record the Fineli food id), or from the product's label on K-Ruoka for branded products and anything Fineli lacks. Where both exist and disagree, use the label for branded products and Fineli for generic ones.
+- [ ] Tortilla labels first: Don Tortilla 14 cm corn, El Taco Truck wheat (15, 20 and 25 cm, or the closest sizes sold), Antalya Dürüm 30 cm. Record piece weights; if Don Tortilla's size doesn't suit a recipe, note it.
+- [ ] Mark each value's source and date in `src/data.js`; drop the "estimate" note on the page when every value is checked.
+
+Prices
+- [ ] Check all priced ingredients on K-Ruoka with the first reference store selected: product, pack sizes, price, date. Use the second store only for products the first doesn't have.
 - [ ] Set `status: "checked"` and the `checked` date for each; note items neither store stocks and give their recipes a substitute.
 - [ ] Price one week's shopping as a real K-Ruoka basket and compare with the app's checkout total.
 
+Before changing values: lock the plan through the current Sunday (`node tools/lock-plan.js`).
+
 Checks
-- `node tools/check-prices.js` reports 0 estimates.
+- `node tools/check-prices.js` reports 0 estimates; every catalogue entry has a nutrition source.
 - Sample basket within about 10 % of the app's total.
+- Weekly protein still at or above both targets with the checked values.
 
 ### Settings
 - [ ] Settings panel: protein targets per person, display names, which day is the cheat night. Saved on the device only; the repo keeps neutral defaults. This can also take the protein targets out of the public page.
@@ -380,8 +403,7 @@ Checks
 - [ ] Live sync of swaps, settings and shopping ticks (v0.11 covers moving a plan by file). Decide where shared state lives first; GitHub Pages has no storage of its own.
 
 ### Nutrition accuracy
-- [ ] Check catalogue values against Fineli (THL's Finnish food composition database) and record the Fineli food id.
-- [ ] Fat and carbohydrate per ingredient, shown on recipe and day views.
+- [x] Fat, carbohydrate and fibre per ingredient, shown on day, recipe, snack and week views (v0.12; values still estimates, see "Check nutrition and prices").
 - [ ] Optional device-only calorie ranges per person, used by the rotation as well as shown.
 - [ ] Separate data for products that differ (corn vs wheat tortillas, Greek yoghurt vs skyr).
 
@@ -428,3 +450,4 @@ Checks
 | v0.10.1 | 2026-10-19 | Closing pinch at year level left to Safari (tab overview) instead of being blocked. |
 | v0.11 | 2026-10-19 | Opens on today, "This week" shopping button, wide desktop week panel, 44 px touch targets, Person 1 first, export/import between devices, dialog sheet with focus handling, layout changes on rotation. |
 | v0.11.1 | 2026-10-19 | Export works in the Claude-hosted copy too (asks the host to save the file). |
+| v0.12 | 2026-10-19 | Fat, carbs and fibre in all views (estimates); Don Tortilla, El Taco Truck and Antalya Dürüm tortillas; home-baked tostadas; plan lock keeps planned days fixed. Nutrition and price checks moved to Later. |

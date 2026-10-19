@@ -35,16 +35,18 @@ var Engine = (function () {
     if (u === "tsp") return a * (c.t || 0) / 3;
     return 0;
   }
+  // Protein, kcal, fat, carbohydrate and fibre of an ingredient list (grams, kcal).
   function nutrOf(ing) {
-    var p = 0, k = 0;
+    var n = { p: 0, k: 0, f: 0, c: 0, fb: 0 };
     ing.forEach(function (it) {
       var c = CATX[it[0]], g = grams(it);
-      if (c && c.p != null) { p += g * c.p / 100; k += g * c.k / 100; }
+      if (c && c.p != null) ["p", "k", "f", "c", "fb"].forEach(function (x) { n[x] += g * (c[x] || 0) / 100; });
     });
-    return { p: p, k: k };
+    return n;
   }
-  RX.forEach(function (r) { var n = nutrOf(r.ing); r.P = n.p; r.K = n.k; r.share = r.split ? r.split.share : SHARE; });
-  S1.concat(S2, JX).forEach(function (s) { var n = nutrOf(s.ing); s.p = Math.round(n.p); s.k = Math.round(n.k); });
+  // Recipes (for two): P protein, K kcal, Fat, Carb, Fib. Extras (one serving): p, k, fat, carb, fib.
+  RX.forEach(function (r) { var n = nutrOf(r.ing); r.P = n.p; r.K = n.k; r.Fat = n.f; r.Carb = n.c; r.Fib = n.fb; r.share = r.split ? r.split.share : SHARE; });
+  S1.concat(S2, JX).forEach(function (s) { var n = nutrOf(s.ing); s.p = Math.round(n.p); s.k = Math.round(n.k); s.fat = n.f; s.carb = n.c; s.fib = n.fb; });
   // Household cost of what each recipe or extra consumes (snacks and juice are per person).
   RX.forEach(function (r) { r.C = PR ? PR.costOf(r.ing) : 0; });
   S1.concat(S2, JX).forEach(function (s) { s.C = PR ? PR.costOf(s.ing, 2) : 0; });
@@ -112,7 +114,8 @@ var Engine = (function () {
   function pick(pool, idx, gap, opts) {
     opts = opts || {};
     var best = null, bestScore = -Infinity;
-    pool.forEach(function (r) {
+    if (opts.force) best = opts.force; // a locked day: the choice is fixed, the bookkeeping still runs
+    else pool.forEach(function (r) {
       var since = last[r.id] == null ? 999 : idx - last[r.id];
       var score = Math.min(since, 60) + rand() * 6;
       if (since < gap) score -= 1000;
@@ -127,9 +130,9 @@ var Engine = (function () {
     return best;
   }
 
-  function pickExtra(pool, idx, tag, mult) {
-    var best = null, bestScore = -Infinity;
-    pool.forEach(function (s) {
+  function pickExtra(pool, idx, tag, mult, force) {
+    var best = force || null, bestScore = -Infinity;
+    if (!force) pool.forEach(function (s) {
       var k = tag + s.id, since = last[k] == null ? 99 : idx - last[k];
       var score = Math.min(since, 10) * 1.5 + rand() * 2 + wasteScore(s.ing, mult);
       if (since < 2) score -= 100;
@@ -142,6 +145,8 @@ var Engine = (function () {
   // ---- Precomputed plan (built by build.py) --------------------------------
   // One row per day: b|l|lAlt|d|batch|juice|s1|s2, with "~id" for a leftover lunch.
   var TABLE = (typeof module === "undefined" && typeof PLAN_TABLE !== "undefined") ? PLAN_TABLE.split(";") : null;
+  var LOCK = [];
+  if (D) { try { LOCK = require("./plan-lock.js").PLAN_LOCK.split(";").map(function (r) { return r.split("|"); }); } catch (e) { LOCK = []; } }
   var exById = {}; S1.concat(S2, JX).forEach(function (s) { exById[s.id] = s; });
   function fromRow(row) {
     var f = row.split("|"), dRaw = byId[f[3]];
@@ -166,10 +171,14 @@ var Engine = (function () {
       if (dow === 1) open = {}; // new shopping week
       var weekend = dow === 0 || dow === 6;
       var prev = plan[i - 1];
+      // Locked days replay the meals that were shown; F() gives the fixed recipe for a field.
+      var lk = LOCK[i] || null, nx = LOCK[i + 1] || null;
+      var F = function (k) { return lk && lk[k] ? byId[lk[k].replace("~", "")] : null; };
+      var E = function (row, k) { return row && row[k] ? exById[row[k]] : null; };
 
       var b = weekend
-        ? pick(pools.allBreakfast, i, RULES.weekendBreakfast, { month: month, extra: function (r) { return r.weekend ? 12 : 0; } })
-        : pick(pools.wkBreakfast, i, RULES.breakfast, { month: month });
+        ? pick(pools.allBreakfast, i, RULES.weekendBreakfast, { month: month, force: F(0), extra: function (r) { return r.weekend ? 12 : 0; } })
+        : pick(pools.wkBreakfast, i, RULES.breakfast, { month: month, force: F(0) });
       consume(b.ing, 1);
 
       // Yesterday's batch dinner becomes today's lunch.
@@ -177,19 +186,19 @@ var Engine = (function () {
       var lunchTime = function (r) { return !weekend && r.time > RULES.weekdayLunchTime ? -1000 : 0; };
       if (prev && prev.d.batch) {
         l = leftoverOf(prev.dRaw);
-        lAlt = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: [prev.d.main], peek: true, extra: lunchTime });
+        lAlt = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: [prev.d.main], peek: true, extra: lunchTime, force: F(2) });
       } else {
-        l = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: prev ? [prev.d.main] : null, extra: lunchTime });
+        l = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: prev ? [prev.d.main] : null, extra: lunchTime, force: F(1) });
         consume(l.ing, 1);
       }
 
       var d, dRaw;
-      if (dow === 6) { dRaw = d = pick(pools.cheat, i, RULES.cheat, { month: month }); consume(d.ing, 1); }
+      if (dow === 6) { dRaw = d = pick(pools.cheat, i, RULES.cheat, { month: month, force: F(3) }); consume(d.ing, 1); }
       else {
         // A batch dinner only when tomorrow is not Saturday (cheat day) and today's lunch was not already leftovers.
         var canBatch = dow !== 5 && !l.leftover;
         dRaw = pick(pools.dinner, i, RULES.dinner, {
-          month: month, avoidMain: [l.main].concat(prev ? [prev.d.main] : []),
+          month: month, force: F(3), avoidMain: [l.main].concat(prev ? [prev.d.main] : []),
           mult: function (r) { return r.twice && canBatch ? 2 : 1; },
           extra: function (r) {
             var e = -Math.abs(b.P + l.P + r.P - MEAL_GOAL) * W.protein;
@@ -198,19 +207,21 @@ var Engine = (function () {
             return e;
           }
         });
-        d = dRaw.twice && canBatch ? batchOf(dRaw) : dRaw;
+        d = (lk ? lk[4] === "1" : dRaw.twice && canBatch) ? batchOf(dRaw) : dRaw;
         consume(dRaw.ing, d.batch || 1);
       }
 
       // Two juices a week, alternating, so fresh herbs and part-used packs get used up.
       if (dow === 1 || !weekJuices) {
-        var ja = pickExtra(JX, i, "j:", 6), jb = pickExtra(JX.filter(function (j) { return j !== ja; }), i, "j:", 6);
+        // Locked: today's juice sits at i % 2 and tomorrow's at the other slot.
+        var fj = [null, null]; if (lk) { fj[i % 2] = E(lk, 5); fj[(i + 1) % 2] = E(nx, 5); }
+        var ja = pickExtra(JX, i, "j:", 6, fj[0]), jb = pickExtra(JX.filter(function (j) { return j !== ja; }), i, "j:", 6, fj[1]);
         weekJuices = [ja, jb];
       }
       var juice = weekJuices[i % 2];
       consume(juice.ing, 2);
-      var s1 = pickExtra(S1, i, "s1:", 2); consume(s1.ing, 2);
-      var s2 = pickExtra(S2, i, "s2:", 2); consume(s2.ing, 2);
+      var s1 = pickExtra(S1, i, "s1:", 2, E(lk, 6)); consume(s1.ing, 2);
+      var s2 = pickExtra(S2, i, "s2:", 2, E(lk, 7)); consume(s2.ing, 2);
 
       plan.push({ b: b, l: l, lAlt: lAlt, d: d, dRaw: dRaw, dRawPrev: l.leftover ? prev.dRaw.id : null, juice: juice, snacks: [s1, s2] });
     }
@@ -253,14 +264,15 @@ var Engine = (function () {
     if (res.inc.s1) extras.push(sn[0]);
     if (res.inc.s2) extras.push(sn[1]);
     res.extras = extras;
-    var xp = extras.reduce(function (a, x) { return a + x.p; }, 0), xk = extras.reduce(function (a, x) { return a + x.k; }, 0);
+    function xsum(f) { return extras.reduce(function (a, x) { return a + x[f]; }, 0); }
+    var xp = xsum("p"), xk = xsum("k"), xf = xsum("fat"), xc = xsum("carb"), xb = xsum("fib");
     ["p1", "p2"].forEach(function (p) {
-      var mp = 0, mk = 0;
+      var mp = 0, mk = 0, mf = 0, mc = 0, mb = 0;
       ["b", "l", "d"].forEach(function (s) {
         var r = meals[s], sh = p === "p2" ? r.share : 1 - r.share;
-        mp += r.P * sh; mk += r.K * sh;
+        mp += r.P * sh; mk += r.K * sh; mf += r.Fat * sh; mc += r.Carb * sh; mb += r.Fib * sh;
       });
-      res.people[p] = { mealP: mp, mealK: mk, p: mp + xp, k: mk + xk, target: PX[p].protein };
+      res.people[p] = { mealP: mp, mealK: mk, p: mp + xp, k: mk + xk, f: mf + xf, c: mc + xc, fb: mb + xb, target: PX[p].protein };
     });
     res.cheat = !!meals.d.cheat;
     res.cost = meals.b.C + meals.l.C + meals.d.C + extras.reduce(function (a, x) { return a + x.C; }, 0);

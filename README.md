@@ -31,6 +31,7 @@ Each meal is planned for two and split between Person 1 and Person 2. Where poss
 - No pork mince or thick pork cuts. Bacon and chorizo are allowed.
 - Mince is always 100 % beef or turkey. Refried beans must be lard-free.
 - Greek yoghurt replaces mayonnaise and sour cream on regular days. Saturday dinner is a cheat night.
+- Tortillas: Don Tortilla 14 cm corn tortillas for tacos and tostadas, El Taco Truck wheat tortillas (15, 20 and 25 cm) for everything else, and Antalya Dürüm 30 cm wheat tortillas for burritos and chimichangas. Ready-made tostadas are hard to find, so they are made at home by baking the corn tortillas until crisp.
 - Ingredients that are hard to find in Finland are swapped: kohlrabi for jícama, leipäjuusto or light halloumi for panela, mozzarella for Oaxaca cheese, lingonberries for cranberries, chilli-lime salt for Tajín and chamoy.
 
 ## Rotation
@@ -44,6 +45,8 @@ Each meal is planned for two and split between Person 1 and Person 2. Where poss
 | Lunch | 14 |
 | Dinner | 18 |
 | Cheat dinner | 35 |
+
+Days that have already been planned are locked (`src/plan-lock.js`): later changes to recipes, prices or rules never rewrite a week that may already be shopped for. The rotation replays the locked days and picks new meals only after them, with the same repeat rules across the join.
 
 Weekday meals are kept quick: Monday to Thursday dinners and Monday to Friday lunches take at most 60 minutes. Longer dishes land on Friday or Sunday.
 
@@ -60,14 +63,16 @@ Each pick also weighs:
 ```
 index.html            built page for GitHub Pages, a full HTML document (generated, do not edit)
 artifact.html         the same page as a fragment, for the Claude-hosted copy (generated)
-src/data.js           targets, ingredient catalogue with nutrition values, recipes, optional snacks
+src/data.js           targets, ingredient catalogue (protein, kcal, fat, carbohydrate, fibre), recipes, optional snacks
+src/plan-lock.js      days already planned, kept exactly as shown (see Rotation)
 src/prices.js         prices, pack sizes, shelf life and freezing per ingredient
 src/pricing.js        recipe costs, cheapest pack mix, the week's shopping in trips with per-pack shelf life
-src/engine.js         rotation engine and daily protein/calorie calculation
+src/engine.js         rotation engine and daily nutrition calculation
 src/app.html          page layout, styles and UI code
 build.py              computes the plan to 2032, inlines src/*.js into src/app.html, writes both pages
 tools/check-year.js   runs the plan; fails on banned or unknown ingredients, repeat violations, weekday meals over the time limit or weekly protein below target
 tools/check-prices.js reports missing prices, remaining estimates, stale prices and cost levels
+tools/lock-plan.js    extends the plan lock to a date (run before a release that changes the rotation)
 tools/check-waste.js  runs the app's trip planner over a year: waste, checkout, and fixed shelf-life examples (fails if one breaks)
 tools/test-ui.py      browser test of zoom, touch gestures, taps, keyboard, links, swaps, extras, recipes and shopping (needs Playwright)
 ```
@@ -88,4 +93,4 @@ The shopping list is split into three trips a week. Short-lived items are bought
 
 See [RELEASE_PLAN.md](RELEASE_PLAN.md) for upcoming releases.
 
-Nutrition values are per 100 g estimates for typical Finnish supermarket products. Check labels if exact numbers matter.
+Nutrition values (protein, kcal, fat, carbohydrate and fibre per 100 g) are estimates for typical Finnish supermarket products until they are checked against Fineli and the product labels. The day, recipe, snack and week views show all five; the page says they are estimates. Check labels if exact numbers matter.
