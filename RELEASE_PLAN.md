@@ -43,9 +43,7 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 
 ## Current focus
 
-Order agreed after the 2026-10-19 review (see "Review 2026-10-19" below):
-
-1. v0.11: Today first, phone and iPad
+All releases from the 2026-10-19 review have shipped (see "Review 2026-10-19" below). Nothing scheduled. Next candidates are in Later; the real-device check from v0.11 is still open.
 
 ---
 
@@ -306,18 +304,18 @@ Goal: everything on the day's plan can be made and bought using only the app.
 
 ---
 
-## v0.11: Today first, phone and iPad
+## v0.11: Today first, phone and iPad (shipped)
 
 Goal: the everyday questions (what do we cook today, what do we buy next) are one tap away, and the app behaves on iPad rotation and with a keyboard.
 
-- [ ] Open on today by default, with a "This week" shortcut to the shopping trips. Year view stays one level up.
-- [ ] Wider shopping and week view on desktop and iPad landscape, instead of the 420 px side panel with sideways scrolling.
-- [ ] Bigger touch targets for week numbers, close buttons and header buttons.
-- [ ] Person 1 before Person 2 everywhere (recipe splits currently list Person 2 first).
-- [ ] Move a plan between devices: export and import swaps and settings as a file. No server.
-- [ ] Rotation and resize: the panel content and paging stay correct when the layout changes between phone, iPad and desktop widths.
-- [ ] Day sheet as a proper dialog: focus moves into it and back on close, the background is hidden from screen readers, Escape closes, and arrow keys don't move the calendar while it is open.
-- [ ] Test on a real iPhone and iPad in Safari, including VoiceOver and larger text. The current browser tests run in Chromium only.
+- [x] Opens on today. `#year`, `#m…` and `#d…` links still open that level. A "This week" button (basket icon on phones) next to − and + opens the current week's shopping from any level.
+- [x] Desktop and iPad landscape: the week and month summaries get a side panel up to 620 px wide, so the week table fits without sideways scrolling. Recipes keep the narrower panel.
+- [x] Touch screens: header and zoom buttons at least 44 px tall (icon buttons 40 px wide so the phone header still fits), 44 px close button, wider week-number column. Month names are shortened in the breadcrumb on phones so it stays on one line.
+- [x] Person 1 before Person 2 in recipe splits, the day view and meal summaries.
+- [x] Move a plan between devices: "This device" section exports swaps, extras and shopping lists to a JSON file (share sheet on phones and tablets, download elsewhere) and imports one. Imported and stored data go through the same checks; a wrong file changes nothing. Open tabs on the same device follow each other's changes.
+- [x] Rotation and resize: crossing the desktop width resets the sheet and its screen-reader state, rebuilds pages laid out for the old width, and draws the right panel content.
+- [x] Day sheet as a dialog: `role="dialog"`, `aria-modal`, the page behind inert and hidden from screen readers while open, the sheet hidden while closed, focus moved in on open and back on close, Escape closes, arrow and +/− keys pause while the sheet is open or focus is in the panel. Focus is kept when the panel or calendar is redrawn.
+- [ ] Test on a real iPhone and iPad in Safari, including VoiceOver and larger text. The browser tests run in Chromium only. Left open for you.
 
 ---
 
@@ -416,3 +414,4 @@ Not taken:
 | v0.9 | 2026-10-19 | Shelf life per pack by eating day, freezing for later days, extras tick boxes driving all totals, swap refresh and leftover swap fixes, failing checks. History rewritten to remove store names. |
 | v0.10 | 2026-10-19 | Juice and snack recipes, doubled batch amounts, reheat-first leftovers, 60-minute weekday meals, shopping ticks, "Have it", mid-week start, fuller copy text. |
 | v0.10.1 | 2026-10-19 | Closing pinch at year level left to Safari (tab overview) instead of being blocked. |
+| v0.11 | 2026-10-19 | Opens on today, "This week" shopping button, wide desktop week panel, 44 px touch targets, Person 1 first, export/import between devices, dialog sheet with focus handling, layout changes on rotation. |

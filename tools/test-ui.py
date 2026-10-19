@@ -7,6 +7,8 @@ input protocol, so the browser's own scrolling and touch-action rules apply, lik
 on a real phone. Frame timing is checked at normal CPU speed and slowed 2x.
 """
 import asyncio
+import tempfile
+import pathlib
 import sys
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -70,7 +72,7 @@ async def touch_suite(browser, name, w, h):
     page = await ctx.new_page()
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
-    await open_page(page)
+    await open_page(page, "#year")
     cdp = await ctx.new_cdp_session(page)
     phone = w <= 640
     cell = ".ag" if phone else ".dc"
@@ -150,7 +152,7 @@ async def desktop_suite(browser):
     page = await browser.new_page(viewport={"width": 1400, "height": 900})
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
-    await open_page(page)
+    await open_page(page, "#year")
     await page.keyboard.press("+")
     await page.wait_for_timeout(450)
     check("desktop: + key opens the month", (await level(page)).startswith("#m"))
@@ -242,6 +244,8 @@ async def perf_suite(browser, rate, limit):
     if rate == 1:
         ms = await page.evaluate("(() => { const a = performance.getEntriesByName('app-start')[0], b = performance.getEntriesByName('app-ready')[0]; return a && b ? b.startTime - a.startTime : 9999; })()")
         check("perf: app start-up script under 300 ms", ms < 300, f"{ms:.0f} ms")
+    # The gestures below start from the year view.
+    await page.goto(url("#year")); await page.reload(); await page.wait_for_timeout(400)
     await page.evaluate("""() => { window.__gaps = []; let last = performance.now();
       const tick = t => { window.__gaps.push(t - last); last = t; window.__raf = requestAnimationFrame(tick); }; window.__raf = requestAnimationFrame(tick); }""")
     x, y = await centre(page, ".month.now")
@@ -296,6 +300,7 @@ async def plan_suite(browser):
     await page.keyboard.press("ArrowLeft"); await page.wait_for_timeout(600)
     await page.click('.dbig [data-recipe="d"]'); await page.wait_for_timeout(300)
     await page.click('#panel [data-reset]'); await page.wait_for_timeout(300)
+    await page.evaluate("document.activeElement && document.activeElement.blur()")  # arrows only act on the calendar
     await page.wait_for_timeout(1200)
     await page.keyboard.press("ArrowRight"); await page.wait_for_timeout(600)
     back = await page.evaluate(lunch20)
@@ -372,6 +377,84 @@ async def cook_shop_suite(browser):
     await ctx.close()
 
 
+async def today_suite(browser, tmpdir):
+    """v0.11: opens on today, shopping shortcut, dialog sheet, P1 first, touch targets,
+    wide panel, export/import, layout changes, other tabs."""
+    # Phone: opens on today; the sheet is a dialog with focus inside and an inert page behind.
+    ctx = await browser.new_context(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
+    page = await ctx.new_page(); errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    await page.goto(url()); await page.evaluate("localStorage.clear()"); await page.goto(url("")); await page.reload(); await page.wait_for_timeout(400)
+    today = await page.evaluate("(()=>{const n=new Date();return '#d'+n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')})()")
+    check("today: opening without a link shows today", await level(page) == today, await level(page))
+    await page.tap("#shop"); await page.wait_for_timeout(500)
+    st = await page.evaluate("""(() => { const p = document.getElementById('panel'); return { open: p.classList.contains('open'), role: p.getAttribute('role'),
+      modal: p.getAttribute('aria-modal'), inert: document.querySelector('main').inert, focus: p.contains(document.activeElement),
+      title: (p.querySelector('.p-title') || {}).textContent }; })()""")
+    wk = await page.evaluate("(()=>{const n=new Date(),t=new Date(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate()));const d=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-d);const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return 'Week '+Math.ceil(((t-y0)/864e5+1)/7)})()")
+    check("today: 'This week' opens this week's shopping in the sheet", st["open"] and st["title"] == wk, str(st))
+    check("today: the open sheet is a modal dialog with focus inside", st["role"] == "dialog" and st["modal"] == "true" and st["inert"] and st["focus"], str(st))
+    before = await level(page)
+    await page.keyboard.press("ArrowRight"); await page.wait_for_timeout(300)
+    check("today: arrow keys don't move the calendar while the sheet is open", await level(page) == before, await level(page))
+    await page.keyboard.press("Escape"); await page.wait_for_timeout(400)
+    st2 = await page.evaluate("(() => { const p = document.getElementById('panel'); return [p.classList.contains('open'), p.getAttribute('aria-hidden'), document.querySelector('main').inert, p.contains(document.activeElement)]; })()")
+    check("today: Escape closes the sheet, hides it and gives the page back", st2 == [False, "true", False, False], str(st2))
+    sizes = await page.evaluate("""(() => { const r = s => document.querySelector(s).getBoundingClientRect();
+      const hdr = document.querySelector('.top-in');
+      return { prev: [Math.round(r('#prev').width), Math.round(r('#prev').height)], next: Math.round(r('#next').height), shop: Math.round(r('#shop').height),
+               zin: Math.round(r('#zin').height), fits: hdr.scrollWidth <= hdr.clientWidth + 1 && r('#next').right <= innerWidth }; })()""")
+    check("today: header and zoom buttons are at least 44 px tall and the header fits", sizes["prev"][0] >= 40 and min(sizes["prev"][1], sizes["next"], sizes["shop"], sizes["zin"]) >= 44 and sizes["fits"], str(sizes))
+    check("today: phone no script errors", not errors, "; ".join(errors[:2]))
+    await ctx.close()
+
+    # Desktop: wide panel for the week, Person 1 first, export and import, layout changes, other tabs.
+    ctx = await browser.new_context(viewport={"width": 1400, "height": 900}, accept_downloads=True)
+    page = await ctx.new_page(); errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    await page.goto(url("#d2026-10-19")); await page.evaluate("localStorage.clear()"); await page.reload(); await page.wait_for_timeout(400)
+    await page.click("#shop"); await page.wait_for_timeout(400)
+    wide = await page.evaluate("(() => { const w = document.querySelector('.wrap'), t = document.querySelector('#panel .tbl-wrap'); return [w.classList.contains('wide'), Math.round(document.getElementById('panel').getBoundingClientRect().width), t.scrollWidth <= t.clientWidth + 1]; })()")
+    check("today: desktop week panel is wide and the table fits", wide[0] and wide[1] >= 560 and wide[2], str(wide))
+    await page.click('.dbig [data-recipe="b"]'); await page.wait_for_timeout(300)
+    order = await page.evaluate("[[...document.querySelectorAll('#panel .split .lbl')].map(e => e.textContent), document.querySelector('.dbig .dmeal .kcal').textContent.slice(0, 9), document.querySelector('.wrap').classList.contains('wide')]")
+    check("today: Person 1 comes first in recipe splits and the day view", order[0] == ["Person 1", "Person 2"] and order[1] == "Person 1:", str(order))
+    check("today: the recipe panel goes back to normal width", order[2] is False, str(order[2]))
+
+    await page.evaluate("""localStorage.setItem('mpd-swaps', JSON.stringify({'2026-10-21|d': 'd01'}));
+      localStorage.setItem('mpd-extras', JSON.stringify({juice: false, s1: true, s2: true}))""")
+    await page.reload(); await page.wait_for_timeout(400)
+    async with page.expect_download() as dl:
+        await page.click("#export")
+    path = str(tmpdir / "plan.json"); await (await dl.value).save_as(path)
+    await page.evaluate("localStorage.clear()"); await page.reload(); await page.wait_for_timeout(300)
+    await page.set_input_files("#import-file", path); await page.wait_for_timeout(400)
+    got = await page.evaluate("[localStorage.getItem('mpd-swaps'), JSON.parse(localStorage.getItem('mpd-extras')).juice, document.getElementById('dev-msg').textContent]")
+    check("today: export then import restores swaps and extras", got[0] == '{"2026-10-21|d":"d01"}' and got[1] is False and got[2].startswith("Imported 1 swap"), str(got))
+    bad = tmpdir / "bad.json"; bad.write_text('{"hello": 1}')
+    await page.set_input_files("#import-file", str(bad)); await page.wait_for_timeout(300)
+    msg = await page.evaluate("[document.getElementById('dev-msg').textContent, localStorage.getItem('mpd-swaps')]")
+    check("today: a wrong file is refused and changes nothing", msg[0].startswith("That file is not") and msg[1] == '{"2026-10-21|d":"d01"}', str(msg))
+
+    # Another tab changes the extras: this tab follows.
+    other = await ctx.new_page(); await other.goto(url("#d2026-10-19")); await other.wait_for_timeout(300)
+    await other.evaluate("localStorage.setItem('mpd-extras', JSON.stringify({juice: true, s1: true, s2: false}))")
+    await page.wait_for_timeout(400)
+    follows = await page.evaluate("[document.querySelector('.dbig [data-extra=juice]').checked, document.querySelector('.dbig [data-extra=s2]').checked]")
+    check("today: a change in another tab shows up here", follows == [True, False], str(follows))
+    await other.close()
+
+    # Desktop -> tablet width -> desktop: sheet state and panel follow the layout.
+    await page.set_viewport_size({"width": 800, "height": 1000}); await page.wait_for_timeout(400)
+    small = await page.evaluate("(() => { const p = document.getElementById('panel'); return [p.classList.contains('open'), p.getAttribute('aria-hidden'), p.getAttribute('role'), document.querySelector('.wrap').classList.contains('wide')]; })()")
+    check("today: narrowing to tablet width closes the panel into a hidden sheet", small == [False, "true", "dialog", False], str(small))
+    await page.set_viewport_size({"width": 1400, "height": 900}); await page.wait_for_timeout(400)
+    big = await page.evaluate("(() => { const p = document.getElementById('panel'); return [p.getAttribute('aria-hidden'), p.getAttribute('role'), document.querySelector('main').inert, !!p.querySelector('.p-title'), getComputedStyle(p).display !== 'none']; })()")
+    check("today: widening again brings back the side panel with content", big == [None, "region", False, True, True], str(big))
+    check("today: desktop no script errors", not errors, "; ".join(errors[:2]))
+    await ctx.close()
+
+
 async def main():
     build_suite()
     async with async_playwright() as p:
@@ -381,6 +464,8 @@ async def main():
         await desktop_suite(browser)
         await plan_suite(browser)
         await cook_shop_suite(browser)
+        with tempfile.TemporaryDirectory() as td:
+            await today_suite(browser, pathlib.Path(td))
         await link_suite(browser)
         await perf_suite(browser, 1, 17)
         await perf_suite(browser, 2, 34)
