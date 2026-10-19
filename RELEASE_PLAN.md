@@ -62,7 +62,7 @@ Scope
 - [x] `src/prices.js`: one row per catalogue ingredient with product name, store, the pack sizes on sale (with price for each), unit price (€/kg, €/l or €/pc), status (`estimate` or `checked`) and date checked.
 - [x] Shelf life per ingredient: how many days it keeps once opened or bought fresh, and whether it freezes well. Used by the pack guidance below and the waste-aware rotation in v0.4.
 - [x] Fill estimates for all non-pantry ingredients (about 110), preferring everyday K-Menu and Pirkka-level products.
-- [ ] Replace estimates with checked prices from the reference store. Moved to the backlog (Check prices in the store).
+- [ ] Replace estimates with checked prices from the reference store. Moved to the backlog (Check prices in the store, under Later).
 - [x] Recipe cost for the household, on the recipe view.
 - [x] Cost per day on the day view. Cost per month (and the daily average) on a month summary; the weekly summary shows the week's cost.
 - [x] Shopping list: rounds up to whole packs and shows the expected checkout total. Pantry items listed without price.
@@ -74,7 +74,7 @@ Scope
 
 Checks
 - [x] Every non-pantry ingredient has a price.
-- [ ] A sample week's shopping total matches a real K-Ruoka basket within about 10 %. Moved to the backlog (Check prices in the store).
+- [ ] A sample week's shopping total matches a real K-Ruoka basket within about 10 %. Moved to the backlog (Check prices in the store, under Later).
 
 Shipped notes
 - All 86 priced ingredients are estimates. K-Ruoka blocks automated reading, so checking needs a browser session or manual entry.
@@ -354,6 +354,18 @@ Not taken:
 ---
 
 ## Later
+
+### Check prices in the store (was v0.2.1)
+
+Goal: replace the estimated prices with checked ones. Done on request; the reference stores are named in that request and not written into the repo.
+
+- [ ] Check all 90 priced ingredients on K-Ruoka with the first reference store selected, in a browser (needs the desktop app linked) or by hand: product, pack sizes, price, date. Use the second store for anything the first doesn't stock.
+- [ ] Set `status: "checked"` and the `checked` date for each; note items neither store stocks and give their recipes a substitute.
+- [ ] Price one week's shopping as a real K-Ruoka basket and compare with the app's checkout total.
+
+Checks
+- `node tools/check-prices.js` reports 0 estimates.
+- Sample basket within about 10 % of the app's total.
 
 ### Settings
 - [ ] Settings panel: protein targets per person, display names, which day is the cheat night. Saved on the device only; the repo keeps neutral defaults. This can also take the protein targets out of the public page.
