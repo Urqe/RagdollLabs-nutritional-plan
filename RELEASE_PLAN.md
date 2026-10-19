@@ -415,3 +415,4 @@ Not taken:
 | v0.10 | 2026-10-19 | Juice and snack recipes, doubled batch amounts, reheat-first leftovers, 60-minute weekday meals, shopping ticks, "Have it", mid-week start, fuller copy text. |
 | v0.10.1 | 2026-10-19 | Closing pinch at year level left to Safari (tab overview) instead of being blocked. |
 | v0.11 | 2026-10-19 | Opens on today, "This week" shopping button, wide desktop week panel, 44 px touch targets, Person 1 first, export/import between devices, dialog sheet with focus handling, layout changes on rotation. |
+| v0.11.1 | 2026-10-19 | Export works in the Claude-hosted copy too (asks the host to save the file). |
