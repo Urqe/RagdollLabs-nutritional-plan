@@ -15,7 +15,9 @@ var Engine = (function () {
   // The plan is generated day by day from EPOCH, so cap how far ahead it goes.
   var MAX_DAYS = 365 * 8; // to the start of 2033
   // Minimum days between repeats.
-  var RULES = { breakfast: 7, weekendBreakfast: 10, lunch: 14, dinner: 18, cheat: 35 };
+  var RULES = { breakfast: 7, weekendBreakfast: 10, lunch: 14, dinner: 18, cheat: 35,
+    weekdayDinnerTime: 60,   // Monday to Thursday dinners take at most this many minutes
+    weekdayLunchTime: 60 };  // weekday lunches too
   // Protein the three meals should give two people together: both targets minus snack 1 each.
   var MEAL_GOAL = PX.p1.protein + PX.p2.protein - 2 * 23;
   // Season months (0 = January): summer May–August, winter November–March.
@@ -172,11 +174,12 @@ var Engine = (function () {
 
       // Yesterday's batch dinner becomes today's lunch.
       var l, lAlt = null;
+      var lunchTime = function (r) { return !weekend && r.time > RULES.weekdayLunchTime ? -1000 : 0; };
       if (prev && prev.d.batch) {
         l = leftoverOf(prev.dRaw);
-        lAlt = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: [prev.d.main], peek: true });
+        lAlt = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: [prev.d.main], peek: true, extra: lunchTime });
       } else {
-        l = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: prev ? [prev.d.main] : null });
+        l = pick(pools.lunch, i, RULES.lunch, { month: month, avoidMain: prev ? [prev.d.main] : null, extra: lunchTime });
         consume(l.ing, 1);
       }
 
@@ -191,6 +194,7 @@ var Engine = (function () {
           extra: function (r) {
             var e = -Math.abs(b.P + l.P + r.P - MEAL_GOAL) * W.protein;
             if (dow >= 1 && dow <= 4) e -= (r.C - avgDinnerC) * W.budget;
+            if (dow >= 1 && dow <= 4 && r.time > RULES.weekdayDinnerTime) e -= 1000; // long dishes go to Friday or Sunday
             return e;
           }
         });

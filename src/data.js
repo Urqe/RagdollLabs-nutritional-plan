@@ -780,30 +780,30 @@ var RECIPES = [
 // Per person. Snack 1 is protein-focused and counts toward the daily totals.
 // Snack 2 is a light fruit or vegetable snack. The juice is not counted.
 var SNACKS1 = [
-  { id: "s1", name: "Protein shake", desc: "30 g whey in water", ing: [["whey",30,"g"]] },
-  { id: "s2", name: "Maitorahka with berries", desc: "200 g quark, 100 g berries", ing: [["quark",200,"g"],["berries",100,"g"]] },
-  { id: "s3", name: "Raejuusto with chilli-lime cucumber", desc: "200 g cottage cheese, cucumber, chilli-lime salt", ing: [["cottage",200,"g"],["cucumber",100,"g"],["chilisalt",1,"pinch"]] },
-  { id: "s4", name: "Tiramisu rice cakes", desc: "Skyr whipped with protein, instant coffee and cinnamon on 2 rice cakes, dusted with cocoa", ing: [["skyr",150,"g"],["whey",10,"g"],["ricecake",2,"pc"],["coffee",1,"tsp"],["cocoa",2,"g"]] },
-  { id: "s5", name: "Frozen yoghurt bark", desc: "Make a tray ahead: Greek yoghurt with protein, berries, mango, granola and dark chocolate", ing: [["greek",150,"g"],["whey",10,"g"],["berries",30,"g"],["mango",20,"g"],["granola",10,"g"],["darkchoc",5,"g"]] },
-  { id: "s6", name: "Skyr with honey and cinnamon", desc: "200 g skyr, 1 tsp honey", ing: [["skyr",200,"g"],["honey",0.33,"tbsp"],["cinnamon",1,"pinch"]] }
+  { id: "s1", name: "Protein shake", desc: "30 g whey in water", steps: ["Shake 30 g whey with 300 ml cold water (or half milk for a thicker shake).", "Drink within an hour of training if you trained today."], ing: [["whey",30,"g"]] },
+  { id: "s2", name: "Maitorahka with berries", desc: "200 g quark, 100 g berries", steps: ["Stir the quark smooth with a splash of water or milk.", "Top with the berries straight from frozen; they thaw in a few minutes."], ing: [["quark",200,"g"],["berries",100,"g"]] },
+  { id: "s3", name: "Raejuusto with chilli-lime cucumber", desc: "200 g cottage cheese, cucumber, chilli-lime salt", steps: ["Cut the cucumber into small cubes.", "Spoon the cottage cheese into a bowl, add the cucumber and a pinch of chilli-lime salt."], ing: [["cottage",200,"g"],["cucumber",100,"g"],["chilisalt",1,"pinch"]] },
+  { id: "s4", name: "Tiramisu rice cakes", desc: "Skyr whipped with protein, instant coffee and cinnamon on 2 rice cakes, dusted with cocoa", steps: ["Whisk the skyr with the protein powder, instant coffee and a pinch of cinnamon until smooth.", "Spread on the rice cakes and dust with cocoa. Eat straight away so they stay crisp."], ing: [["skyr",150,"g"],["whey",10,"g"],["ricecake",2,"pc"],["coffee",1,"tsp"],["cocoa",2,"g"]] },
+  { id: "s5", name: "Frozen yoghurt bark", desc: "Make a tray ahead: Greek yoghurt with protein, berries, mango, granola and dark chocolate", steps: ["Make a tray ahead: stir the protein into the yoghurt and spread 1 cm thick on baking paper.", "Scatter berries, mango, granola and chopped chocolate on top. Freeze for 3 hours, then break into pieces; amounts are one serving."], ing: [["greek",150,"g"],["whey",10,"g"],["berries",30,"g"],["mango",20,"g"],["granola",10,"g"],["darkchoc",5,"g"]] },
+  { id: "s6", name: "Skyr with honey and cinnamon", desc: "200 g skyr, 1 tsp honey", steps: ["Stir the honey and cinnamon into the skyr."], ing: [["skyr",200,"g"],["honey",0.33,"tbsp"],["cinnamon",1,"pinch"]] }
 ];
 var SNACKS2 = [
-  { id: "f1", name: "Mango with lime and chilli-lime salt", desc: "150 g mango", ing: [["mango",150,"g"],["lime",0.25,"pc"],["chilisalt",1,"pinch"]] },
-  { id: "f2", name: "Pear with peanut butter and cinnamon", desc: "½ pear, ½ tbsp peanut butter", ing: [["pear",0.5,"pc"],["pb",0.5,"tbsp"],["cinnamon",1,"pinch"]] },
-  { id: "f3", name: "Strawberry frappé", desc: "Frozen strawberries blended with water and ice", ing: [["strawb",100,"g"]] },
-  { id: "f4", name: "Popcorn with fruit", desc: "Air-popped popcorn from 25 g kernels, ½ apple", ing: [["popcorn",25,"g"],["apple",0.5,"pc"]] },
-  { id: "f5", name: "Orange wedges with chilli", desc: "1 orange, chilli-lime salt", ing: [["orange",1,"pc"],["chilisalt",1,"pinch"]] },
-  { id: "f6", name: "Kohlrabi and cucumber sticks with lime", desc: "Kohlrabi stands in for jícama", ing: [["kohlrabi",100,"g"],["cucumber",100,"g"],["lime",0.25,"pc"],["chilisalt",1,"pinch"]] },
-  { id: "f7", name: "Green apple with chilli-lime and peanuts", desc: "½ apple, 15 g peanuts", ing: [["apple",0.5,"pc"],["peanut",15,"g"],["chilisalt",1,"pinch"]] },
-  { id: "f8", name: "Light esquites", desc: "Charred corn with yoghurt, leipäjuusto, lime and chilli", ing: [["corn",120,"g"],["greek",40,"g"],["leipa",15,"g"],["lime",0.25,"pc"],["chilipw",1,"pinch"]] }
+  { id: "f1", name: "Mango with lime and chilli-lime salt", desc: "150 g mango", steps: ["Cube the mango (thaw frozen mango for 20 minutes first).", "Squeeze over lime and sprinkle with chilli-lime salt."], ing: [["mango",150,"g"],["lime",0.25,"pc"],["chilisalt",1,"pinch"]] },
+  { id: "f2", name: "Pear with peanut butter and cinnamon", desc: "½ pear, ½ tbsp peanut butter", steps: ["Slice the pear and spread or dip with the peanut butter.", "Dust with cinnamon."], ing: [["pear",0.5,"pc"],["pb",0.5,"tbsp"],["cinnamon",1,"pinch"]] },
+  { id: "f3", name: "Strawberry frappé", desc: "Frozen strawberries blended with water and ice", steps: ["Blend the frozen strawberries with 100 ml water and a few ice cubes until thick."], ing: [["strawb",100,"g"]] },
+  { id: "f4", name: "Popcorn with fruit", desc: "Air-popped popcorn from 25 g kernels, ½ apple", steps: ["Pop the kernels in a covered pan with a teaspoon of oil, or in a paper bag in the microwave (2–3 min).", "Serve with the apple, sliced."], ing: [["popcorn",25,"g"],["apple",0.5,"pc"]] },
+  { id: "f5", name: "Orange wedges with chilli", desc: "1 orange, chilli-lime salt", steps: ["Cut the orange into wedges and sprinkle with chilli-lime salt."], ing: [["orange",1,"pc"],["chilisalt",1,"pinch"]] },
+  { id: "f6", name: "Kohlrabi and cucumber sticks with lime", desc: "Kohlrabi stands in for jícama", steps: ["Peel the kohlrabi and cut it and the cucumber into sticks.", "Squeeze over lime and sprinkle with chilli-lime salt."], ing: [["kohlrabi",100,"g"],["cucumber",100,"g"],["lime",0.25,"pc"],["chilisalt",1,"pinch"]] },
+  { id: "f7", name: "Green apple with chilli-lime and peanuts", desc: "½ apple, 15 g peanuts", steps: ["Slice the apple, sprinkle with chilli-lime salt and serve with the peanuts."], ing: [["apple",0.5,"pc"],["peanut",15,"g"],["chilisalt",1,"pinch"]] },
+  { id: "f8", name: "Light esquites", desc: "Charred corn with yoghurt, leipäjuusto, lime and chilli", steps: ["Drain the corn and char it in a dry hot pan for 4–5 minutes.", "Off the heat, stir in the yoghurt, lime juice and chilli powder. Crumble the leipäjuusto on top."], ing: [["corn",120,"g"],["greek",40,"g"],["leipa",15,"g"],["lime",0.25,"pc"],["chilipw",1,"pinch"]] }
 ];
 var JUICES = [
-  { id: "j1", name: "Pear, celery and mint", ing: [["pear",0.25,"pc"],["cucumber",100,"g"],["celery",40,"g"],["mint",0.1,"bunch"]] },
-  { id: "j2", name: "Citrus, carrot and kohlrabi", ing: [["orange",1,"pc"],["carrot",50,"g"],["kohlrabi",50,"g"]] },
-  { id: "j3", name: "Strawberry, apple and lime", ing: [["strawb",80,"g"],["apple",0.25,"pc"],["lime",0.25,"pc"]] },
-  { id: "j4", name: "Green apple and celery", ing: [["apple",0.25,"pc"],["celery",80,"g"],["cucumber",100,"g"],["lime",0.5,"pc"]] },
-  { id: "j5", name: "Pineapple and cucumber", ing: [["pineapple",80,"g"],["cucumber",100,"g"],["kohlrabi",50,"g"],["mint",0.1,"bunch"]] },
-  { id: "j6", name: "Grape and kohlrabi", ing: [["grapes",80,"g"],["kohlrabi",50,"g"],["lime",0.5,"pc"]] }
+  { id: "j1", name: "Pear, cucumber, celery and mint", steps: ["Wash and roughly chop everything; peel citrus and kohlrabi.","Blend with ½ cup water and a handful of ice until smooth. Strain if you like it thin. Amounts are one glass."], ing: [["pear",0.25,"pc"],["cucumber",100,"g"],["celery",40,"g"],["mint",0.1,"bunch"]] },
+  { id: "j2", name: "Orange, carrot and kohlrabi", steps: ["Wash and roughly chop everything; peel citrus and kohlrabi.","Blend with ½ cup water and a handful of ice until smooth. Strain if you like it thin. Amounts are one glass."], ing: [["orange",1,"pc"],["carrot",50,"g"],["kohlrabi",50,"g"]] },
+  { id: "j3", name: "Strawberry, apple and lime", steps: ["Wash and roughly chop everything; peel citrus and kohlrabi.","Blend with ½ cup water and a handful of ice until smooth. Strain if you like it thin. Amounts are one glass."], ing: [["strawb",80,"g"],["apple",0.25,"pc"],["lime",0.25,"pc"]] },
+  { id: "j4", name: "Green apple, celery, cucumber and lime", steps: ["Wash and roughly chop everything; peel citrus and kohlrabi.","Blend with ½ cup water and a handful of ice until smooth. Strain if you like it thin. Amounts are one glass."], ing: [["apple",0.25,"pc"],["celery",80,"g"],["cucumber",100,"g"],["lime",0.5,"pc"]] },
+  { id: "j5", name: "Pineapple, cucumber, kohlrabi and mint", steps: ["Wash and roughly chop everything; peel citrus and kohlrabi.","Blend with ½ cup water and a handful of ice until smooth. Strain if you like it thin. Amounts are one glass."], ing: [["pineapple",80,"g"],["cucumber",100,"g"],["kohlrabi",50,"g"],["mint",0.1,"bunch"]] },
+  { id: "j6", name: "Grape, kohlrabi and lime", steps: ["Wash and roughly chop everything; peel citrus and kohlrabi.","Blend with ½ cup water and a handful of ice until smooth. Strain if you like it thin. Amounts are one glass."], ing: [["grapes",80,"g"],["kohlrabi",50,"g"],["lime",0.5,"pc"]] }
 ];
 
 if (typeof module !== "undefined") module.exports = { PEOPLE, DEFAULT_SHARE, CAT, RECIPES, SNACKS1, SNACKS2, JUICES };
