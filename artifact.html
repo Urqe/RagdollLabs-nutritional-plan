@@ -2885,6 +2885,17 @@ if (typeof module !== "undefined") module.exports = Engine;
     var data = { app: "mesa-para-dos", kind: "device-plan", version: 1, exported: new Date().toISOString(), swaps: ov, extras: inc, shopping: shop };
     var name = "mesa-para-dos-plan-" + Engine.key(TODAY.y, TODAY.m, TODAY.d) + ".json";
     var blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
+    // Inside Claude the page can't download by itself: it asks the host to save the file
+    // (the viewer confirms). On GitHub Pages this is skipped.
+    if (window.claude && typeof window.claude.use === "function") {
+      window.claude.use("downloads").then(function (dl) {
+        if (!dl) { devMsg("Export isn't available in this view. Open the app on its own page to export."); return; }
+        dl.save({ filename: name, data: blob }).then(function () { devMsg("Saved " + name + "."); }, function (e) {
+          devMsg(e && e.code === "declined" ? "Export cancelled." : "Export isn't available in this view. Open the app on its own page to export.");
+        });
+      }, function () { devMsg("Export isn't available in this view."); });
+      return;
+    }
     var file = null; try { file = new File([blob], name, { type: "application/json" }); } catch (e) {}
     // Phones and tablets: the share sheet (AirDrop, Messages, Files). Elsewhere: a download.
     if (file && navigator.canShare && navigator.canShare({ files: [file] }) && window.matchMedia("(pointer: coarse)").matches) {
