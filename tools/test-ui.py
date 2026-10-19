@@ -81,7 +81,17 @@ async def touch_suite(browser, name, w, h):
     t = await page.eval_on_selector("#months", "e=>e.style.transform")
     check(f"{name}: view settles back after small pinch", t in ("", "none"), t)
 
+    # A closing pinch at year level has nowhere to go in the app: it must reach the browser
+    # (Safari's tab overview), so no touch or gesture event may be cancelled.
+    await page.evaluate("""() => { window.__blocked = 0; window.__moves = 0;
+      document.addEventListener('touchmove', e => { window.__moves++; if (e.defaultPrevented) window.__blocked++; }); }""")
+    await pinch(page, cdp, x, y, 0.6)
+    blocked = await page.evaluate("[window.__blocked, window.__moves]")
+    check(f"{name}: closing pinch at year level is left to the browser", blocked[0] == 0 and blocked[1] > 0 and await level(page) in ("", "#year"), f"blocked {blocked[0]} of {blocked[1]} moves")
+    await page.evaluate("window.__blocked = 0; window.__moves = 0")
     await pinch(page, cdp, x, y, 1.7)
+    claimed = await page.evaluate("[window.__blocked, window.__moves]")
+    check(f"{name}: spreading pinch at year level is claimed by the app", claimed[0] == claimed[1] and claimed[1] > 0, str(claimed))
     check(f"{name}: pinch out on month opens it", (await level(page)).startswith("#m"), await level(page))
 
     x, y = await centre(page, f'{cell}[data-day$=",20"]')

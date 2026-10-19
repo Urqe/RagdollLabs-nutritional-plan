@@ -219,6 +219,9 @@ td button { border: 0; background: none; color: var(--cobalt); cursor: pointer; 
 .crumbs .sep { color: var(--muted); }
 .zoom-btns { display: flex; gap: 6px; flex: none; }
 .zoom-btns .btn { width: 38px; padding: 6px 0; font-size: 1.05rem; line-height: 1; }
+/* At year level a pinch-in has nowhere to go in the app, so it is left to the browser
+   (Safari: tab overview). Month and day levels use pinch both ways. */
+.cal[data-at="year"] { touch-action: pan-y pinch-zoom; }
 .cal { touch-action: pan-y; scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 84px); }
 .pinch-target { outline: 2px solid var(--cobalt); outline-offset: 2px; transition: outline-color .1s; }
 
@@ -2034,6 +2037,7 @@ if (typeof module !== "undefined") module.exports = Engine;
     prefetchNeighbours();
   }
   function renderChrome() {
+    $("cal").setAttribute("data-at", state.level);
     $("legend").innerHTML = LEGEND[state.level];
     var f = state.focus, s = state.sel, c = '<button data-level="year"' + (state.level === "year" ? ' aria-current="page"' : "") + ">Year</button>";
     if (state.level !== "year") c += '<span class="sep">›</span><button data-level="month"' + (state.level === "month" ? ' aria-current="page"' : "") + ">" + MONTHS[f.m] + " " + f.y + "</button>";
@@ -2822,9 +2826,11 @@ if (typeof module !== "undefined") module.exports = Engine;
       var m = $("months"), L = m.getBoundingClientRect();
       g = { mode: "pinch", d0: Math.max(tdist(a, b), 1), mx0: mx, my0: my, mx: mx, my: my, ox: mx - L.left, oy: my - L.top, r: 1, s: [] };
       g.target = targetAt(mx, my);
-      markTarget(state.level === "day" ? null : anchorFor(state.level, g.target));
-      m.style.willChange = "transform"; moving(true);
-      e.preventDefault();
+      // At year level the app only wants a spreading pinch (into a month). The gesture is
+      // claimed on the first finger movement if it spreads; a closing pinch is let go so
+      // the browser can use it (Safari's tab overview).
+      g.decided = state.level !== "year";
+      if (g.decided) { markTarget(state.level === "day" ? null : anchorFor(state.level, g.target)); m.style.willChange = "transform"; moving(true); e.preventDefault(); }
     } else if (e.touches.length === 1 && !g) {
       g = { mode: "swipe", x0: e.touches[0].clientX, y0: e.touches[0].clientY, dx: 0, dy: 0, lock: null, s: [] };
     }
@@ -2834,6 +2840,10 @@ if (typeof module !== "undefined") module.exports = Engine;
     if (g.mode === "pinch" && e.touches.length >= 2) {
       var a = e.touches[0], b = e.touches[1];
       g.r = tdist(a, b) / g.d0; g.mx = (a.clientX + b.clientX) / 2; g.my = (a.clientY + b.clientY) / 2;
+      if (!g.decided) {
+        if (g.r < 1) { g = null; return; } // closing pinch at year level: leave it to the browser
+        g.decided = true; markTarget(anchorFor(state.level, g.target)); $("months").style.willChange = "transform"; moving(true);
+      }
       sample(g.s, g.r); e.preventDefault(); schedule();
     } else if (g.mode === "swipe" && e.touches.length === 1) {
       g.dx = e.touches[0].clientX - g.x0; g.dy = e.touches[0].clientY - g.y0;
@@ -2845,6 +2855,7 @@ if (typeof module !== "undefined") module.exports = Engine;
     if (!g) return;
     if (g.mode === "pinch") {
       if (e.touches.length >= 2) return;
+      if (!g.decided) { g = null; return; } // two fingers that never moved
       cancelAnimationFrame(raf); raf = 0;
       var r = g.r, v = velocity(g.s) * 1000, tgt = g.target, lv = state.level;
       // The pinch transform as scale + offset with origin 0 0, so the zoom continues from it.
@@ -2869,11 +2880,15 @@ if (typeof module !== "undefined") module.exports = Engine;
   cal.addEventListener("touchend", endTouch);
   cal.addEventListener("touchcancel", function () {
     if (!g) return;
-    var mode = g.mode; g = null; markTarget(null);
+    var mode = g.mode, decided = g.decided; g = null; markTarget(null);
+    if (mode === "pinch" && !decided) return;
     if (mode === "pinch") { dropPrepared(); settleBack(); moving(false, 300); } else if (pager) pagerFinish(0, 0);
   });
-  // Keep Safari's own page zoom out of the calendar, so the pinch reaches the app.
-  ["gesturestart", "gesturechange"].forEach(function (n) { cal.addEventListener(n, function (e) { e.preventDefault(); }); });
+  // Keep Safari's own page zoom out of the calendar while the app owns the pinch. At year
+  // level a closing pinch is not claimed, so Safari can still open its tab overview.
+  ["gesturestart", "gesturechange"].forEach(function (n) {
+    cal.addEventListener(n, function (e) { if (state.level !== "year" || (g && g.mode === "pinch" && g.decided)) e.preventDefault(); });
+  });
   // A pinch or swipe never turns into a tap, and nothing is tappable mid-animation.
   document.addEventListener("click", function (e) { if ((busy || Date.now() < suppressUntil) && cal.contains(e.target)) { e.stopPropagation(); e.preventDefault(); } }, true);
   // Trackpad pinch and Ctrl + scroll.
