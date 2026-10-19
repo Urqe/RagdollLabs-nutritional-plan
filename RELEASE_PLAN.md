@@ -298,6 +298,14 @@ Goal: everything on the day's plan can be made and bought using only the app.
 
 ---
 
+## v0.10.1: Safari pinch at year level (shipped)
+
+- [x] At year level the app no longer blocks a closing pinch. There is no level above Year, so the gesture is left to the browser and Safari on iPhone and iPad opens its tab overview as usual. A spreading pinch is still claimed on the first finger movement and opens a month. Month and day levels are unchanged.
+- [x] Browser tests check that no touch event is cancelled during a closing pinch at year level, and that every event is claimed during a spreading one.
+- Needs a check on a real iPhone: the browser tests run in Chromium, not Safari.
+
+---
+
 ## v0.11: Today first, phone and iPad
 
 Goal: the everyday questions (what do we cook today, what do we buy next) are one tap away, and the app behaves on iPad rotation and with a keyboard.
@@ -407,3 +415,4 @@ Not taken:
 | v0.8 | 2026-10-19 | Store names removed; prices described as based on a K-chain market. Git history rewritten afterwards to remove them from old commits. |
 | v0.9 | 2026-10-19 | Shelf life per pack by eating day, freezing for later days, extras tick boxes driving all totals, swap refresh and leftover swap fixes, failing checks. History rewritten to remove store names. |
 | v0.10 | 2026-10-19 | Juice and snack recipes, doubled batch amounts, reheat-first leftovers, 60-minute weekday meals, shopping ticks, "Have it", mid-week start, fuller copy text. |
+| v0.10.1 | 2026-10-19 | Closing pinch at year level left to Safari (tab overview) instead of being blocked. |
