@@ -335,6 +335,8 @@ async def cook_shop_suite(browser):
     await page.click('.dbig [data-extra-open="juice"]'); await page.wait_for_timeout(300)
     ex = await page.evaluate("[document.querySelector('#panel .p-title').textContent, document.querySelectorAll('#panel .ing li').length, document.querySelectorAll('#panel .steps li').length]")
     check("cook: juice opens with ingredients and directions", ex[1] >= 2 and ex[2] >= 1, str(ex))
+    mac = await page.evaluate("[document.querySelectorAll('#panel .macros').length, (document.querySelector('.dbig .person .macros') || {}).textContent || '', !!document.querySelector('.dbig .nutri-note')]")
+    check("cook: fat, carbs and fibre shown for extras and each person's day", mac[0] == 2 and mac[1].startswith("Fat ") and "Fibre" in mac[1] and mac[2], str(mac))
 
     # Double-batch dinner shows doubled amounts (chicken thighs 280 g per batch -> 560 g).
     await page.click('.dbig [data-recipe="d"]'); await page.wait_for_timeout(300)

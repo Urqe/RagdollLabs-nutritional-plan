@@ -32,4 +32,16 @@ const wk=[]; for(let i=0;i<14;i++){const dt=new Date(Date.UTC(2026,9,12)+i*864e5
 { const W={p1:[],p2:[]}; let start=Date.UTC(2025,11,29);
   for(let w=0;w<52;w++){ const acc={p1:0,p2:0}; for(let k=0;k<7;k++){ const dt=new Date(start+(w*7+k)*864e5); const d=E.day(dt.getUTCFullYear(),dt.getUTCMonth(),dt.getUTCDate(),{},MIN); acc.p1+=d.people.p1.p; acc.p2+=d.people.p2.p; } W.p1.push(acc.p1/7); W.p2.push(acc.p2/7); }
   for(const p of ['p1','p2']) { console.log('weekly avg',p,'min',Math.min(...W[p]).toFixed(0),'max',Math.max(...W[p]).toFixed(0)); if(Math.min(...W[p]) < D.PEOPLE[p].protein) fails.push(p+' weekly protein average below target'); } }
-if(fails.length){ console.log('FAILED: '+fails.join('; ')); process.exitCode=1; } else console.log('All guarantees hold: no banned ingredients, no unknown ingredients, no repeat violations, weekly protein at or above target.');
+// Nutrition data: every ingredient with protein/kcal also has fat, carbohydrate and fibre,
+// and its kcal roughly matches 4/9/4/2 kcal per g of protein/fat/carbs/fibre.
+for(const [id,c] of Object.entries(D.CAT)){ if(c.p==null) continue;
+  if(c.f==null||c.c==null||c.fb==null){ fails.push('no fat/carbs/fibre for '+id); continue; }
+  const kc=c.p*4+c.f*9+c.c*4+c.fb*2; if(c.k>40 && Math.abs(kc-c.k)/c.k>0.25) fails.push('kcal does not match nutrients for '+id+' ('+c.k+' vs '+Math.round(kc)+')'); }
+// Locked days must come out exactly as they were shown.
+{ const L=require('../src/plan-lock.js').PLAN_LOCK.split(';'); const T=E.exportTable(L.length).split(';'); let bad=0;
+  L.forEach((r,i)=>{ if(T[i]!==r) bad++; }); console.log('locked days reproduced:',L.length-bad,'of',L.length); if(bad) fails.push(bad+' locked days changed'); }
+// Burritos use the 30 cm tortillas; tostadas are corn tortillas baked at home.
+for(const r of R){ const txt=(r.name+' '+r.steps.join(' ')).toLowerCase(), ids=r.ing.map(i=>i[0]);
+  if(/burrito|chimichanga/.test(r.name.toLowerCase()) && r.meal!=='breakfast' && !ids.includes('tortXL')) fails.push(r.id+' burrito without 30 cm tortillas');
+  if(/tostada/.test(r.name.toLowerCase()) && !(ids.includes('tortC') && /make the tostadas/.test(txt))) fails.push(r.id+' tostadas not made from corn tortillas'); }
+if(fails.length){ console.log('FAILED: '+fails.join('; ')); process.exitCode=1; } else console.log('All guarantees hold: no banned or unknown ingredients, full nutrient data, locked days unchanged, no repeat violations, weekday time limits kept, weekly protein at or above target.');
