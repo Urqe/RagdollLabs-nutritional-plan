@@ -390,6 +390,21 @@ Checks
 - Sample basket within about 10 % of the app's total.
 - Weekly protein still at or above both targets with the checked values.
 
+### Recipe style tags
+- [ ] Add a `style` field to every recipe. Tag the current library `mexican` (the Healthy Ivonne-style base).
+- [ ] `comfort` for non-Mexican healthy recipes, such as those adapted from Alex Hughes (see below).
+- [ ] The tag list stays open: new tags are added when a new recipe source justifies one.
+- [ ] Rotation balances styles across the week instead of clustering them.
+- [ ] Show the style on the recipe and day views.
+- Retagging the current library doesn't depend on new recipes, so it can ship on its own first.
+
+### Recipe expansion: Alex Hughes, "Low-Cal Kitchen Bangers"
+- Source: *Low-Cal Kitchen Bangers* (Ebury, 2024) and *20-Minute Low-Cal Kitchen Bangers* (Ebury, 2025). About 200 recipes in total, with macros for each.
+- Goal: a second style alongside the Mexican base, made up of healthy comfort-food and American-style meals tagged `comfort`. They don't need to be made Mexican.
+- [ ] Prerequisites: access to the books, and a research pass to shortlist recipes.
+- [ ] Filter: protein per portion against the targets, remove excluded ingredients, and swap to ingredients available in Finland where needed.
+- [ ] Adapted recipes only, with no verbatim copying into this public repo.
+
 ### Settings
 - [ ] Settings panel: protein targets per person, display names, which day is the cheat night. Saved on the device only; the repo keeps neutral defaults. This can also take the protein targets out of the public page.
 - [ ] Spice level per person.
