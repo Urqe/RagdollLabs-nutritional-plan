@@ -62,7 +62,7 @@ Scope
 - [x] `src/prices.js`: one row per catalogue ingredient with product name, store, the pack sizes on sale (with price for each), unit price (€/kg, €/l or €/pc), status (`estimate` or `checked`) and date checked.
 - [x] Shelf life per ingredient: how many days it keeps once opened or bought fresh, and whether it freezes well. Used by the pack guidance below and the waste-aware rotation in v0.4.
 - [x] Fill estimates for all non-pantry ingredients (about 110), preferring everyday K-Menu and Pirkka-level products.
-- [ ] Replace estimates with checked prices from the reference store. Moved to the backlog (Check nutrition and prices, under Later).
+- [ ] Replace estimates with checked prices from the reference store. Done in v0.13.
 - [x] Recipe cost for the household, on the recipe view.
 - [x] Cost per day on the day view. Cost per month (and the daily average) on a month summary; the weekly summary shows the week's cost.
 - [x] Shopping list: rounds up to whole packs and shows the expected checkout total. Pantry items listed without price.
@@ -74,7 +74,7 @@ Scope
 
 Checks
 - [x] Every non-pantry ingredient has a price.
-- [ ] A sample week's shopping total matches a real K-Ruoka basket within about 10 %. Moved to the backlog (Check nutrition and prices, under Later).
+- [ ] A sample week's shopping total matches a real K-Ruoka basket within about 10 %. Done in v0.13.
 
 Shipped notes
 - All 86 priced ingredients are estimates. K-Ruoka blocks automated reading, so checking needs a browser session or manual entry.
@@ -429,7 +429,7 @@ Not taken:
 - [ ] Live sync of swaps, settings and shopping ticks (v0.11 covers moving a plan by file). Decide where shared state lives first; GitHub Pages has no storage of its own.
 
 ### Nutrition accuracy
-- [x] Fat, carbohydrate and fibre per ingredient, shown on day, recipe, snack and week views (v0.12; values still estimates, see "Check nutrition and prices").
+- [x] Fat, carbohydrate and fibre per ingredient, shown on day, recipe, snack and week views (v0.12; values checked in v0.13).
 - [ ] Optional device-only calorie ranges per person, used by the rotation as well as shown.
 - [ ] Separate data for products that differ (corn vs wheat tortillas, Greek yoghurt vs skyr).
 
