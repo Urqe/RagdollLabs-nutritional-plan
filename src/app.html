@@ -562,7 +562,7 @@ performance.mark && performance.mark("app-start");
     "Make any fresh toppings now (salsa, herbs, lime, yoghurt) and split by the portions above.",
     "Eat within 2 days of cooking. Don't reheat the same portion twice."];
   function eur(x, dec) { return (dec === 0 ? String(Math.round(x)) : x.toFixed(2).replace(".", ",")) + " €"; }
-  function priceNote() { return '<p class="kcal price-note">Prices are estimates based on ' + esc(PRICE_META.basis) + ". Updated " + esc(PRICE_META.updated) + ".</p>"; }
+  function priceNote() { return '<p class="kcal price-note">Normal shelf prices from ' + esc(PRICE_META.basis) + ", checked " + esc(PRICE_META.updated) + ". Offers and Plussa prices are not included.</p>"; }
   function monthPlans(y, m) {
     var n = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(), out = [];
     for (var d = 1; d <= n; d++) { var pl = dayPlan({ y: y, m: m, d: d }); if (pl) out.push({ o: { y: y, m: m, d: d }, pl: pl }); }
@@ -1002,7 +1002,7 @@ performance.mark && performance.mark("app-start");
   // ---- Panel views ---------------------------------------------------------
   // Fat, carbohydrate and fibre in grams, one line.
   function macros(f, c, fb) { return '<div class="macros">Fat ' + r0(f) + " g · Carbs " + r0(c) + " g · Fibre " + r0(fb) + " g</div>"; }
-  var NUTRI_NOTE = '<p class="kcal nutri-note">Nutrition values are typical-product estimates, not yet checked against Fineli or the labels.</p>';
+  var NUTRI_NOTE = '<p class="kcal nutri-note">Nutrition values come from the product labels and the store\'s produce data, checked ' + NUTRI_CHECKED + ". Spices and condiments use typical values.</p>";
   function personCard(label, x, target) {
     var have = x.p, pct = Math.min(100, have / target * 100);
     return '<div class="person"><div class="lbl">' + label + '</div><div class="num">' + r0(have) + ' <small>/ ' + target + " g protein</small></div>" +

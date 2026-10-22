@@ -43,7 +43,7 @@ Working plan for the meal plan calendar. Each release has a goal, a scope checkl
 
 ## Current focus
 
-All releases from the 2026-10-19 review have shipped (see "Review 2026-10-19" below). Next up when the chat is linked to the desktop app: "Check nutrition and prices" under Later. Next candidates are in Later; the real-device check from v0.11 is still open.
+Nothing scheduled. Candidates are in Later; the real-device check from v0.11 is still open.
 
 ---
 
@@ -333,6 +333,38 @@ Results: weekly protein averages unchanged in shape (Person 1 111–118 g, Perso
 
 ---
 
+## v0.13: Checked nutrition and prices (shipped)
+
+Goal: replace the estimated nutrition values and prices with checked ones (was "Check nutrition and prices" under Later). Done in a browser on the user's computer on 2026-10-22. Reference stores are named in the request only, never in the repo.
+
+Prices
+- [x] Every priced ingredient checked on K-Ruoka with the first reference store selected: product, pack sizes, normal shelf price (no offers or Plussa prices). The first store stocked everything that either store stocks, so the second store was only used to confirm the gaps below.
+- [x] All 93 entries marked `status: "checked"` with the date. New prices for grated cheese, feta, kidney beans and red lentils, which had none.
+- [x] Pack sizes follow what the store sells (e.g. chicken breast 600 g, skyr 400 g, salsa verde 230 g, corn tortillas 250 g). The waste check's chicken example now uses amounts that fit a 600 g pack.
+
+Not stocked in either store, with substitutes
+- Chicken thigh fillets: only bone-in thigh pieces are sold. Recipes now use chicken breast fillets.
+- Beef mince 5 %: only 10 % and 17 % are sold. Recipes now use 10 %.
+- Habanero: now red chilli ("or habanero" if found).
+- Light halloumi: now regular halloumi.
+- El Taco Truck 15 cm and 25 cm wheat tortillas: the 15 cm slot uses El Taco Truck Street tortillas (8 × 18 g), the 25 cm slot Santa Maria Large (6 per pack).
+
+Nutrition
+- [x] Packaged products: protein, kcal, fat, carbohydrate and fibre from the product label on K-Ruoka. Loose produce: the store's produce data, which matches Fineli's figures. Fineli itself showed a bot check that could not be passed.
+- [x] Source per ingredient in `src/data.js` (`src: "label"` or `"produce"`) and the check date in `NUTRI_CHECKED`. Spices, dried chillies and a few condiments keep typical values (small amounts).
+- [x] Tortilla piece weights from the packs: El Taco Truck 20 cm 8 × 40 g, Street 8 × 18 g, Antalya Dürüm 30 cm 8 × 100 g. Don Tortilla's pack (250 g) doesn't state a count; 10 × 25 g assumed.
+- [x] Page notes: prices are "normal shelf prices from a K-chain market, checked <date>"; nutrition notes say where values come from.
+
+Checks
+- [x] `node tools/check-prices.js`: 0 estimates, no missing prices.
+- [x] Sample basket: the week of 26 October priced live, product by product, at the first reference store: 235.38 €, same as the app's checkout total. Loose produce is priced per piece at the store's approximate weight, so the till will differ slightly.
+- [x] Weekly protein with checked values: Person 1 108–117 g, Person 2 146–161 g (targets 105 and 140).
+- [x] Plan lock: all 658 locked days unchanged. UI tests pass.
+
+Results: food cost 28.39 € a day (was 23.66 € with estimates); checkout about 224 € a week (was 201 €); waste 2.71 € a week (was 2.79 €). The biggest price gaps against the estimates were beef cuts, corn tortillas (Don Tortilla 5.15 € a pack), whey protein and frozen strawberries.
+
+---
+
 ## Review 2026-10-19
 
 An outside code review was done on v0.7. Taken into the releases above:
@@ -368,27 +400,6 @@ Not taken:
 ---
 
 ## Later
-
-### Check nutrition and prices (was v0.2.1)
-
-Goal: replace the estimated nutrition values and prices with checked ones. Done on request, in a browser on the user's computer (this chat linked to the Claude desktop app), because Fineli and K-Ruoka both block automated reading. The reference stores are named in that request and never written into the repo, commits or docs.
-
-Nutrition
-- [ ] For each catalogue ingredient: protein, kcal, fat, carbohydrate and fibre per 100 g from Fineli (record the Fineli food id), or from the product's label on K-Ruoka for branded products and anything Fineli lacks. Where both exist and disagree, use the label for branded products and Fineli for generic ones.
-- [ ] Tortilla labels first: Don Tortilla 14 cm corn, El Taco Truck wheat (15, 20 and 25 cm, or the closest sizes sold), Antalya Dürüm 30 cm. Record piece weights; if Don Tortilla's size doesn't suit a recipe, note it.
-- [ ] Mark each value's source and date in `src/data.js`; drop the "estimate" note on the page when every value is checked.
-
-Prices
-- [ ] Check all priced ingredients on K-Ruoka with the first reference store selected: product, pack sizes, price, date. Use the second store only for products the first doesn't have.
-- [ ] Set `status: "checked"` and the `checked` date for each; note items neither store stocks and give their recipes a substitute.
-- [ ] Price one week's shopping as a real K-Ruoka basket and compare with the app's checkout total.
-
-Before changing values: lock the plan through the current Sunday (`node tools/lock-plan.js`).
-
-Checks
-- `node tools/check-prices.js` reports 0 estimates; every catalogue entry has a nutrition source.
-- Sample basket within about 10 % of the app's total.
-- Weekly protein still at or above both targets with the checked values.
 
 ### Recipe style tags
 - [ ] Add a `style` field to every recipe. Tag the current library `mexican` (the Healthy Ivonne-style base).
@@ -466,3 +477,4 @@ Checks
 | v0.11 | 2026-10-19 | Opens on today, "This week" shopping button, wide desktop week panel, 44 px touch targets, Person 1 first, export/import between devices, dialog sheet with focus handling, layout changes on rotation. |
 | v0.11.1 | 2026-10-19 | Export works in the Claude-hosted copy too (asks the host to save the file). |
 | v0.12 | 2026-10-19 | Fat, carbs and fibre in all views (estimates); Don Tortilla, El Taco Truck and Antalya Dürüm tortillas; home-baked tostadas; plan lock keeps planned days fixed. Nutrition and price checks moved to Later. |
+| v0.13 | 2026-10-22 | Checked shelf prices and pack sizes for all 93 ingredients; label and produce nutrition; substitutes for products neither store stocks (thigh fillets, 5 % mince, habanero, light halloumi, two tortilla sizes). |

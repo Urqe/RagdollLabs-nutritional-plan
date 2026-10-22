@@ -33,7 +33,7 @@ const T = P.TRIPS, empty = () => [{}, {}, {}, {}, {}, {}, {}];
   expect("skyr opened Monday is not used on Sunday", sun && sun.fromEarlier === 0 && sun.buy);
 }
 { // Chicken keeps 2 days once opened, but freezes: the rest is frozen and used later.
-  const n = empty(); n[0].chk = 500; n[4].chk = 210; n[6].chk = 200; const r = P.planTrips(n, T);
+  const n = empty(); n[0].chk = 300; n[4].chk = 150; n[6].chk = 150; const r = P.planTrips(n, T);
   expect("chicken left on Monday is frozen for Friday", r.trips[0].freeze.some(f => f.id === "chk" && /after Mon, for Fri/.test(f.text)));
   expect("no chicken bought for Friday-Sunday", !r.trips[2].lines.find(l => l.id === "chk").buy);
 }
